@@ -113,8 +113,10 @@ public final class Lexer {
             lexEscape();
         else if(peek("'")) // invalid ' as character
             throw new ParseException("missing/invalid single quotation in character literal", chars.index);
-        else // valid character
+        else if(peek(".")) // valid character
             match("."); // match any next character
+        else
+            throw new ParseException("character literal cannot span multiple lines", chars.index);
 
         // Closing '
         if(!peek("'")) // no closing ' character
@@ -127,7 +129,24 @@ public final class Lexer {
     }
 
     public Token lexString() {
-        throw new UnsupportedOperationException(); //TODO
+        // Opening "
+        match("\"");
+
+        // Repeat until Closing "
+        while(!peek("\"")) {
+            if(peek("\\\\"))  // escape characters
+                lexEscape();
+            else if(peek(".")) // valid character
+                match("."); // match any next character
+            else
+                throw new ParseException("string literal cannot span multiple lines", chars.index);
+        }
+
+        // Closing "
+        match("\"");
+
+        // return final character token
+        return chars.emit(Token.Type.STRING);
     }
 
     public void lexEscape() {
