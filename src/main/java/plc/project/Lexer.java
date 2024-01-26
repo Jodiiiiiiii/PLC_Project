@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -35,7 +36,21 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        List<Token> tokens = new ArrayList<>();
+
+        // continue lexing until no more input
+        while(chars.index < chars.input.length()){
+            // skip whitespace characters
+            if(peek("\\s"))
+            {
+                chars.advance();
+                chars.skip();
+            }
+            else // lex new token starting from current non-whitespace character
+                tokens.add(lexToken());
+        }
+        // return finalized list of tokens
+        return tokens;
     }
 
     /**
@@ -159,7 +174,22 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        throw new UnsupportedOperationException(); //TODO
+        // !=
+        if(peek("!", "="))
+            match("!","=");
+        // ==
+        else if(peek("=", "="))
+            match("=", "=");
+        // &&
+        else if(peek("&", "&"))
+            match("&", "&");
+        // ||
+        else if(peek("|", "|"))
+            match("|", "|");
+        else if(peek(".")) // should NOT include whitespace characters
+            match("."); // match whatever other character there is
+
+        return chars.emit(Token.Type.OPERATOR);
     }
 
     /**
