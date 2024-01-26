@@ -21,7 +21,8 @@ public final class Lexer {
             NONZERO_DIGIT = Pattern.compile("([1-9])"),
             DIGIT = Pattern.compile("([0-9])"),
             IDENTIFIER_START = Pattern.compile("([A-Za-z_@])"),
-            IDENTIFIER_PART = Pattern.compile(IDENTIFIER_START + "|" + DIGIT + "|-");
+            IDENTIFIER_PART = Pattern.compile(IDENTIFIER_START + "|" + DIGIT + "|-"),
+            ESCAPE_CHAR = Pattern.compile("([bnrt'\"\\\\])");
 
     private final CharStream chars;
 
@@ -46,7 +47,6 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-
         // Identifier: a-z,A-Z,_,@
         if(peek(IDENTIFIER_START.pattern()))
             return lexIdentifier();
@@ -97,14 +97,33 @@ public final class Lexer {
             // iterate through valid subsequent digits (after decimal point)
             while(peek(DIGIT.pattern()))
                 match(DIGIT.pattern());
-            // return final DECIMAL number
+            // return final DECIMAL token
             return chars.emit(Token.Type.DECIMAL);
         }
+        // not a decimal - return final INTEGER token
         return chars.emit(Token.Type.INTEGER);
     }
 
     public Token lexCharacter() {
-        throw new UnsupportedOperationException(); //TODO
+        // Opening '
+        match("'");
+
+        // Single character
+        if(peek("\\\\"))  // escape characters
+            lexEscape();
+        else if(peek("'")) // invalid ' as character
+            throw new ParseException("missing/invalid single quotation in character literal", chars.index);
+        else // valid character
+            match("."); // match any next character
+
+        // Closing '
+        if(!peek("'")) // no closing ' character
+            throw new ParseException("missing/invalid single quotation in character literal", chars.index);
+        else
+            match("'");
+
+        // return final character token
+        return chars.emit(Token.Type.CHARACTER);
     }
 
     public Token lexString() {
@@ -112,7 +131,12 @@ public final class Lexer {
     }
 
     public void lexEscape() {
-        throw new UnsupportedOperationException(); //TODO
+        match("\\\\"); // already known
+        // check for valid escape character
+        if(!peek(ESCAPE_CHAR.pattern()))
+            throw new ParseException("invalid escape character", chars.index);
+        else
+            match(ESCAPE_CHAR.pattern());
     }
 
     public Token lexOperator() {
