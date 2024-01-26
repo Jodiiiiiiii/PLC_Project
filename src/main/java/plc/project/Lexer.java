@@ -1,6 +1,7 @@
 package plc.project;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * The lexer works through three main functions:
@@ -15,6 +16,11 @@ import java.util.List;
  *
  * The {@link #peek(String...)} and {@link #match(String...)} functions are * helpers you need to use, they will make the implementation a lot easier. */
 public final class Lexer {
+
+    public static final Pattern
+            DIGIT = Pattern.compile("([0-9])"),
+            IDENTIFIER_START = Pattern.compile("([A-Za-z_@])"),
+            IDENTIFIER_PART = Pattern.compile(IDENTIFIER_START + "|" + DIGIT + "|-");
 
     private final CharStream chars;
 
@@ -39,11 +45,30 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        throw new UnsupportedOperationException(); //TODO
+
+        if(peek(IDENTIFIER_START.pattern()))
+        {
+            return lexIdentifier();
+        }
+
+        // dummy fail token // TODO - REMOVE
+        return new Token(Token.Type.OPERATOR, "FAILED CASE", 0);
+
+        // should replace this with a ParseException I think?
+        //throw new UnsupportedOperationException(); //TODO
     }
 
+    // TODO - IS THERE A BETTER WAY TO HANDLE JUST USING A FINAL REGEX PATTERN INSTEAD OF PARTS IN CODE?? (lecture??)
     public Token lexIdentifier() {
-        throw new UnsupportedOperationException(); //TODO
+
+        match(IDENTIFIER_START.pattern());
+        // iterate through remaining matches
+        while(peek(IDENTIFIER_PART.pattern()))
+        {
+            match(IDENTIFIER_PART.pattern());
+        }
+        // return final string of matched characters
+        return chars.emit(Token.Type.IDENTIFIER);
     }
 
     public Token lexNumber() {
@@ -71,8 +96,13 @@ public final class Lexer {
      * which should be a regex. For example, {@code peek("a", "b", "c")} would
      * return true if the next characters are {@code 'a', 'b', 'c'}.
      */
-    public boolean peek(String... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in Lecture)
+    public boolean peek(String... patterns) { // Note: allows for peaking several characters at once!! (useful for looking ahead)
+        // check for issues (not enough characters or non-matching characters)
+        for(int i = 0; i < patterns.length; i++)
+            if(!chars.has(i) || !String.valueOf(chars.get(i)).matches(patterns[i]) )
+                return false;
+        // no issues found -> return true
+        return true;
     }
 
     /**
@@ -81,7 +111,15 @@ public final class Lexer {
      * true. Hint - it's easiest to have this method simply call peek.
      */
     public boolean match(String... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in Lecture)
+        boolean peek = peek(patterns);
+        if(peek) {
+            // advance for each character
+            for(int i = 0; i < patterns.length; i++){
+                chars.advance();
+            }
+        }
+        // return same result from peek
+        return peek;
     }
 
     /**
