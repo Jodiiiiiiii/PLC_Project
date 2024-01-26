@@ -5,19 +5,20 @@ import java.util.regex.Pattern;
 
 /**
  * The lexer works through three main functions:
- *
+ * *
  *  - {@link #lex()}, which repeatedly calls lexToken() and skips whitespace
- *  - {@link #lexToken()}, which lexes the next token
+ *  - {@link #lexToken()}, which does lexing on the next token
  *  - {@link CharStream}, which manages the state of the lexer and literals
- *
+ * *
  * If the lexer fails to parse something (such as an unterminated string) you
  * should throw a {@link ParseException} with an index at the character which is
  * invalid.
- *
+ * *
  * The {@link #peek(String...)} and {@link #match(String...)} functions are * helpers you need to use, they will make the implementation a lot easier. */
 public final class Lexer {
 
     public static final Pattern
+            NONZERO_DIGIT = Pattern.compile("([1-9])"),
             DIGIT = Pattern.compile("([0-9])"),
             IDENTIFIER_START = Pattern.compile("([A-Za-z_@])"),
             IDENTIFIER_PART = Pattern.compile(IDENTIFIER_START + "|" + DIGIT + "|-");
@@ -29,7 +30,7 @@ public final class Lexer {
     }
 
     /**
-     * Repeatedly lexes the input using {@link #lexToken()}, also skipping over
+     * Repeatedly lexing the input using {@link #lexToken()}, also skipping over
      * whitespace where appropriate.
      */
     public List<Token> lex() {
@@ -40,39 +41,66 @@ public final class Lexer {
      * This method determines the type of the next token, delegating to the
      * appropriate lex method. As such, it is best for this method to not change
      * the state of the char stream (thus, use peek not match).
-     *
+     * *
      * The next character should start a valid token since whitespace is handled
      * by {@link #lex()}
      */
     public Token lexToken() {
 
+        // Identifier: a-z,A-Z,_,@
         if(peek(IDENTIFIER_START.pattern()))
-        {
             return lexIdentifier();
-        }
+        // Number: 0-9 | '-' AND 1-9 | '-' AND 0 AND '.'
+        else if(peek(DIGIT.pattern()) || peek("-", NONZERO_DIGIT.pattern()) || peek("-", "0", "."))
+            return lexNumber();
+        // Character: '
+        else if(peek("'"))
+            return lexCharacter();
+        // String: "
+        else if(peek("\""))
+            return lexString();
+        // Operator: [any other character]
+        else
+            return lexOperator();
 
-        // dummy fail token // TODO - REMOVE
-        return new Token(Token.Type.OPERATOR, "FAILED CASE", 0);
-
-        // should replace this with a ParseException I think?
-        //throw new UnsupportedOperationException(); //TODO
+        // TODO: ParseException (would any ever be thrown here?)
     }
 
-    // TODO - IS THERE A BETTER WAY TO HANDLE JUST USING A FINAL REGEX PATTERN INSTEAD OF PARTS IN CODE?? (lecture??)
     public Token lexIdentifier() {
-
+        // read first character - already confirmed earlier
         match(IDENTIFIER_START.pattern());
         // iterate through remaining matches
         while(peek(IDENTIFIER_PART.pattern()))
-        {
             match(IDENTIFIER_PART.pattern());
-        }
         // return final string of matched characters
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
     public Token lexNumber() {
-        throw new UnsupportedOperationException(); //TODO
+        // match negative (-) sign if applicable
+        if(peek("-"))
+            match("-");
+        // Zero
+        if(peek("0")) {
+            match("0");
+        }
+        // Non-zero number
+        else
+        {
+            // Integer | Decimal (before decimal point)
+            while(peek(DIGIT.pattern()))
+                match(DIGIT.pattern());
+        }
+        // Decimal?
+        if(peek("\\.", DIGIT.pattern())) {
+            match("\\.", DIGIT.pattern());
+            // iterate through valid subsequent digits (after decimal point)
+            while(peek(DIGIT.pattern()))
+                match(DIGIT.pattern());
+            // return final DECIMAL number
+            return chars.emit(Token.Type.DECIMAL);
+        }
+        return chars.emit(Token.Type.INTEGER);
     }
 
     public Token lexCharacter() {
@@ -125,7 +153,7 @@ public final class Lexer {
     /**
      * A helper class maintaining the input string, current index of the char
      * stream, and the current length of the token being matched.
-     *
+     * *
      * You should rely on peek/match for state management in nearly all cases.
      * The only field you need to access is {@link #index} for any {@link
      * ParseException} which is thrown.

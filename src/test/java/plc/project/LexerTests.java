@@ -38,7 +38,10 @@ public class LexerTests {
                 Arguments.of("Single Digit", "1", true),
                 Arguments.of("Multiple Digits", "12345", true),
                 Arguments.of("Negative", "-1", true),
-                Arguments.of("Leading Zero", "01", false)
+                Arguments.of("Leading Zero", "01", false),
+
+                // Negative Zero
+                Arguments.of("Negative Zero", "-0", false)
         );
     }
 
@@ -53,7 +56,12 @@ public class LexerTests {
                 Arguments.of("Multiple Digits", "123.456", true),
                 Arguments.of("Negative Decimal", "-1.0", true),
                 Arguments.of("Trailing Decimal", "1.", false),
-                Arguments.of("Leading Decimal", ".5", false)
+                Arguments.of("Leading Decimal", ".5", false),
+
+                // Negative Zeroes
+                // TODO: verify that this is correct behavior - according to project specifications
+                Arguments.of("Negative Zero", "-0.0", true),
+                Arguments.of("Negative Zero", "-0.000000", true)
         );
     }
 
