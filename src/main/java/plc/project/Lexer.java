@@ -21,8 +21,8 @@ public final class Lexer {
     public static final Pattern
             NONZERO_DIGIT = Pattern.compile("([1-9])"),
             DIGIT = Pattern.compile("([0-9])"),
-            IDENTIFIER_START = Pattern.compile("([A-Za-z_@])"),
-            IDENTIFIER_PART = Pattern.compile(IDENTIFIER_START + "|" + DIGIT + "|-"),
+            IDENTIFIER_START = Pattern.compile("([A-Za-z@])"),
+            IDENTIFIER_PART = Pattern.compile("([A-Za-z0-9_-])"),
             ESCAPE_CHAR = Pattern.compile("([bnrt'\"\\\\])");
 
     private final CharStream chars;
@@ -41,7 +41,7 @@ public final class Lexer {
         // continue lexing until no more input
         while(chars.index < chars.input.length()){
             // skip whitespace characters
-            if(peek("\\s"))
+            if(peek("[ \b\n\r\t]")) // set of whitespace characters in our grammar
             {
                 chars.advance();
                 chars.skip();
@@ -62,7 +62,7 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        // Identifier: a-z,A-Z,_,@
+        // Identifier: a-z,A-Z,@
         if(peek(IDENTIFIER_START.pattern()))
             return lexIdentifier();
         // Number: 0-9 | '-' AND 1-9 | '-' AND 0 AND '.'
@@ -77,8 +77,6 @@ public final class Lexer {
         // Operator: [any other character]
         else
             return lexOperator();
-
-        // TODO: ParseException (would any ever be thrown here?)
     }
 
     public Token lexIdentifier() {
@@ -128,8 +126,8 @@ public final class Lexer {
             lexEscape();
         else if(peek("'")) // invalid ' as character
             throw new ParseException("missing/invalid single quotation in character literal", chars.index);
-        else if(peek(".")) // valid character
-            match("."); // match any next character
+        else if(peek("[^\n\r]")) // valid character (no spanning multiple lines)
+            match("[^\n\r]"); // match any next character
         else
             throw new ParseException("character literal cannot span multiple lines", chars.index);
 
@@ -151,8 +149,8 @@ public final class Lexer {
         while(!peek("\"")) {
             if(peek("\\\\"))  // escape characters
                 lexEscape();
-            else if(peek(".")) // valid character
-                match("."); // match any next character
+            else if(peek("[^\n\r]")) // valid character
+                match("[^\n\r]"); // match any next character
             else
                 throw new ParseException("string literal cannot span multiple lines", chars.index);
         }
@@ -184,9 +182,9 @@ public final class Lexer {
         else if(peek("&", "&"))
             match("&", "&");
         // ||
-        else if(peek("|", "|"))
-            match("|", "|");
-        else if(peek(".")) // should NOT include whitespace characters
+        else if(peek("\\|", "\\|"))
+            match("\\|", "\\|");
+        else if(peek(".")) // should NOT include whitespace characters (parsed out earlier - don't worry about it here)
             match("."); // match whatever other character there is
 
         return chars.emit(Token.Type.OPERATOR);
