@@ -127,7 +127,10 @@ public class LexerTests {
                 Arguments.of("Return", "'\r'", false), // spans multiple lines
                 Arguments.of("Backspace", "'\b'", true), // does not span multiple lines
                 Arguments.of("Tab", "'\t'", true), // does not span multiple lines
-                Arguments.of("Space", "' '", true) // Does not span multiple lines
+                Arguments.of("Space", "' '", true), // Does not span multiple lines
+                // Form Feed // Vertical Tab
+                Arguments.of("Form feed", "'\f'", false), // spans multiple lines
+                Arguments.of("Vertical Tab", "'\u000B'", false) // spans multiple lines
         );
     }
 
@@ -179,7 +182,11 @@ public class LexerTests {
                 Arguments.of("Newline Escape", "\"Hello,\\nWorld\"", true),
                 Arguments.of("Newline in Java", "\"Hello,\nWorld\"", false),
                 Arguments.of("Unterminated", "\"unterminated", false),
-                Arguments.of("Invalid Escape", "\"invalid\\escape\"", false)
+                Arguments.of("Invalid Escape", "\"invalid\\escape\"", false),
+                // Form Feed // Vertical Tab
+                Arguments.of("Form feed", "\"Hello\fWorld\"", false), // spans multiple lines
+                Arguments.of("Vertical Tab", "\"Hello\u000BWorld\"", false) // spans multiple lines
+
         );
     }
 
@@ -224,6 +231,7 @@ public class LexerTests {
                 Arguments.of("Newline", "\n", false),
                 Arguments.of("Return", "\r", false),
                 Arguments.of("Tab", "\t", false)
+
         );
     }
 
@@ -302,8 +310,21 @@ public class LexerTests {
                         new Token(Token.Type.STRING, "\"bc\"", 39),
                         new Token(Token.Type.OPERATOR, "&&", 46)
 
+                )),
+                Arguments.of("Example 11 - -.0foo", "-.0foo", Arrays.asList(
+                        new Token(Token.Type.OPERATOR, "-", 0),
+                        new Token(Token.Type.OPERATOR, ".", 1),
+                        new Token(Token.Type.INTEGER, "0", 2),
+                        new Token(Token.Type.IDENTIFIER, "foo", 3)
+                )),
+                Arguments.of("Example 12 - Form Feed and Vertical Tab", "\"HelloWorld\" \r\b\f\nHello\fWorld \u000B", Arrays.asList(
+                        new Token(Token.Type.STRING, "\"HelloWorld\"", 0),
+                        new Token(Token.Type.OPERATOR, "\f", 15),
+                        new Token(Token.Type.IDENTIFIER, "Hello", 17),
+                        new Token(Token.Type.OPERATOR, "\f", 22),
+                        new Token(Token.Type.IDENTIFIER, "World", 23),
+                        new Token(Token.Type.OPERATOR, "\u000B", 29)
                 ))
-                // TODO: test - for number or - for operator
         );
     }
 
