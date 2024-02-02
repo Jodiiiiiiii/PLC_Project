@@ -123,14 +123,14 @@ public class LexerTests {
                 Arguments.of("Escape - Backslash", "'\\\\'", true),
                 Arguments.of("Non-Escaped Backslash", "'\\'", false),
                 // Whitespace characters
-                Arguments.of("Newline", "'\n'", false), // spans multiple lines
-                Arguments.of("Return", "'\r'", false), // spans multiple lines
-                Arguments.of("Backspace", "'\b'", true), // does not span multiple lines
-                Arguments.of("Tab", "'\t'", true), // does not span multiple lines
-                Arguments.of("Space", "' '", true), // Does not span multiple lines
+                Arguments.of("Newline", "'\n'", false), // not permitted in grammar
+                Arguments.of("Return", "'\r'", false), // not permitted in grammar
+                Arguments.of("Backspace", "'\b'", true), // FINE
+                Arguments.of("Tab", "'\t'", true), // FINE
+                Arguments.of("Space", "' '", true), // FINE
                 // Form Feed // Vertical Tab
-                Arguments.of("Form feed", "'\f'", false), // spans multiple lines
-                Arguments.of("Vertical Tab", "'\u000B'", false) // spans multiple lines
+                Arguments.of("Form feed", "'\f'", true), // FINE
+                Arguments.of("Vertical Tab", "'\u000B'", true) // FINE
         );
     }
 
@@ -170,10 +170,10 @@ public class LexerTests {
                 Arguments.of("Escape - Backslash", "\"ab\\\\cd\"", true),
                 Arguments.of("Non-escaped Backslash", "\"ab\\cd\"", false),
                 // Whitespace Characters
-                Arguments.of("Newline", "\"ab\ncd\"", false), // spans multiple lines
-                Arguments.of("Return", "\"ab\rcd\"", false), // spans multiple lines
-                Arguments.of("Backspace", "\"ab\bcd\"", true), // does not span multiple lines
-                Arguments.of("Tab", "\"ab\tcd\"", true), // does not span multiple lines
+                Arguments.of("Newline", "\"ab\ncd\"", false), // not permitted in grammar
+                Arguments.of("Return", "\"ab\rcd\"", false), // not permitted in grammar
+                Arguments.of("Backspace", "\"ab\bcd\"", true), // FINE
+                Arguments.of("Tab", "\"ab\tcd\"", true), // FINE
                 Arguments.of("Space", "\"abcd\"", true),
                 Arguments.of("Many Spaces", "\"ab       cd\"", true),
                 Arguments.of("Only Space", "\" \"", true),
@@ -184,8 +184,8 @@ public class LexerTests {
                 Arguments.of("Unterminated", "\"unterminated", false),
                 Arguments.of("Invalid Escape", "\"invalid\\escape\"", false),
                 // Form Feed // Vertical Tab
-                Arguments.of("Form feed", "\"Hello\fWorld\"", false), // spans multiple lines
-                Arguments.of("Vertical Tab", "\"Hello\u000BWorld\"", false) // spans multiple lines
+                Arguments.of("Form feed", "\"Hello\fWorld\"", true), // FINE
+                Arguments.of("Vertical Tab", "\"Hello\u000BWorld\"", true) // FINE
 
         );
     }
@@ -195,6 +195,7 @@ public class LexerTests {
     void testOperator(String test, String input, boolean success) {
         //this test requires our lex() method, since that's where whitespace is handled.
         test(input, List.of(new Token(Token.Type.OPERATOR, input, 0)), success);
+        System.out.println("Return1123123 \r Return2 |");
     }
 
     private static Stream<Arguments> testOperator() {
@@ -372,7 +373,7 @@ public class LexerTests {
     @Test
     void testException6() {
         ParseException exception = Assertions.assertThrows(ParseException.class,
-                () -> new Lexer("'\r'").lex());
+                () -> new Lexer("'\n'").lex()); // was \r - but this is actually FINE
         Assertions.assertEquals(1, exception.getIndex());
     }
 

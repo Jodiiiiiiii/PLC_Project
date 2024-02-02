@@ -126,8 +126,8 @@ public final class Lexer {
             lexEscape();
         else if(peek("'")) // invalid ' as character
             throw new ParseException("missing/invalid single quotation in character literal", chars.index);
-        else if(peek("[^\n\r\f\u000B]")) // valid character (no spanning multiple lines)
-            match("[^\n\r\f\u000B]"); // match any next character
+        else if(peek("[^\n\r]")) // valid character (no spanning multiple lines)
+            match("[^\n\r]"); // match any next character
         else
             throw new ParseException("character literal cannot span multiple lines", chars.index);
 
@@ -149,8 +149,8 @@ public final class Lexer {
         while(!peek("\"")) {
             if(peek("\\\\"))  // escape characters
                 lexEscape();
-            else if(peek("[^\n\r\f\u000B]")) // valid character (does not span multiple lines)
-                match("[^\n\r\f\u000B]"); // match any next character (does not span multiple lines)
+            else if(peek("[^\n\r]")) // valid character (does not span multiple lines)
+                match("[^\n\r]"); // match any next character (does not span multiple lines)
             else
                 throw new ParseException("string literal cannot span multiple lines", chars.index);
         }
