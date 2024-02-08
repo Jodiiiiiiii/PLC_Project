@@ -1,6 +1,11 @@
 package plc.project;
 
+// new import statements
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -145,7 +150,10 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expression parseExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        //throw new UnsupportedOperationException(); //TODO
+
+        // temp
+        return parsePrimaryExpression();
     }
 
     /**
@@ -183,7 +191,127 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expression parsePrimaryExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        // LITERALS
+        if(peek("NIL")) // NIL - null
+        {
+            match("NIL");
+
+            return new Ast.Expression.Literal(null);
+        }
+        else if(peek("TRUE")) // TRUE - boolean
+        {
+            match("TRUE");
+
+            return new Ast.Expression.Literal(true);
+        }
+        else if(peek("FALSE")) // FALSE - boolean
+        {
+            match("FALSE");
+
+            return new Ast.Expression.Literal(false);
+        }
+        else if(peek(Token.Type.INTEGER)) { // integer
+            BigInteger literal = new BigInteger(tokens.get(0).getLiteral());
+            match(Token.Type.INTEGER);
+
+            return new Ast.Expression.Literal(literal);
+        }
+        else if(peek(Token.Type.DECIMAL)) { // decimal
+            BigDecimal literal = new BigDecimal(tokens.get(0).getLiteral());
+            match(Token.Type.DECIMAL);
+
+            return new Ast.Expression.Literal(literal);
+        }
+        else if(peek(Token.Type.CHARACTER)) {
+            String literal = tokens.get(0).getLiteral().substring(1, 2); // ignore single quotes
+            // handle escape characters
+            literal = handleEscapes(literal);
+
+            match(Token.Type.CHARACTER);
+
+            return new Ast.Expression.Literal(literal.charAt(0)); // convert string to char
+        }
+        else if(peek(Token.Type.STRING)) {
+            String literal = tokens.get(0).getLiteral().substring(1, tokens.get(0).getLiteral().length()-1);
+            literal = handleEscapes(literal);
+
+            match(Token.Type.STRING);
+
+            return new Ast.Expression.Literal(literal);
+        }
+        else if(peek("(")) // expression grouping
+        {
+            // consume matched open parentheses
+            match("(");
+
+            // parse grouped expression
+            Ast.Expression.Group group = new Ast.Expression.Group(parseExpression()); // recursive call to expression
+
+            // check for matched closing parentheses
+            if(!peek(")")) // invalid grouping
+                throw new ParseException("invalid expression grouping - closing parentheses expected", tokens.get(tokens.index).getIndex());
+            match(")");
+        }
+        else if(peek(Token.Type.IDENTIFIER, "(")) // function call
+        {
+            // function name (identifier)
+            String funName = tokens.get(0).getLiteral();
+            match(Token.Type.IDENTIFIER, "(");
+
+            // arguments
+            List<Ast.Expression> arguments = new ArrayList<>();
+            if(!peek(")")) // check for first argument
+                arguments.add(parseExpression());
+            while(!peek(")")) // additional arguments
+            {
+                // comma to separate arguments
+                if(!peek(",")) // invalid argument separation
+                    throw new ParseException("invalid function call - comma expected", tokens.get(tokens.index).getIndex());
+                match(",");
+
+                arguments.add(parseExpression());
+            }
+
+            return new Ast.Expression.Function(funName, arguments);
+        }
+        else if(peek(Token.Type.IDENTIFIER, "[")) // access list
+        {
+            // name (identifier)
+            String name = tokens.get(0).getLiteral();
+            match(Token.Type.IDENTIFIER, "[");
+
+            // offset (expression)
+            Ast.Expression offset = parseExpression();
+
+            // closing square bracket
+            if(!match("]"))
+                throw new ParseException("invalid list access - expected closing square bracket", tokens.get(tokens.index).getIndex());
+            match("]");
+
+            return new Ast.Expression.Access(Optional.of(offset), name); // generate access object for list
+        }
+        else if(peek(Token.Type.IDENTIFIER)) // access identifier
+        {
+            // name (identifier)
+            String name = tokens.get(0).getLiteral();
+            match(Token.Type.IDENTIFIER);
+
+            return new Ast.Expression.Access(Optional.empty(), name);
+        }
+
+        throw new ParseException("invalid primary expression - no literal, group, function, or access found", 1);
+    }
+
+    private String handleEscapes(String literal) {
+        // handle escape characters
+        literal = literal.replace("\\\\", "\\");
+        literal = literal.replace("\\b", "\b");
+        literal = literal.replace("\\n", "\n");
+        literal = literal.replace("\\r", "\r");
+        literal = literal.replace("\\t", "\t");
+        literal = literal.replace("\\\"", "\"");
+        literal = literal.replace("\\'", "'");
+        return literal;
     }
 
     /**
@@ -197,7 +325,24 @@ public final class Parser {
      * {@code peek(Token.Type.IDENTIFIER)} and {@code peek("literal")}.
      */
     private boolean peek(Object... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        for (int i = 0; i < patterns.length; i++)
+        {
+            if (!tokens.has(i)){
+                return false; // fail if that many tokens do not remain
+            } else if (patterns[i] instanceof Token.Type) {
+                if (patterns[i] != tokens.get(i).getType()) {
+                    return false; // fail if token type does not match expected
+                }
+            } else if (patterns[i] instanceof String) {
+                if (!patterns[i].equals(tokens.get(i).getLiteral())) {
+                    return false; // fail if literal does not match expected
+                }
+            } else {
+                // invalid object class type input (i.e. not Token.Type or String - should never occur)
+                throw new AssertionError("Invalid pattern object: " +  patterns[i].getClass());
+            }
+        }
+        return true; // true if did not fail
     }
 
     /**
@@ -205,7 +350,14 @@ public final class Parser {
      * and advances the token stream.
      */
     private boolean match(Object... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        boolean peek = peek(patterns);
+        // advance token stream for each individual match
+        if (peek) {
+            for (int i = 0; i < patterns.length; i++) {
+                tokens.advance();
+            }
+        }
+        return peek; // return same return as peek
     }
 
     private static final class TokenStream {
