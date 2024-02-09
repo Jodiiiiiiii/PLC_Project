@@ -11,13 +11,13 @@ import java.util.Optional;
  * The parser takes the sequence of tokens emitted by the lexer and turns that
  * into a structured representation of the program, called the Abstract Syntax
  * Tree (AST).
- *
+ * *
  * The parser has a similar architecture to the lexer, just with {@link Token}s
  * instead of characters. As before, {@link #peek(Object...)} and {@link
  * #match(Object...)} are helpers to make the implementation easier.
- *
+ * *
  * This type of parser is called <em>recursive descent</em>. Each rule in our
- * grammar will have it's own function, and reference to other rules correspond
+ * grammar will have its own function, and reference to other rules correspond
  * to calling that functions.
  */
 public final class Parser {
@@ -72,7 +72,58 @@ public final class Parser {
      * next tokens start a method, aka {@code FUN}.
      */
     public Ast.Function parseFunction() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("FUN");
+
+        // function name
+        if(!peek(Token.Type.IDENTIFIER))
+            throw new ParseException("Expected Function Name - invalid function definition", getErrorIndex());
+        String name = tokens.get(0).getLiteral();
+        match(Token.Type.IDENTIFIER);
+
+        // ( - required
+        if(!peek("("))
+            throw new ParseException("Missing ) - invalid function definition", getErrorIndex());
+        match("(");
+
+        // arguments
+        List<String> parameters = new ArrayList<>();
+        if(!peek(")")) // check for first argument (no comma)
+        {
+            if(!peek(Token.Type.IDENTIFIER))
+                throw new ParseException("Expected ) or Identifier - invalid function definition", getErrorIndex());
+            parameters.add(tokens.get(0).getLiteral());
+            match(Token.Type.IDENTIFIER);
+        }
+        while(!peek(")")) // additional arguments
+        {
+            // comma - required to separate arguments
+            if(!peek(",")) // invalid argument separation
+                throw new ParseException("Expected , for more arguments or ) to close function definition", getErrorIndex());
+            match(",");
+
+            // argument - required since not closed with ")"
+            if(!peek(Token.Type.IDENTIFIER))
+                throw new ParseException("Expected Identifier - invalid function definition", getErrorIndex());
+            parameters.add(tokens.get(0).getLiteral());
+        }
+
+        // ) - required
+        match(")"); // guaranteed since we broke out of loop
+
+        // DO - required
+        if(!peek("DO"))
+            throw new ParseException("Expected DO - invalid function definition", getErrorIndex());
+        match("DO");
+
+        // block
+        List<Ast.Statement> statements = parseBlock();
+
+        // END - required
+        if(!peek("END"))
+            throw new ParseException("Expected END - invalid function definition", getErrorIndex());
+        match("END");
+
+        return new Ast.Function(name, parameters, statements);
     }
 
     /**
@@ -555,7 +606,7 @@ public final class Parser {
      * instead it is either a {@link Token.Type}, which matches if the token's
      * type is the same, or a {@link String}, which matches if the token's
      * literal is the same.
-     *
+     * *
      * In other words, {@code Token(IDENTIFIER, "literal")} is matched by both
      * {@code peek(Token.Type.IDENTIFIER)} and {@code peek("literal")}.
      */
