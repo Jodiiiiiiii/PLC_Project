@@ -32,7 +32,21 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     public Ast.Source parseSource() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        // globals
+        List<Ast.Global> globals = new ArrayList<>();
+        while(peek("LIST") | peek("VAR") | peek("VAL"))
+            globals.add(parseGlobal());
+
+        // functions
+        List<Ast.Function> functions = new ArrayList<>();
+        while(peek("FUN"))
+            functions.add(parseFunction());
+
+        // make sure remaining file is empty
+        if(tokens.has(0))
+            throw new ParseException("Expected end of file - only globals and functions permitted in source file", getErrorIndex());
+
+        return new Ast.Source(globals, functions);
     }
 
     /**
@@ -46,7 +60,7 @@ public final class Parser {
             return parseMutable();
         else if(peek("VAL"))
             return parseImmutable();
-        else
+        else // should never be reached
             throw new ParseException("Expected LIST, VAR, or VAL - invalid global declaration", getErrorIndex());
     }
 
