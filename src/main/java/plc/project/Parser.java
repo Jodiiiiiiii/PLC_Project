@@ -710,7 +710,7 @@ public final class Parser {
             return prevToken.getIndex() + prevToken.getLiteral().length(); // no subsequent token, but yes previous term
         }
 
-        return 0; // no tokens (previous or subsequent)
+        return 0; // no tokens (previous or subsequent); should never be reached (handled by parseSource())
 
     }
 
