@@ -61,7 +61,7 @@ public final class Parser {
         else if(peek("VAL"))
             return parseImmutable();
         else // should never be reached
-            throw new ParseException("Expected LIST, VAR, or VAL : invalid global declaration", getErrorIndex());
+            throw new ParseException("Expected \"LIST\", \"VAR\", or \"VAL\" : invalid global declaration", getErrorIndex());
     }
 
     /**
@@ -79,12 +79,12 @@ public final class Parser {
 
         // = required
         if(!peek("="))
-            throw new ParseException("Expected = : invalid list definition", getErrorIndex());
+            throw new ParseException("Expected '=' : invalid list definition", getErrorIndex());
         match("=");
 
         // [ required
         if(!peek("["))
-            throw new ParseException("Expected [ : invalid list definition", getErrorIndex());
+            throw new ParseException("Expected '[' : invalid list definition", getErrorIndex());
         match("[");
 
         // first expression
@@ -100,12 +100,12 @@ public final class Parser {
 
         // ] - required
         if(!peek("]"))
-            throw new ParseException("Expected ] : invalid list definition", getErrorIndex());
+            throw new ParseException("Expected ']' : invalid list definition", getErrorIndex());
         match("]");
 
         // ; - required
         if(!peek(";"))
-            throw new ParseException("Expected ; : invalid list definition", getErrorIndex());
+            throw new ParseException("Expected ';' : invalid list definition", getErrorIndex());
         match(";");
 
         return new Ast.Global(name, true, Optional.of(new Ast.Expression.PlcList(expressions)));
@@ -132,7 +132,7 @@ public final class Parser {
 
             // ; - required
             if(!peek(";"))
-                throw new ParseException("Expected ; : invalid mutable definition/initialization", getErrorIndex());
+                throw new ParseException("Expected ';' : invalid mutable definition/initialization", getErrorIndex());
             match(";");
 
             return new Ast.Global(name, true, Optional.of(value));
@@ -140,7 +140,7 @@ public final class Parser {
 
         // ; - required
         if(!peek(";"))
-            throw new ParseException("Expected ; : invalid mutable definition", getErrorIndex());
+            throw new ParseException("Expected ';' : invalid mutable definition", getErrorIndex());
         match(";");
 
         return new Ast.Global(name, true, Optional.empty());
@@ -161,7 +161,7 @@ public final class Parser {
 
         // = - required
         if(!peek("="))
-            throw new ParseException("Expected = : invalid immutable definition", getErrorIndex());
+            throw new ParseException("Expected '=' : invalid immutable definition", getErrorIndex());
         match("=");
 
         // expression
@@ -169,7 +169,7 @@ public final class Parser {
 
         // ; - required
         if(!peek(";"))
-            throw new ParseException("Expected ; : invalid immutable definition", getErrorIndex());
+            throw new ParseException("Expected ';' : invalid immutable definition", getErrorIndex());
         match(";");
 
         return new Ast.Global(name, false, Optional.of(value));
@@ -190,7 +190,7 @@ public final class Parser {
 
         // ( - required
         if(!peek("("))
-            throw new ParseException("Missing ) : invalid function definition", getErrorIndex());
+            throw new ParseException("Missing ')' : invalid function definition", getErrorIndex());
         match("(");
 
         // arguments
@@ -198,7 +198,7 @@ public final class Parser {
         if(!peek(")")) // check for first argument (no comma)
         {
             if(!peek(Token.Type.IDENTIFIER))
-                throw new ParseException("Expected ) or Identifier : invalid function definition", getErrorIndex());
+                throw new ParseException("Expected ')' or Identifier : invalid function definition", getErrorIndex());
             parameters.add(tokens.get(0).getLiteral());
             match(Token.Type.IDENTIFIER);
         }
@@ -206,7 +206,7 @@ public final class Parser {
         {
             // comma - required to separate arguments
             if(!peek(",")) // invalid argument separation
-                throw new ParseException("Expected , (for more arguments) or ) (to close function definition)", getErrorIndex());
+                throw new ParseException("Expected ',' (for more arguments) or ')' (to close function definition)", getErrorIndex());
             match(",");
 
             // argument - required since not closed with ")"
@@ -220,7 +220,7 @@ public final class Parser {
 
         // DO - required
         if(!peek("DO"))
-            throw new ParseException("Expected DO : invalid function definition", getErrorIndex());
+            throw new ParseException("Expected \"DO\" : invalid function definition", getErrorIndex());
         match("DO");
 
         // block
@@ -228,7 +228,7 @@ public final class Parser {
 
         // END - required
         if(!peek("END"))
-            throw new ParseException("Expected END : invalid function definition", getErrorIndex());
+            throw new ParseException("Expected \"END\" : invalid function definition", getErrorIndex());
         match("END");
 
         return new Ast.Function(name, parameters, statements);
@@ -277,7 +277,7 @@ public final class Parser {
 
                 // check for missing semicolon
                 if(!peek(";"))
-                    throw new ParseException("Expected ; : invalid assignment statement", getErrorIndex());
+                    throw new ParseException("Expected ';' : invalid assignment statement", getErrorIndex());
                 match(";");
 
                 return new Ast.Statement.Assignment(left, right);
@@ -285,7 +285,7 @@ public final class Parser {
 
             // check for missing semicolon
             if(!peek(";"))
-                throw new ParseException("Expected ; : invalid expression statement", getErrorIndex());
+                throw new ParseException("Expected ';' : invalid expression statement", getErrorIndex());
             match(";");
 
             // no assignment, so it is an expression
@@ -316,7 +316,7 @@ public final class Parser {
 
             // check for semicolon - required
             if(!peek(";"))
-                throw new ParseException("Expected ; : invalid declaration statement", getErrorIndex());
+                throw new ParseException("Expected ';' : invalid declaration statement", getErrorIndex());
             match(";");
 
             // return declaration with initialization
@@ -325,7 +325,7 @@ public final class Parser {
 
         // check for semicolon - required
         if(!peek(";"))
-            throw new ParseException("Expected ; : invalid declaration statement", getErrorIndex());
+            throw new ParseException("Expected ';' : invalid declaration statement", getErrorIndex());
         match(";");
 
         // return declaration without initialization
@@ -345,7 +345,7 @@ public final class Parser {
 
         // DO - required
         if(!peek("DO"))
-            throw new ParseException("Expected DO : invalid if statement", getErrorIndex());
+            throw new ParseException("Expected \"DO\" : invalid if statement", getErrorIndex());
         match("DO");
 
         // if block
@@ -359,7 +359,7 @@ public final class Parser {
 
             // END - required
             if(!peek("END"))
-                throw new ParseException("Expected END : invalid if-else statement", getErrorIndex());
+                throw new ParseException("Expected \"END\" : invalid if-else statement", getErrorIndex());
             match("END");
 
             return new Ast.Statement.If(condition, ifBlock, elseBlock);
@@ -367,7 +367,7 @@ public final class Parser {
 
         // END - required
         if(!peek("END"))
-            throw new ParseException("Expected END : invalid if statement", getErrorIndex());
+            throw new ParseException("Expected \"END\" : invalid if statement", getErrorIndex());
         match("END");
 
         return new Ast.Statement.If(condition, ifBlock, new ArrayList<>()); // empty block for else
@@ -392,13 +392,13 @@ public final class Parser {
 
         // DEFAULT case - required
         if(!peek("DEFAULT"))
-            throw new ParseException("Expected DEFAULT : missing default case in switch statement", getErrorIndex());
+            throw new ParseException("Expected \"DEFAULT\" : missing default case in switch statement", getErrorIndex());
         match("DEFAULT");
         cases.add(new Ast.Statement.Case(Optional.empty(), parseBlock()));
 
         // END - required
         if(!peek("END"))
-            throw new ParseException("Missing END : invalid switch statement", getErrorIndex());
+            throw new ParseException("Missing \"END\" : invalid switch statement", getErrorIndex());
         match("END");
 
         return new Ast.Statement.Switch(condition, cases);
@@ -417,7 +417,7 @@ public final class Parser {
 
         // Colon - required
         if(!peek(":"))
-            throw new ParseException("Expected : : invalid case statement", getErrorIndex());
+            throw new ParseException("Expected ':' : invalid case statement", getErrorIndex());
         match(":");
 
         return new Ast.Statement.Case(Optional.of(value), parseBlock());
@@ -436,7 +436,7 @@ public final class Parser {
 
         // DO - required
         if(!peek("DO"))
-            throw new ParseException("Expected DO : invalid while loop", getErrorIndex());
+            throw new ParseException("Expected \"DO\" : invalid while loop", getErrorIndex());
         match("DO");
 
         // block
@@ -444,7 +444,7 @@ public final class Parser {
 
         // END - required
         if(!peek("END"))
-            throw new ParseException("Expected END : invalid while loop", getErrorIndex());
+            throw new ParseException("Expected \"END\" : invalid while loop", getErrorIndex());
         match("END");
 
         return new Ast.Statement.While(condition, block);
@@ -463,7 +463,7 @@ public final class Parser {
 
         // semicolon - required
         if(!peek(";"))
-            throw new ParseException("Expected ; : invalid return statement", getErrorIndex());
+            throw new ParseException("Expected ';' : invalid return statement", getErrorIndex());
         match(";");
 
         return new Ast.Statement.Return(expr);
@@ -629,7 +629,7 @@ public final class Parser {
 
             // check for matched closing parentheses
             if(!peek(")")) // invalid grouping
-                throw new ParseException("Expected ) : invalid expression grouping", getErrorIndex());
+                throw new ParseException("Expected ')' : invalid expression grouping", getErrorIndex());
             match(")");
 
             return group;
@@ -648,7 +648,7 @@ public final class Parser {
             {
                 // comma to separate arguments
                 if(!peek(",")) // invalid argument separation
-                    throw new ParseException("Expected , : invalid function parameters", getErrorIndex());
+                    throw new ParseException("Expected ',' : invalid function parameters", getErrorIndex());
                 match(",");
 
                 arguments.add(parseExpression());
@@ -668,7 +668,7 @@ public final class Parser {
 
             // closing square bracket
             if(!match("]"))
-                throw new ParseException("Expected ] : invalid list access", getErrorIndex());
+                throw new ParseException("Expected ']' : invalid list access", getErrorIndex());
             match("]");
 
             return new Ast.Expression.Access(Optional.of(offset), name); // generate access object for list
