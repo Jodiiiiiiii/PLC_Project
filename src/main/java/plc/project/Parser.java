@@ -131,7 +131,12 @@ public final class Parser {
      * preceding token indicates the opening a block of statements.
      */
     public List<Ast.Statement> parseBlock() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Statement> statements = new ArrayList<>();
+        while(!peek("END") && !peek("CASE") && !peek("DEFAULT") && !peek("ELSE"))
+        {
+            statements.add(parseStatement());
+        }
+        return statements;
     }
 
     /**
