@@ -89,7 +89,47 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if(peek("LET"))
+            return parseDeclarationStatement();
+        else if(peek("SWITCH"))
+            return parseSwitchStatement();
+        else if(peek("CASE") || peek("DEFAULT"))
+            return parseCaseStatement();
+        else if(peek("IF"))
+            return parseIfStatement();
+        else if(peek("WHILE"))
+            return parseWhileStatement();
+        else if(peek("RETURN"))
+            return parseReturnStatement();
+        else // expression/assignment statement
+        {
+            // left side expression always present for expression/assignment statement
+            Ast.Expression left = parseExpression();
+
+            if(peek("="))
+            {
+                match("=");
+                Ast.Expression right = parseExpression();
+
+                // check for missing semicolon
+                if(!peek(";"))
+                    throw new ParseException("Expected ; - invalid assignment statement", getErrorIndex());
+                match(";");
+
+                return new Ast.Statement.Assignment(left, right);
+            }
+
+            // TODO: should I also be managing whether it is a Statement.Expression or a Statement.Declaration?
+            // TODO: what is exactly the difference?
+            
+            // check for missing semicolon
+            if(!peek(";"))
+                throw new ParseException("Expected ; - invalid expression statement", getErrorIndex());
+            match(";");
+
+            // no assignment, so it is an expression
+            return new Ast.Statement.Expression(left);
+        }
     }
 
     /**
@@ -150,38 +190,95 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expression parseExpression() throws ParseException {
-        //throw new UnsupportedOperationException(); //TODO
-
-        // temp
-        return parsePrimaryExpression();
+        return parseLogicalExpression();
     }
 
     /**
      * Parses the {@code logical-expression} rule.
      */
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression left = parseComparisonExpression(); // gather left expression if not passed as parameter already
+
+        // check for and loop through multiplicative operators
+        if(peek("&&") || peek("||"))
+        {
+            String operator = tokens.get(0).getLiteral(); // gather operator for AST construction
+            match(Token.Type.OPERATOR); // consume operator token
+
+            // start new recursive call for right hand side
+            Ast.Expression right = parseComparisonExpression();
+            // return final binary
+            return new Ast.Expression.Binary(operator, left, right);
+        }
+
+        // else just return left hand expression (non-binary)
+        return left;
     }
 
     /**
      * Parses the {@code comparison-expression} rule.
      */
     public Ast.Expression parseComparisonExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression left = parseAdditiveExpression(); // gather left expression if not passed as parameter already
+
+        // check for and loop through multiplicative operators
+        if(peek(">") || peek("<") || peek("==") || peek("!="))
+        {
+            String operator = tokens.get(0).getLiteral(); // gather operator for AST construction
+            match(Token.Type.OPERATOR); // consume operator token
+
+            // start new recursive call for right hand side
+            Ast.Expression right = parseAdditiveExpression();
+            // return final binary
+            return new Ast.Expression.Binary(operator, left, right);
+        }
+
+        // else just return left hand expression (non-binary)
+        return left;
     }
 
     /**
      * Parses the {@code additive-expression} rule.
      */
     public Ast.Expression parseAdditiveExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression left = parseMultiplicativeExpression(); // gather left expression if not passed as parameter already
+
+        // check for and loop through multiplicative operators
+        if(peek("+") || peek("-"))
+        {
+            String operator = tokens.get(0).getLiteral(); // gather operator for AST construction
+            match(Token.Type.OPERATOR); // consume operator token
+
+            // start new recursive call for right hand side
+            Ast.Expression right = parseMultiplicativeExpression();
+            // return final binary
+            return new Ast.Expression.Binary(operator, left, right);
+        }
+
+        // else just return left hand expression (non-binary)
+        return left;
     }
 
     /**
      * Parses the {@code multiplicative-expression} rule.
      */
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression left = parsePrimaryExpression(); // gather left expression if not passed as parameter already
+
+        // check for and loop through multiplicative operators
+        if(peek("*") || peek("/") || peek("^"))
+        {
+            String operator = tokens.get(0).getLiteral(); // gather operator for AST construction
+            match(Token.Type.OPERATOR); // consume operator token
+
+            // start new recursive call for right hand side
+            Ast.Expression right = parsePrimaryExpression();
+            // return final binary
+            return new Ast.Expression.Binary(operator, left, right);
+        }
+
+        // else just return left hand expression (non-binary)
+        return left;
     }
 
     /**
@@ -249,8 +346,10 @@ public final class Parser {
 
             // check for matched closing parentheses
             if(!peek(")")) // invalid grouping
-                throw new ParseException("invalid expression grouping - closing parentheses expected", tokens.get(tokens.index).getIndex());
+                throw new ParseException("Expected ) - invalid expression grouping", getErrorIndex());
             match(")");
+
+            return group;
         }
         else if(peek(Token.Type.IDENTIFIER, "(")) // function call
         {
@@ -266,7 +365,7 @@ public final class Parser {
             {
                 // comma to separate arguments
                 if(!peek(",")) // invalid argument separation
-                    throw new ParseException("invalid function call - comma expected", tokens.get(tokens.index).getIndex());
+                    throw new ParseException("Expected , - invalid function parameters", getErrorIndex());
                 match(",");
 
                 arguments.add(parseExpression());
@@ -285,7 +384,7 @@ public final class Parser {
 
             // closing square bracket
             if(!match("]"))
-                throw new ParseException("invalid list access - expected closing square bracket", tokens.get(tokens.index).getIndex());
+                throw new ParseException("Expected ] - invalid list access", getErrorIndex());
             match("]");
 
             return new Ast.Expression.Access(Optional.of(offset), name); // generate access object for list
@@ -298,8 +397,10 @@ public final class Parser {
 
             return new Ast.Expression.Access(Optional.empty(), name);
         }
-
-        throw new ParseException("invalid primary expression - no literal, group, function, or access found", 1);
+        else
+        {
+            throw new ParseException("Expected valid primary expression - no literal, group, function, or access found", getErrorIndex());
+        }
     }
 
     private String handleEscapes(String literal) {
@@ -312,6 +413,21 @@ public final class Parser {
         literal = literal.replace("\\\"", "\"");
         literal = literal.replace("\\'", "'");
         return literal;
+    }
+
+    private int getErrorIndex(){
+        if (tokens.has(0)) {
+            return tokens.get(0).getIndex(); // valid next token, just invalid parsing
+        }
+
+        if(tokens.has(-1))
+        {
+            Token prevToken = tokens.get(-1);
+            return prevToken.getIndex() + prevToken.getLiteral().length(); // no subsequent token, but yes previous term
+        }
+
+        return 0; // no tokens (previous or subsequent)
+
     }
 
     /**
