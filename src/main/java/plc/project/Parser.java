@@ -653,6 +653,7 @@ public final class Parser {
 
                 arguments.add(parseExpression());
             }
+            match(")"); // guaranteed when leaving while loop
 
             return new Ast.Expression.Function(funName, arguments);
         }
