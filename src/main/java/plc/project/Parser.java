@@ -119,9 +119,6 @@ public final class Parser {
                 return new Ast.Statement.Assignment(left, right);
             }
 
-            // TODO: should I also be managing whether it is a Statement.Expression or a Statement.Declaration?
-            // TODO: what is exactly the difference?
-            
             // check for missing semicolon
             if(!peek(";"))
                 throw new ParseException("Expected ; - invalid expression statement", getErrorIndex());
@@ -138,7 +135,37 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("LET");
+
+        // identifier
+        if(!peek(Token.Type.IDENTIFIER))
+            throw new ParseException("Expected identifier - invalid declaration statement", getErrorIndex());
+        String name = tokens.get(0).getLiteral();
+        match(Token.Type.IDENTIFIER);
+
+        // Assignment - optional
+        if(peek("="))
+        {
+            match("=");
+
+            Ast.Expression value = parseExpression();
+
+            // check for semicolon - required
+            if(!peek(";"))
+                throw new ParseException("Expected ; - invalid declaration statement", getErrorIndex());
+            match(";");
+
+            // return declaration with initialization
+            return new Ast.Statement.Declaration(name, Optional.of(value));
+        }
+
+        // check for semicolon - required
+        if(!peek(";"))
+            throw new ParseException("Expected ; - invalid declaration statement", getErrorIndex());
+        match(";");
+
+        // return declaration without initialization
+        return new Ast.Statement.Declaration(name, Optional.empty());
     }
 
     /**
@@ -147,7 +174,39 @@ public final class Parser {
      * {@code IF}.
      */
     public Ast.Statement.If parseIfStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("IF");
+
+        // if expression
+        Ast.Expression condition = parseExpression();
+
+        // DO - required
+        if(!peek("DO"))
+            throw new ParseException("Expected DO - invalid if statement", getErrorIndex());
+        match("DO");
+
+        // if block
+        List<Ast.Statement> ifBlock = parseBlock();
+
+        // else block - optional
+        if(peek("ELSE"))
+        {
+            match("ELSE");
+            List<Ast.Statement> elseBlock = parseBlock();
+
+            // END - required
+            if(!peek("END"))
+                throw new ParseException("Expected END - invalid if-else statement", getErrorIndex());
+            match("END");
+
+            return new Ast.Statement.If(condition, ifBlock, elseBlock);
+        }
+
+        // END - required
+        if(!peek("END"))
+            throw new ParseException("Expected END - invalid if statement", getErrorIndex());
+        match("END");
+
+        return new Ast.Statement.If(condition, ifBlock, new ArrayList<>()); // empty block for else
     }
 
     /**
@@ -156,7 +215,29 @@ public final class Parser {
      * {@code SWITCH}.
      */
     public Ast.Statement.Switch parseSwitchStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("SWITCH");
+
+        Ast.Expression condition = parseExpression();
+
+        // iterate through cases
+        List<Ast.Statement.Case> cases = new ArrayList<>();
+        while(peek("CASE"))
+        {
+            cases.add(parseCaseStatement());
+        }
+
+        // DEFAULT case - required
+        if(!peek("DEFAULT"))
+            throw new ParseException("Expected DEFAULT - missing default case in switch statement", getErrorIndex());
+        match("DEFAULT");
+        cases.add(new Ast.Statement.Case(Optional.empty(), parseBlock()));
+
+        // END - required
+        if(!peek("END"))
+            throw new ParseException("Missing END - invalid switch statement", getErrorIndex());
+        match("END");
+
+        return new Ast.Statement.Switch(condition, cases);
     }
 
     /**
@@ -165,7 +246,17 @@ public final class Parser {
      * default block of a switch statement, aka {@code CASE} or {@code DEFAULT}.
      */
     public Ast.Statement.Case parseCaseStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("CASE");
+
+        // expression value - required
+        Ast.Expression value = parseExpression();
+
+        // Colon - required
+        if(!peek(":"))
+            throw new ParseException("Expected : in case statement", getErrorIndex());
+        match(":");
+
+        return new Ast.Statement.Case(Optional.of(value), parseBlock());
     }
 
     /**
@@ -174,7 +265,25 @@ public final class Parser {
      * {@code WHILE}.
      */
     public Ast.Statement.While parseWhileStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("WHILE");
+
+        // condition - required
+        Ast.Expression condition = parseExpression();
+
+        // DO - required
+        if(!peek("DO"))
+            throw new ParseException("Expected DO - invalid while loop", getErrorIndex());
+        match("DO");
+
+        // block
+        List<Ast.Statement> block = parseBlock();
+
+        // END - required
+        if(!peek("END"))
+            throw new ParseException("Expected END - invalid while loop", getErrorIndex());
+        match("END");
+
+        return new Ast.Statement.While(condition, block);
     }
 
     /**
@@ -183,7 +292,17 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("RETURN");
+
+        // expression - required
+        Ast.Expression expr = parseExpression();
+
+        // semicolon - required
+        if(!peek(";"))
+            throw new ParseException("Expected ; - invalid return statement", getErrorIndex());
+        match(";");
+
+        return new Ast.Statement.Return(expr);
     }
 
     /**
