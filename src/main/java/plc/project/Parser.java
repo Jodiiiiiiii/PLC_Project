@@ -40,7 +40,14 @@ public final class Parser {
      * next tokens start a global, aka {@code LIST|VAL|VAR}.
      */
     public Ast.Global parseGlobal() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if(peek("LIST"))
+            return parseList();
+        else if(peek("VAR"))
+            return parseMutable();
+        else if(peek("VAL"))
+            return parseImmutable();
+        else
+            throw new ParseException("Expected LIST, VAR, or VAL - invalid global declaration", getErrorIndex());
     }
 
     /**
@@ -48,7 +55,46 @@ public final class Parser {
      * next token declares a list, aka {@code LIST}.
      */
     public Ast.Global parseList() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("LIST");
+
+        // name - identifier required
+        if(!peek(Token.Type.IDENTIFIER))
+            throw new ParseException("Expected Identifier - invalid list definition", getErrorIndex());
+        String name = tokens.get(0).getLiteral();
+        match(Token.Type.IDENTIFIER);
+
+        // = required
+        if(!peek("="))
+            throw new ParseException("Expected = - invalid list definition", getErrorIndex());
+        match("=");
+
+        // [ required
+        if(!peek("["))
+            throw new ParseException("Expected [ - invalid list definition", getErrorIndex());
+        match("[");
+
+        // first expression
+        List<Ast.Expression> expressions = new ArrayList<>();
+        expressions.add(parseExpression());
+
+        // additional expressions (comma separated
+        while(peek(","))
+        {
+            match(",");
+            expressions.add(parseExpression());
+        }
+
+        // ] - required
+        if(!peek("]"))
+            throw new ParseException("Expected ] - invalid list definition", getErrorIndex());
+        match("]");
+
+        // ; - required
+        if(!peek(";"))
+            throw new ParseException("Expected ; - invalid list definition", getErrorIndex());
+        match(";");
+
+        return new Ast.Global(name, true, Optional.of(new Ast.Expression.PlcList(expressions)));
     }
 
     /**
@@ -56,7 +102,34 @@ public final class Parser {
      * next token declares a mutable global variable, aka {@code VAR}.
      */
     public Ast.Global parseMutable() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("VAR");
+
+        // name - identifier required
+        if(!peek(Token.Type.IDENTIFIER))
+            throw new ParseException("Expected Identifier - invalid mutable definition", getErrorIndex());
+        String name = tokens.get(0).getLiteral();
+        match(Token.Type.IDENTIFIER);
+
+        // = - optional
+        if(peek("="))
+        {
+            match("=");
+            Ast.Expression value = parseExpression();
+
+            // ; - required
+            if(!peek(";"))
+                throw new ParseException("Expected ; - invalid mutable definition/initialization", getErrorIndex());
+            match(";");
+
+            return new Ast.Global(name, true, Optional.of(value));
+        }
+
+        // ; - required
+        if(!peek(";"))
+            throw new ParseException("Expected ; - invalid mutable definition", getErrorIndex());
+        match(";");
+
+        return new Ast.Global(name, true, Optional.empty());
     }
 
     /**
@@ -64,7 +137,28 @@ public final class Parser {
      * next token declares an immutable global variable, aka {@code VAL}.
      */
     public Ast.Global parseImmutable() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("VAL");
+
+        // name - identifier required
+        if(!peek(Token.Type.IDENTIFIER))
+           throw new ParseException("Expected Identifier - invalid immutable definition", getErrorIndex());
+        String name = tokens.get(0).getLiteral();
+        match(Token.Type.IDENTIFIER);
+
+        // = - required
+        if(!peek("="))
+            throw new ParseException("Expected = - invalid immutable definition", getErrorIndex());
+        match("=");
+
+        // expression
+        Ast.Expression value = parseExpression();
+
+        // ; - required
+        if(!peek(";"))
+            throw new ParseException("Expected ; - invalid immutable definition", getErrorIndex());
+        match(";");
+
+        return new Ast.Global(name, false, Optional.of(value));
     }
 
     /**
