@@ -392,6 +392,54 @@ final class ParserTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
                                 new Ast.Expression.Access(Optional.empty(), "expr2")
                         )
+                ),
+                Arguments.of("Priority: Addition Multiplication",
+                        Arrays.asList(
+                                //expr1 + expr2 * expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "+", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                                new Token(Token.Type.OPERATOR, "*", 14),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                        ),
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                new Ast.Expression.Binary("*",
+                                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expression.Access(Optional.empty(), "expr3"))
+                        )
+                ),
+                Arguments.of("Priority: And Or",
+                        Arrays.asList(
+                                //expr1 && expr2 || expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "&&", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                                new Token(Token.Type.OPERATOR, "||", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 18)
+                        ),
+                        new Ast.Expression.Binary("||",
+                                new Ast.Expression.Binary("&&",
+                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                        new Ast.Expression.Access(Optional.empty(), "expr2")),
+                                new Ast.Expression.Access(Optional.empty(), "expr3")
+                        )
+                ),
+                Arguments.of("Priority: Equals Not Equals",
+                        Arrays.asList(
+                                //expr1 && expr2 || expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "==", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                                new Token(Token.Type.OPERATOR, "!=", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 18)
+                        ),
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Binary("==",
+                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                        new Ast.Expression.Access(Optional.empty(), "expr2")),
+                                new Ast.Expression.Access(Optional.empty(), "expr3")
+                        )
                 )
         );
     }
