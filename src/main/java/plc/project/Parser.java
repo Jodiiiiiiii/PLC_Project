@@ -480,10 +480,10 @@ public final class Parser {
      * Parses the {@code logical-expression} rule.
      */
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        Ast.Expression left = parseComparisonExpression(); // gather left expression if not passed as parameter already
+        Ast.Expression expr = parseComparisonExpression(); // gather left expression if not passed as parameter already
 
         // check for and loop through multiplicative operators
-        if(peek("&&") || peek("||"))
+        while(peek("&&") || peek("||"))
         {
             String operator = tokens.get(0).getLiteral(); // gather operator for AST construction
             match(Token.Type.OPERATOR); // consume operator token
@@ -491,21 +491,21 @@ public final class Parser {
             // start new recursive call for right hand side
             Ast.Expression right = parseComparisonExpression();
             // return final binary
-            return new Ast.Expression.Binary(operator, left, right);
+            expr = new Ast.Expression.Binary(operator, expr, right);
         }
 
         // else just return left hand expression (non-binary)
-        return left;
+        return expr;
     }
 
     /**
      * Parses the {@code comparison-expression} rule.
      */
     public Ast.Expression parseComparisonExpression() throws ParseException {
-        Ast.Expression left = parseAdditiveExpression(); // gather left expression if not passed as parameter already
+        Ast.Expression expr = parseAdditiveExpression(); // gather left expression if not passed as parameter already
 
         // check for and loop through multiplicative operators
-        if(peek(">") || peek("<") || peek("==") || peek("!="))
+        while(peek(">") || peek("<") || peek("==") || peek("!="))
         {
             String operator = tokens.get(0).getLiteral(); // gather operator for AST construction
             match(Token.Type.OPERATOR); // consume operator token
@@ -513,21 +513,21 @@ public final class Parser {
             // start new recursive call for right hand side
             Ast.Expression right = parseAdditiveExpression();
             // return final binary
-            return new Ast.Expression.Binary(operator, left, right);
+            expr = new Ast.Expression.Binary(operator, expr, right);
         }
 
         // else just return left hand expression (non-binary)
-        return left;
+        return expr;
     }
 
     /**
      * Parses the {@code additive-expression} rule.
      */
     public Ast.Expression parseAdditiveExpression() throws ParseException {
-        Ast.Expression left = parseMultiplicativeExpression(); // gather left expression if not passed as parameter already
+        Ast.Expression expr = parseMultiplicativeExpression(); // gather left expression if not passed as parameter already
 
         // check for and loop through multiplicative operators
-        if(peek("+") || peek("-"))
+        while(peek("+") || peek("-"))
         {
             String operator = tokens.get(0).getLiteral(); // gather operator for AST construction
             match(Token.Type.OPERATOR); // consume operator token
@@ -535,21 +535,21 @@ public final class Parser {
             // start new recursive call for right hand side
             Ast.Expression right = parseMultiplicativeExpression();
             // return final binary
-            return new Ast.Expression.Binary(operator, left, right);
+            expr = new Ast.Expression.Binary(operator, expr, right);
         }
 
         // else just return left hand expression (non-binary)
-        return left;
+        return expr;
     }
 
     /**
      * Parses the {@code multiplicative-expression} rule.
      */
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
-        Ast.Expression left = parsePrimaryExpression(); // gather left expression if not passed as parameter already
+        Ast.Expression expr = parsePrimaryExpression(); // gather left expression if not passed as parameter already
 
         // check for and loop through multiplicative operators
-        if(peek("*") || peek("/") || peek("^"))
+        while(peek("*") || peek("/") || peek("^"))
         {
             String operator = tokens.get(0).getLiteral(); // gather operator for AST construction
             match(Token.Type.OPERATOR); // consume operator token
@@ -557,11 +557,11 @@ public final class Parser {
             // start new recursive call for right hand side
             Ast.Expression right = parsePrimaryExpression();
             // return final binary
-            return new Ast.Expression.Binary(operator, left, right);
+            expr = new Ast.Expression.Binary(operator, expr, right);
         }
 
         // else just return left hand expression (non-binary)
-        return left;
+        return expr;
     }
 
     /**
