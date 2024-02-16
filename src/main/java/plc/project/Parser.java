@@ -202,7 +202,7 @@ public final class Parser {
             parameters.add(tokens.get(0).getLiteral());
             match(Token.Type.IDENTIFIER);
         }
-        while(!peek(")")) // additional arguments
+        while(!peek(")")) // additional arguments TODO: account for case where ')' is never found
         {
             // comma - required to separate arguments
             if(!peek(",")) // invalid argument separation
@@ -243,7 +243,7 @@ public final class Parser {
         while(!peek("END") && !peek("CASE") && !peek("DEFAULT") && !peek("ELSE"))
         {
             statements.add(parseStatement());
-        }
+        } // TODO: account for case where block terminal is never found
         return statements;
     }
 
@@ -648,7 +648,7 @@ public final class Parser {
             {
                 // comma to separate arguments
                 if(!peek(",")) // invalid argument separation
-                    throw new ParseException("Expected ',' : invalid function parameters. index: " + getErrorIndex(), getErrorIndex());
+                    throw new ParseException("Expected ',' or ')' : invalid function parameters. index: " + getErrorIndex(), getErrorIndex());
                 match(",");
 
                 arguments.add(parseExpression());

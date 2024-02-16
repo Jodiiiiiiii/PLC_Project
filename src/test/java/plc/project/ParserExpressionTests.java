@@ -530,6 +530,79 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr2"),
                                 new Ast.Expression.Access(Optional.empty(), "expr3")
                         ))
+                ),
+                Arguments.of("Different Argument Types",
+                        Arrays.asList(
+                                //name(12345, (expr2), expr3[NIL])
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.INTEGER, "12345", 5),
+                                new Token(Token.Type.OPERATOR, ",", 10),
+                                new Token(Token.Type.OPERATOR, "(", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 12),
+                                new Token(Token.Type.OPERATOR, ")", 17),
+                                new Token(Token.Type.OPERATOR, ",", 18),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 19),
+                                new Token(Token.Type.OPERATOR, "[", 24),
+                                new Token(Token.Type.IDENTIFIER, "NIL", 25),
+                                new Token(Token.Type.OPERATOR, "]", 28),
+                                new Token(Token.Type.OPERATOR, ")", 29)
+                        ),
+                        new Ast.Expression.Function("name", Arrays.asList(
+                                new Ast.Expression.Literal(new BigInteger("12345")),
+                                new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr2")),
+                                new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(null)), "expr3")
+                        ))
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testFunctionParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseExpression);
+    }
+    private static Stream<Arguments> testFunctionParseException() {
+        return Stream.of(
+                Arguments.of("Missing Closing Parenthesis",
+                        Arrays.asList(
+                                //name(
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4)
+                        ),
+                        // unable to determine missing parentheses because it is searching for a parameter due to no following parenthesis
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 5", 5)
+                ),
+                Arguments.of("Missing Second Parameter",
+                        Arrays.asList(
+                                //name(param,)
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.IDENTIFIER, "param", 5),
+                                new Token(Token.Type.OPERATOR, ",", 10),
+                                new Token(Token.Type.OPERATOR, ")", 11)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 11", 11)
+                ),
+                Arguments.of("Missing Comma v1",
+                        Arrays.asList(
+                                //name(param1 param2)
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.IDENTIFIER, "param1", 5),
+                                new Token(Token.Type.IDENTIFIER, "param2", 11),
+                                new Token(Token.Type.OPERATOR, ")", 17)
+                        ),
+                        new ParseException("Expected ',' or ')' : invalid function parameters. index: 11", 11)
+                ),
+                Arguments.of("Missing Closing Parenthesis w/ Parameter",
+                        Arrays.asList(
+                                //name(param1
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.IDENTIFIER, "param1", 5)
+                        ),
+                        new ParseException("Expected ',' or ')' : invalid function parameters. index: 11", 11)
                 )
         );
     }
