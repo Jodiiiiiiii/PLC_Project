@@ -208,8 +208,52 @@ final class ParserExpressionTests {
                         ),
                         new Ast.Expression.Group(new Ast.Expression.Binary("+",
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
-                                new Ast.Expression.Access(Optional.empty(), "expr2")
-                        ))
+                                new Ast.Expression.Access(Optional.empty(), "expr2")))
+                ),
+                Arguments.of("Grouped Group",
+                        Arrays.asList(
+                                //(expr1 + expr2)
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.OPERATOR, "(", 1),
+                                new Token(Token.Type.IDENTIFIER, "expr", 2),
+                                new Token(Token.Type.OPERATOR, ")", 6),
+                                new Token(Token.Type.OPERATOR, ")", 7)
+                        ),
+                        new Ast.Expression.Group( new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testGroupParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseExpression);
+    }
+    private static Stream<Arguments> testGroupParseException() {
+        return Stream.of(
+                Arguments.of("Missing Closing Parenthesis",
+                        Arrays.asList(
+                                //(expr
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 1)
+                        ),
+                        new ParseException("Expected ')' : invalid expression grouping", 5)
+                ),
+                Arguments.of("Missing Expression in Parentheses",
+                        Arrays.asList(
+                                //()
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.OPERATOR, ")", 1)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found", 1)
+                ),
+                Arguments.of("Invalid Closing Parenthesis",
+                        Arrays.asList(
+                                //()
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 1),
+                                new Token(Token.Type.IDENTIFIER, "]", 5)
+                        ),
+                        new ParseException("Expected ')' : invalid expression grouping", 5)
                 )
         );
     }
