@@ -38,6 +38,22 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ";", 6)
                         ),
                         new Ast.Statement.Expression(new Ast.Expression.Function("name", Arrays.asList()))
+                ),
+                Arguments.of("Variable Expression",
+                        Arrays.asList(
+                                //name();
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4)
+                        ),
+                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "name"))
+                ),
+                Arguments.of("Literal Expression",
+                        Arrays.asList(
+                                //name();
+                                new Token(Token.Type.DECIMAL, "1.02", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4)
+                        ),
+                        new Ast.Statement.Expression(new Ast.Expression.Literal(new BigDecimal("1.02")))
                 )
         );
     }
@@ -50,7 +66,7 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testAssignmentStatement() {
         return Stream.of(
-                Arguments.of("Assignment",
+                Arguments.of("Assignment: Standard",
                         Arrays.asList(
                                 //name = value;
                                 new Token(Token.Type.IDENTIFIER, "name", 0),
@@ -62,6 +78,82 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "name"),
                                 new Ast.Expression.Access(Optional.empty(), "value")
                         )
+                ),
+                Arguments.of("Assignment: Different Types",
+                        Arrays.asList(
+                                //TRUE = list[1.2];
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.IDENTIFIER, "list", 7),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.DECIMAL, "1.2", 12),
+                                new Token(Token.Type.OPERATOR, "]", 15),
+                                new Token(Token.Type.OPERATOR, ";", 16)
+                        ),
+                        new Ast.Statement.Assignment(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(new BigDecimal("1.2"))), "list")
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testStatementParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement);
+    }
+    private static Stream<Arguments> testStatementParseException() {
+        return Stream.of(
+                Arguments.of("Invalid Expression",
+                        Arrays.asList(
+                                //?
+                                new Token(Token.Type.OPERATOR, "?", 0)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 0", 0)
+                ),
+                Arguments.of("Expression statement: Missing semicolon (Variable)",
+                        Arrays.asList(
+                                //f
+                                new Token(Token.Type.IDENTIFIER, "f", 0)
+                        ),
+                        new ParseException("Expected ';' : invalid expression statement. index: 1", 1)
+                ),
+                Arguments.of("Expression Statement: Missing semicolon (Function)",
+                        Arrays.asList(
+                                //name()
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.OPERATOR, ")", 5)
+                        ),
+                        new ParseException("Expected ';' : invalid expression statement. index: 6", 6)
+                ),
+                Arguments.of("Assignment Statement: Missing semicolon",
+                        Arrays.asList(
+                                //name = value
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.IDENTIFIER, "value", 7)
+                        ),
+                        new ParseException("Expected ';' : invalid assignment statement. index: 12", 12)
+                ),
+                Arguments.of("Assignment Statement: Missing Equals",
+                        Arrays.asList(
+                                //name value;
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.IDENTIFIER, "value", 7),
+                                new Token(Token.Type.OPERATOR, ";", 12)
+                        ),
+                        new ParseException("Expected ';' : invalid expression statement. index: 7", 7)
+                ),
+                Arguments.of("Assignment Statement: Missing Right Expression",
+                        Arrays.asList(
+                                //name value;
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.OPERATOR, ";", 7)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 7", 7)
                 )
         );
     }
