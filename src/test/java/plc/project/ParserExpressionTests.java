@@ -73,29 +73,109 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testLiteralExpression() {
         return Stream.of(
-                Arguments.of("Boolean Literal",
+                Arguments.of("Null: NIL",
+                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "NIL", 0)),
+                        new Ast.Expression.Literal(null)
+                ),
+                Arguments.of("Boolean Literal: TRUE",
                         Arrays.asList(new Token(Token.Type.IDENTIFIER, "TRUE", 0)),
                         new Ast.Expression.Literal(Boolean.TRUE)
                 ),
-                Arguments.of("Integer Literal",
+                Arguments.of("Boolean Literal: FALSE",
+                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "FALSE", 0)),
+                        new Ast.Expression.Literal(Boolean.FALSE)
+                ),
+                Arguments.of("Integer Literal: Small",
                         Arrays.asList(new Token(Token.Type.INTEGER, "1", 0)),
                         new Ast.Expression.Literal(new BigInteger("1"))
                 ),
-                Arguments.of("Decimal Literal",
+                Arguments.of("Integer Literal: Big",
+                        Arrays.asList(new Token(Token.Type.INTEGER, "123456789111", 0)),
+                        new Ast.Expression.Literal(new BigInteger("123456789111"))
+                ),
+                Arguments.of("Integer Literal: Negative",
+                        Arrays.asList(new Token(Token.Type.INTEGER, "-1", 0)),
+                        new Ast.Expression.Literal(new BigInteger("-1"))
+                ),
+                Arguments.of("Decimal Literal: Less Precision",
                         Arrays.asList(new Token(Token.Type.DECIMAL, "2.0", 0)),
                         new Ast.Expression.Literal(new BigDecimal("2.0"))
                 ),
-                Arguments.of("Character Literal",
+                Arguments.of("Decimal Literal: More Precision",
+                        Arrays.asList(new Token(Token.Type.DECIMAL, "123456789.123456789", 0)),
+                        new Ast.Expression.Literal(new BigDecimal("123456789.123456789"))
+                ),
+                Arguments.of("Decimal Literal: Negative",
+                        Arrays.asList(new Token(Token.Type.DECIMAL, "-2.0", 0)),
+                        new Ast.Expression.Literal(new BigDecimal("-2.0"))
+                ),
+                Arguments.of("Character Literal: Standard",
                         Arrays.asList(new Token(Token.Type.CHARACTER, "'c'", 0)),
                         new Ast.Expression.Literal('c')
                 ),
-                Arguments.of("String Literal",
+                Arguments.of("Character Literal: Escape \\n",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\n'", 0)),
+                        new Ast.Expression.Literal('\n')
+                ),
+                Arguments.of("Character Literal: Escape \\b",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\b'", 0)),
+                        new Ast.Expression.Literal('\b')
+                ),
+                Arguments.of("Character Literal: Escape \\r",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\r'", 0)),
+                        new Ast.Expression.Literal('\r')
+                ),
+                Arguments.of("Character Literal: Escape \\t",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\t'", 0)),
+                        new Ast.Expression.Literal('\t')
+                ),
+                Arguments.of("Character Literal: Escape \\",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\\\'", 0)),
+                        new Ast.Expression.Literal('\\')
+                ),
+                Arguments.of("Character Literal: Escape \"",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\\"'", 0)),
+                        new Ast.Expression.Literal('\"')
+                ),
+                Arguments.of("Character Literal: Escape '",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\''", 0)),
+                        new Ast.Expression.Literal('\'')
+                ),
+                Arguments.of("String Literal: Standard",
                         Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
                         new Ast.Expression.Literal("string")
                 ),
-                Arguments.of("Escape Character",
+                Arguments.of("String Literal: Escape \\b",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\bWorld!\"", 0)),
+                        new Ast.Expression.Literal("Hello,\bWorld!")
+                ),
+                Arguments.of("String Literal: Escape \\n",
                         Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
                         new Ast.Expression.Literal("Hello,\nWorld!")
+                ),
+                Arguments.of("String Literal: Escape \\r",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\rWorld!\"", 0)),
+                        new Ast.Expression.Literal("Hello,\rWorld!")
+                ),
+                Arguments.of("String Literal: Escape \\t",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\tWorld!\"", 0)),
+                        new Ast.Expression.Literal("Hello,\tWorld!")
+                ),
+                Arguments.of("String Literal: Escape \\",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\\\World!\"", 0)),
+                        new Ast.Expression.Literal("Hello,\\World!")
+                ),
+                Arguments.of("String Literal: Escape \"",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\\"World!\"", 0)),
+                        new Ast.Expression.Literal("Hello,\"World!")
+                ),
+                Arguments.of("String Literal: Escape '",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\'World!\"", 0)),
+                        new Ast.Expression.Literal("Hello,'World!")
+                ),
+                Arguments.of("String Literal: Escape Ends",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"\\nHello,World!\\n\"", 0)),
+                        new Ast.Expression.Literal("\nHello,World!\n")
                 )
         );
     }

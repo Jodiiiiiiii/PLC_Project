@@ -603,7 +603,7 @@ public final class Parser {
             return new Ast.Expression.Literal(literal);
         }
         else if(peek(Token.Type.CHARACTER)) {
-            String literal = tokens.get(0).getLiteral().substring(1, 2); // ignore single quotes
+            String literal = tokens.get(0).getLiteral().substring(1, tokens.get(0).getLiteral().length()-1); // ignore single quotes
             // handle escape characters
             literal = handleEscapes(literal);
 
