@@ -191,6 +191,7 @@ final class ParserTests {
         );
     }
 
+    //TODO: add tests for switch-case
     /*
 
     @ParameterizedTest
@@ -230,7 +231,7 @@ final class ParserTests {
 
     private static Stream<Arguments> testWhileStatement() {
         return Stream.of(
-                Arguments.of("While",
+                Arguments.of("While: Standard",
                         Arrays.asList(
                                 //WHILE expr DO stmt; END
                                 new Token(Token.Type.IDENTIFIER, "WHILE", 0),
@@ -244,6 +245,148 @@ final class ParserTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr"),
                                 Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")))
                         )
+                ),
+                Arguments.of("While: Empty Body",
+                        Arrays.asList(
+                                //WHILE expr DO END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 6),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "END", 14)
+                        ),
+                        new Ast.Statement.While(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("While: Multiple-line block",
+                        Arrays.asList(
+                                //WHILE expr DO stmt; another; END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 6),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "another", 20),
+                                new Token(Token.Type.OPERATOR, ";", 27),
+                                new Token(Token.Type.IDENTIFIER, "END", 29)
+                        ),
+                        new Ast.Statement.While(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList(
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")),
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "another")))
+                        )
+                ),
+                Arguments.of("While: Triple-line block",
+                        Arrays.asList(
+                                //WHILE expr DO stmt; another; again; END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 6),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "another", 20),
+                                new Token(Token.Type.OPERATOR, ";", 27),
+                                new Token(Token.Type.IDENTIFIER, "again", 29),
+                                new Token(Token.Type.OPERATOR, ";", 34),
+                                new Token(Token.Type.IDENTIFIER, "END", 36)
+                        ),
+                        new Ast.Statement.While(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList(
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")),
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "another")),
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "again")))
+                        )
+                ),
+                Arguments.of("While: literal expression",
+                        Arrays.asList(
+                                //WHILE TRUE DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 6),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "another", 20),
+                                new Token(Token.Type.OPERATOR, ";", 27),
+                                new Token(Token.Type.IDENTIFIER, "again", 29),
+                                new Token(Token.Type.OPERATOR, ";", 34),
+                                new Token(Token.Type.IDENTIFIER, "END", 36)
+                        ),
+                        new Ast.Statement.While(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                Arrays.asList(
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")),
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "another")),
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "again")))
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testWhileParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement);
+    }
+    private static Stream<Arguments> testWhileParseException() {
+        return Stream.of(
+                Arguments.of("Missing DO",
+                        Arrays.asList(
+                                //WHILE expr stmt; END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 6),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                new Token(Token.Type.IDENTIFIER, "END", 17)
+                        ),
+                        new ParseException("Expected \"DO\" : invalid while loop. index: 11", 11)
+                ),
+                Arguments.of("Missing END",
+                        Arrays.asList(
+                                //WHILE expr DO stmt;
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 6),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 19", 19)
+                ),
+                Arguments.of("While: Missing Expression",
+                        Arrays.asList(
+                                //WHILE DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "DO", 6),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 9),
+                                new Token(Token.Type.OPERATOR, ";", 13),
+                                new Token(Token.Type.IDENTIFIER, "END", 15)
+                        ),
+                        new ParseException("Expected \"DO\" : invalid while loop. index: 9", 9) // existing DO was processed as the expression
+                ),
+                Arguments.of("While: Invalid Expression in Block",
+                        Arrays.asList(
+                                //WHILE expr DO ; END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 6),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.OPERATOR, ";", 14),
+                                new Token(Token.Type.IDENTIFIER, "END", 16)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 14", 14) // existing DO was processed as the expression
+                ),
+                Arguments.of("While: Improper Termination of Loop",
+                        Arrays.asList(
+                                //WHILE expr DO ; END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 6),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 17)
+                        ),
+                        new ParseException("Expected \"END\" : invalid while loop. index: 17", 17) // existing DO was processed as the expression
                 )
         );
     }
