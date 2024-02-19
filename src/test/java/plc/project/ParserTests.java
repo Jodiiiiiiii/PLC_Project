@@ -169,6 +169,20 @@ final class ParserTests {
                                 Arrays.asList()
                         )
                 ),
+                Arguments.of("If - empty block",
+                        Arrays.asList(
+                                //IF expr DO END
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "END", 17)
+                        ),
+                        new Ast.Statement.If(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList(),
+                                Arrays.asList()
+                        )
+                ),
                 Arguments.of("Else",
                         Arrays.asList(
                                 //IF expr DO stmt1; ELSE stmt2; END
@@ -187,6 +201,154 @@ final class ParserTests {
                                 Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt1"))),
                                 Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt2")))
                         )
+                ),
+                Arguments.of("Else - Empty blocks",
+                        Arrays.asList(
+                                //IF expr DO stmt1; ELSE stmt2; END
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "ELSE", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 30)
+                        ),
+                        new Ast.Statement.If(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList(),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("If-Else: Literals",
+                        Arrays.asList(
+                                //IF expr DO stmt1; ELSE stmt2; END
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 11),
+                                new Token(Token.Type.OPERATOR, ";", 16),
+                                new Token(Token.Type.IDENTIFIER, "ELSE", 18),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 23),
+                                new Token(Token.Type.OPERATOR, ";", 28),
+                                new Token(Token.Type.IDENTIFIER, "END", 30)
+                        ),
+                        new Ast.Statement.If(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt1"))),
+                                Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt2")))
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testIfParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement);
+    }
+    private static Stream<Arguments> testIfParseException() {
+        return Stream.of(
+                Arguments.of("Missing expression",
+                        Arrays.asList(
+                                //IF DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                new Token(Token.Type.IDENTIFIER, "END", 17)
+                        ),
+                        // improperly processed existing DO as expression
+                        new ParseException("Expected \"DO\" : invalid if statement. index: 11", 11)
+                ),
+                Arguments.of("Missing DO",
+                        Arrays.asList(
+                                //IF expr stmt; END
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                new Token(Token.Type.IDENTIFIER, "END", 17)
+                        ),
+                        new ParseException("Expected \"DO\" : invalid if statement. index: 11", 11)
+                ),
+                Arguments.of("Invalid statement (in if)",
+                        Arrays.asList(
+                                //IF expr DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                new Token(Token.Type.IDENTIFIER, "END", 17)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 15", 15)
+                ),
+                Arguments.of("Missing END",
+                        Arrays.asList(
+                                //IF expr DO stmt;
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        // could not find END so kept trying to parse block
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 16", 16)
+                ),
+                Arguments.of("Improper termination (instead of END)",
+                        Arrays.asList(
+                                //IF expr DO stmt; DEFAULT
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 17)
+                        ),
+                        new ParseException("Expected \"END\" : invalid if statement. index: 17", 17)
+                ),
+                Arguments.of("Missing END (if-else)",
+                        Arrays.asList(
+                                //IF expr DO stmt1; ELSE stmt2;
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 11),
+                                new Token(Token.Type.OPERATOR, ";", 16),
+                                new Token(Token.Type.IDENTIFIER, "ELSE", 18),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 23),
+                                new Token(Token.Type.OPERATOR, ";", 28)
+                        ),
+                        // could not find END so kept trying to parse block
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 29", 29)
+                ),
+                Arguments.of("Invalid statement (else)",
+                        Arrays.asList(
+                                //IF expr DO stmt1; ELSE stmt2; END
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 11),
+                                new Token(Token.Type.OPERATOR, ";", 16),
+                                new Token(Token.Type.IDENTIFIER, "ELSE", 18),
+                                new Token(Token.Type.OPERATOR, ";", 28),
+                                new Token(Token.Type.IDENTIFIER, "END", 30)
+                        ),
+                        // could not find END so kept trying to parse block
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 28", 28)
+                ),
+                Arguments.of("Invalid termination (other than END) - if-else",
+                        Arrays.asList(
+                                //IF expr DO stmt1; ELSE stmt2; DEFAULT
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 11),
+                                new Token(Token.Type.OPERATOR, ";", 16),
+                                new Token(Token.Type.IDENTIFIER, "ELSE", 18),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 23),
+                                new Token(Token.Type.OPERATOR, ";", 28),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 30)
+                        ),
+                        // could not find END so kept trying to parse block
+                        new ParseException("Expected \"END\" : invalid if-else statement. index: 30", 30)
                 )
         );
     }
