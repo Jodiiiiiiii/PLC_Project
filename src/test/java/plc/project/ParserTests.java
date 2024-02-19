@@ -264,6 +264,41 @@ final class ParserTests {
                                 new Token(Token.Type.OPERATOR, ";", 11)
                         ),
                         new Ast.Statement.Return(new Ast.Expression.Access(Optional.empty(), "expr"))
+                ),
+                Arguments.of("Return Statement: literal",
+                        Arrays.asList(
+                                //RETURN expr;
+                                new Token(Token.Type.IDENTIFIER, "RETURN", 0),
+                                new Token(Token.Type.DECIMAL, "1.0", 7),
+                                new Token(Token.Type.OPERATOR, ";", 10)
+                        ),
+                        new Ast.Statement.Return(new Ast.Expression.Literal(new BigDecimal("1.0")))
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testReturnParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement);
+    }
+    private static Stream<Arguments> testReturnParseException() {
+        return Stream.of(
+                Arguments.of("Missing Semicolon",
+                        Arrays.asList(
+                                //RETURN expr
+                                new Token(Token.Type.IDENTIFIER, "RETURN", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7)
+                        ),
+                        new ParseException("Expected ';' : invalid return statement. index: 11", 11)
+                ),
+                Arguments.of("Missing Expression",
+                        Arrays.asList(
+                                //RETURN expr
+                                new Token(Token.Type.IDENTIFIER, "RETURN", 0),
+                                new Token(Token.Type.OPERATOR, ";", 7)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 7", 7)
                 )
         );
     }
