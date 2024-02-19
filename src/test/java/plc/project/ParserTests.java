@@ -191,38 +191,323 @@ final class ParserTests {
         );
     }
 
-    //TODO: add tests for switch-case
-    /*
-
     @ParameterizedTest
     @MethodSource
-    void testForStatement(String test, List<Token> tokens, Ast.Statement.For expected) {
+    void testSwitchStatement(String test, List<Token> tokens, Ast.Statement.Switch expected) {
         test(tokens, expected, Parser::parseStatement);
     }
 
-    private static Stream<Arguments> testForStatement() {
+    private static Stream<Arguments> testSwitchStatement() {
         return Stream.of(
-                Arguments.of("For",
+                Arguments.of("Switch: Default Case Only",
                         Arrays.asList(
-                                //FOR elem IN list DO stmt; END
-                                new Token(Token.Type.IDENTIFIER, "FOR", 0),
-                                new Token(Token.Type.IDENTIFIER, "elem", 6),
-                                new Token(Token.Type.IDENTIFIER, "IN", 9),
-                                new Token(Token.Type.IDENTIFIER, "list", 12),
-                                new Token(Token.Type.IDENTIFIER, "DO", 17),
-                                new Token(Token.Type.IDENTIFIER, "stmt", 20),
+                                //SWITCH expr DEFAULT line; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 12),
+                                new Token(Token.Type.IDENTIFIER, "line", 20),
                                 new Token(Token.Type.OPERATOR, ";", 24),
                                 new Token(Token.Type.IDENTIFIER, "END", 26)
                         ),
-                        new Ast.Statement.For(
-                                "elem",
-                                new Ast.Expression.Access(Optional.empty(), "list"),
-                                Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")))
+                        new Ast.Statement.Switch(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList(
+                                        new Ast.Statement.Case(Optional.empty(), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "line")))))
+                        )
+                ),
+                Arguments.of("Switch: One Extra Case",
+                        Arrays.asList(
+                                //SWITCH expr CASE TRUE : stmt1; DEFAULT stmt2; stmt3; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 12),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 20),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 33),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 41),
+                                new Token(Token.Type.OPERATOR, ";", 46),
+                                new Token(Token.Type.IDENTIFIER, "stmt3", 48),
+                                new Token(Token.Type.OPERATOR, ";", 53),
+                                new Token(Token.Type.IDENTIFIER, "END", 55)
+                        ),
+                        new Ast.Statement.Switch(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList(
+                                        new Ast.Statement.Case(Optional.of(new Ast.Expression.Literal(Boolean.TRUE)), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt1"))
+                                        )),
+                                        new Ast.Statement.Case(Optional.empty(), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt2")),
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt3")))))
+                        )
+                ),
+                Arguments.of("Switch: Two Extra Case",
+                        Arrays.asList(
+                                //SWITCH expr CASE TRUE : stmt1; CASE FALSE : stmt4; DEFAULT stmt2; stmt3; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 12),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 20),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 33),
+                                new Token(Token.Type.IDENTIFIER, "FALSE", 38),
+                                new Token(Token.Type.OPERATOR, ":", 44),
+                                new Token(Token.Type.IDENTIFIER, "stmt4", 46),
+                                new Token(Token.Type.OPERATOR, ";", 51),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 53),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 61),
+                                new Token(Token.Type.OPERATOR, ";", 66),
+                                new Token(Token.Type.IDENTIFIER, "stmt3", 68),
+                                new Token(Token.Type.OPERATOR, ";", 73),
+                                new Token(Token.Type.IDENTIFIER, "END", 75)
+                        ),
+                        new Ast.Statement.Switch(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList(
+                                        new Ast.Statement.Case(Optional.of(new Ast.Expression.Literal(Boolean.TRUE)), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt1"))
+                                        )),
+                                        new Ast.Statement.Case(Optional.of(new Ast.Expression.Literal(Boolean.FALSE)), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt4"))
+                                        )),
+                                        new Ast.Statement.Case(Optional.empty(), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt2")),
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt3")))))
+                        )
+                ),
+                Arguments.of("Switch: Literal Expression",
+                        Arrays.asList(
+                                //SWITCH expr DEFAULT line; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 7),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 12),
+                                new Token(Token.Type.IDENTIFIER, "line", 20),
+                                new Token(Token.Type.OPERATOR, ";", 24),
+                                new Token(Token.Type.IDENTIFIER, "END", 26)
+                        ),
+                        new Ast.Statement.Switch(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                Arrays.asList(
+                                        new Ast.Statement.Case(Optional.empty(), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "line")))))
                         )
                 )
         );
     }
-*/
+
+    @ParameterizedTest
+    @MethodSource
+    void testSwitchParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement);
+    }
+    private static Stream<Arguments> testSwitchParseException() {
+        return Stream.of(
+                Arguments.of("Missing Expression",
+                        Arrays.asList(
+                                //SWITCH DEFAULT line; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 7),
+                                new Token(Token.Type.IDENTIFIER, "line", 15),
+                                new Token(Token.Type.OPERATOR, ";", 19),
+                                new Token(Token.Type.IDENTIFIER, "END", 21)
+                        ),
+                        // improperly parsed DEFAULT as expression, so it expects another DEFAULT
+                        new ParseException("Expected \"DEFAULT\" : missing default case in switch statement. index: 15", 15)
+                ),
+                Arguments.of("Missing DEFAULT",
+                        Arrays.asList(
+                                //SWITCH expr line; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "line", 12),
+                                new Token(Token.Type.OPERATOR, ";", 16),
+                                new Token(Token.Type.IDENTIFIER, "END", 18)
+                        ),
+                        new ParseException("Expected \"DEFAULT\" : missing default case in switch statement. index: 12", 12)
+                ),
+                Arguments.of("Invalid Expression: DEFAULT case",
+                        Arrays.asList(
+                                //SWITCH expr DEFAULT ; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 12),
+                                new Token(Token.Type.OPERATOR, ";", 24),
+                                new Token(Token.Type.IDENTIFIER, "END", 26)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 24", 24)
+                ),
+                Arguments.of("Missing END",
+                        Arrays.asList(
+                                //SWITCH expr DEFAULT line;
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 12),
+                                new Token(Token.Type.IDENTIFIER, "line", 20),
+                                new Token(Token.Type.OPERATOR, ";", 24)
+                        ),
+                        // no termination to block (so it says invalid identifier, not Expected "END")
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 25", 25)
+                ),
+                Arguments.of("Improper Termination (not END)",
+                        Arrays.asList(
+                                //SWITCH expr DEFAULT line;
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 12),
+                                new Token(Token.Type.IDENTIFIER, "line", 20),
+                                new Token(Token.Type.OPERATOR, ";", 24),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 26)
+                        ),
+                        new ParseException("Missing \"END\" : invalid switch statement. index: 26", 26)
+                ),
+                Arguments.of("Missing Expression (with cases)",
+                        Arrays.asList(
+                                //SWITCH CASE TRUE : stmt1; CASE FALSE : stmt4; DEFAULT stmt2; stmt3; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 12),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 20),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 33),
+                                new Token(Token.Type.IDENTIFIER, "FALSE", 38),
+                                new Token(Token.Type.OPERATOR, ":", 44),
+                                new Token(Token.Type.IDENTIFIER, "stmt4", 46),
+                                new Token(Token.Type.OPERATOR, ";", 51),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 53),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 61),
+                                new Token(Token.Type.OPERATOR, ";", 66),
+                                new Token(Token.Type.IDENTIFIER, "stmt3", 68),
+                                new Token(Token.Type.OPERATOR, ";", 73),
+                                new Token(Token.Type.IDENTIFIER, "END", 75)
+                        ),
+                        // improperly parsed CASE as expression, so it expects CASE/DEFAULT next
+                        new ParseException("Expected \"DEFAULT\" : missing default case in switch statement. index: 20", 20)
+                ),
+                Arguments.of("Missing CASE",
+                        Arrays.asList(
+                                //SWITCH expr TRUE : stmt1; CASE FALSE : stmt4; DEFAULT stmt2; stmt3; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 20),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 33),
+                                new Token(Token.Type.IDENTIFIER, "FALSE", 38),
+                                new Token(Token.Type.OPERATOR, ":", 44),
+                                new Token(Token.Type.IDENTIFIER, "stmt4", 46),
+                                new Token(Token.Type.OPERATOR, ";", 51),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 53),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 61),
+                                new Token(Token.Type.OPERATOR, ";", 66),
+                                new Token(Token.Type.IDENTIFIER, "stmt3", 68),
+                                new Token(Token.Type.OPERATOR, ";", 73),
+                                new Token(Token.Type.IDENTIFIER, "END", 75)
+                        ),
+                        // improperly parsed CASE as expression, so it expects CASE/DEFAULT next
+                        new ParseException("Expected \"DEFAULT\" : missing default case in switch statement. index: 20", 20)
+                ),
+                Arguments.of("Missing expression in case",
+                        Arrays.asList(
+                                //SWITCH expr CASE : stmt1; CASE FALSE : stmt4; DEFAULT stmt2; stmt3; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 12),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 33),
+                                new Token(Token.Type.IDENTIFIER, "FALSE", 38),
+                                new Token(Token.Type.OPERATOR, ":", 44),
+                                new Token(Token.Type.IDENTIFIER, "stmt4", 46),
+                                new Token(Token.Type.OPERATOR, ";", 51),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 53),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 61),
+                                new Token(Token.Type.OPERATOR, ";", 66),
+                                new Token(Token.Type.IDENTIFIER, "stmt3", 68),
+                                new Token(Token.Type.OPERATOR, ";", 73),
+                                new Token(Token.Type.IDENTIFIER, "END", 75)
+                        ),
+                        // improperly parsed CASE as expression, so it expects CASE/DEFAULT next
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 24", 24)
+                ),
+                Arguments.of("Missing : in case",
+                        Arrays.asList(
+                                //SWITCH expr CASE TRUE : stmt1; CASE FALSE   stmt4; DEFAULT stmt2; stmt3; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 12),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 20),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 33),
+                                new Token(Token.Type.IDENTIFIER, "FALSE", 38),
+                                new Token(Token.Type.IDENTIFIER, "stmt4", 46),
+                                new Token(Token.Type.OPERATOR, ";", 51),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 53),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 61),
+                                new Token(Token.Type.OPERATOR, ";", 66),
+                                new Token(Token.Type.IDENTIFIER, "stmt3", 68),
+                                new Token(Token.Type.OPERATOR, ";", 73),
+                                new Token(Token.Type.IDENTIFIER, "END", 75)
+                        ),
+                        // improperly parsed CASE as expression, so it expects CASE/DEFAULT next
+                        new ParseException("Expected ':' : invalid case statement. index: 46", 46)
+                ),
+                Arguments.of("Missing DEFAULT (with cases)",
+                        Arrays.asList(
+                                //SWITCH expr CASE TRUE : stmt1; CASE FALSE : stmt4; DEFAULT stmt2; stmt3; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 12),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 20),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 33),
+                                new Token(Token.Type.IDENTIFIER, "FALSE", 38),
+                                new Token(Token.Type.OPERATOR, ":", 44),
+                                new Token(Token.Type.IDENTIFIER, "stmt4", 46),
+                                new Token(Token.Type.OPERATOR, ";", 51),
+                                new Token(Token.Type.IDENTIFIER, "END", 75)
+                        ),
+                        // improperly parsed CASE as expression, so it expects CASE/DEFAULT next
+                        new ParseException("Expected \"DEFAULT\" : missing default case in switch statement. index: 75", 75)
+                ),
+                Arguments.of("Invalid statement (with cases)",
+                        Arrays.asList(
+                                //SWITCH expr CASE TRUE : stmt1; CASE FALSE : stmt4; DEFAULT ; stmt3; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 7),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 12),
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 20),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 33),
+                                new Token(Token.Type.IDENTIFIER, "FALSE", 38),
+                                new Token(Token.Type.OPERATOR, ":", 44),
+                                new Token(Token.Type.IDENTIFIER, "stmt4", 46),
+                                new Token(Token.Type.OPERATOR, ";", 51),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 53),
+                                new Token(Token.Type.OPERATOR, ";", 66),
+                                new Token(Token.Type.IDENTIFIER, "stmt3", 68),
+                                new Token(Token.Type.OPERATOR, ";", 73),
+                                new Token(Token.Type.IDENTIFIER, "END", 75)
+                        ),
+                        // improperly parsed CASE as expression, so it expects CASE/DEFAULT next
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 66", 66)
+                )
+        );
+    }
+
     @ParameterizedTest
     @MethodSource
     void testWhileStatement(String test, List<Token> tokens, Ast.Statement.While expected) {
@@ -378,7 +663,7 @@ final class ParserTests {
                 ),
                 Arguments.of("While: Improper Termination of Loop",
                         Arrays.asList(
-                                //WHILE expr DO ; END
+                                //WHILE expr DO stmt; DEFAULT
                                 new Token(Token.Type.IDENTIFIER, "WHILE", 0),
                                 new Token(Token.Type.IDENTIFIER, "expr", 6),
                                 new Token(Token.Type.IDENTIFIER, "DO", 11),
