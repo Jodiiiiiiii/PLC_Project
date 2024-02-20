@@ -74,7 +74,7 @@ final class ParserTests {
                 ),
                 Arguments.of("List (One Element)",
                         Arrays.asList(
-                                //VAL name = expr;
+                                //VAL name = [expr];
                                 new Token(Token.Type.IDENTIFIER, "LIST", 0),
                                 new Token(Token.Type.IDENTIFIER, "name", 5),
                                 new Token(Token.Type.OPERATOR, "=", 10),
@@ -95,7 +95,7 @@ final class ParserTests {
                 ),
                 Arguments.of("List (Two Elements)",
                         Arrays.asList(
-                                //VAL name = expr;
+                                //VAL name = [expr1,expr2];
                                 new Token(Token.Type.IDENTIFIER, "LIST", 0),
                                 new Token(Token.Type.IDENTIFIER, "name", 5),
                                 new Token(Token.Type.OPERATOR, "=", 10),
@@ -119,7 +119,7 @@ final class ParserTests {
                 ),
                 Arguments.of("List (Multiple Elements)",
                         Arrays.asList(
-                                //VAL name = expr;
+                                //VAL name = [expr1,expr2,expr3];
                                 new Token(Token.Type.IDENTIFIER, "LIST", 0),
                                 new Token(Token.Type.IDENTIFIER, "name", 5),
                                 new Token(Token.Type.OPERATOR, "=", 10),
@@ -165,7 +165,7 @@ final class ParserTests {
                 ),
                 Arguments.of("Function (1 Parameter)",
                         Arrays.asList(
-                                //FUN name() DO stmt; END
+                                //FUN name(param1) DO stmt; END
                                 new Token(Token.Type.IDENTIFIER, "FUN", 0),
                                 new Token(Token.Type.IDENTIFIER, "name", 4),
                                 new Token(Token.Type.OPERATOR, "(", 8),
@@ -189,7 +189,7 @@ final class ParserTests {
                 ),
                 Arguments.of("Function (Multiple Parameters)",
                         Arrays.asList(
-                                //FUN name() DO stmt; END
+                                //FUN name(param1, param2, param3) DO stmt; END
                                 new Token(Token.Type.IDENTIFIER, "FUN", 0),
                                 new Token(Token.Type.IDENTIFIER, "name", 4),
                                 new Token(Token.Type.OPERATOR, "(", 8),
@@ -375,6 +375,200 @@ final class ParserTests {
                                 new Token(Token.Type.IDENTIFIER, "expr", 11)
                         ),
                         new ParseException("Expected ';' : invalid mutable definition/initialization. index: 15", 15)
+                ),
+                Arguments.of("List (One Element): Invalid Identifier",
+                        Arrays.asList(
+                                //VAL name = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.OPERATOR, ";", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected Identifier : invalid list definition. index: 5", 5)
+                ),
+                Arguments.of("List (One Element): Missing Identifier",
+                        Arrays.asList(
+                                //VAL = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected Identifier : invalid list definition. index: 10", 10)
+                ),
+                Arguments.of("List (One Element): Missing =",
+                        Arrays.asList(
+                                //VAL name [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected '=' : invalid list definition. index: 11", 11)
+                ),
+                Arguments.of("List (One Element): Missing [",
+                        Arrays.asList(
+                                //VAL name = expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected '[' : invalid list definition. index: 12", 12)
+                ),
+                Arguments.of("List (One Element): Missing Expression",
+                        Arrays.asList(
+                                //VAL name = [];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 17", 17)
+                ),
+                Arguments.of("List (One Element): Invalid Expression",
+                        Arrays.asList(
+                                //VAL name = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.OPERATOR, "!=", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 12", 12)
+                ),
+                Arguments.of("List (One Element): Missing ]",
+                        Arrays.asList(
+                                //VAL name = [expr;
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected ']' : invalid list definition. index: 18", 18)
+                ),
+                Arguments.of("List (One Element): Missing Semicolon",
+                        Arrays.asList(
+                                //VAL name = [expr]
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17)
+                        ),
+                        new ParseException("Expected ';' : invalid list definition. index: 18", 18)
+                ),
+                Arguments.of("List (One Element): Leading Comma",
+                        Arrays.asList(
+                                //VAL name = [,expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.OPERATOR, ",", 12),
+                                new Token(Token.Type.IDENTIFIER, "expr", 13),
+                                new Token(Token.Type.OPERATOR, "]", 18),
+                                new Token(Token.Type.OPERATOR, ";", 19)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 12", 12)
+                ),
+                Arguments.of("List (One Element): Trailing Comma",
+                        Arrays.asList(
+                                //VAL name = [expr,];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, ",", 13),
+                                new Token(Token.Type.OPERATOR, "]", 18),
+                                new Token(Token.Type.OPERATOR, ";", 19)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 18", 18)
+                ),
+                Arguments.of("List (Multiple Elements): Missing Separating Comma 1",
+                        Arrays.asList(
+                                //VAL name = [expr1 expr2,expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31)
+                        ),
+                        new ParseException("Expected ']' : invalid list definition. index: 18", 18)
+                ),
+                Arguments.of("List (Multiple Elements): Missing Separating Comma 2",
+                        Arrays.asList(
+                                //VAL name = [expr1,expr2 expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31)
+                        ),
+                        new ParseException("Expected ']' : invalid list definition. index: 25", 25)
+                ),
+                Arguments.of("List (Multiple Elements): Leading Comma",
+                        Arrays.asList(
+                                //VAL name = [,expr1,expr2,expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.OPERATOR, ",", 12),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 13),
+                                new Token(Token.Type.OPERATOR, ",", 18),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 19),
+                                new Token(Token.Type.OPERATOR, ",", 25),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 26),
+                                new Token(Token.Type.OPERATOR, "]", 31),
+                                new Token(Token.Type.OPERATOR, ";", 32)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 12", 12)
+                ),
+                Arguments.of("List (Multiple Elements): Trailing Comma",
+                        Arrays.asList(
+                                //VAL name = [expr1,expr2,expr3,];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, ",", 26),
+                                new Token(Token.Type.OPERATOR, "]", 31),
+                                new Token(Token.Type.OPERATOR, ";", 32)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 31", 31)
                 )
         );
     }
