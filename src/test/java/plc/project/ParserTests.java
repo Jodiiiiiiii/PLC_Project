@@ -222,6 +222,78 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
+    void testSourceParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseSource);
+    }
+    private static Stream<Arguments> testSourceParseException() {
+        return Stream.of(
+                Arguments.of("Global (Immutable): Missing Identifier",
+                        Arrays.asList(
+                                //VAL = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid immutable definition. index: 9", 9)
+                ),
+                Arguments.of("Global (Immutable): Invalid Identifier",
+                        Arrays.asList(
+                                //VAL ; = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid immutable definition. index: 4", 4)
+                ),
+                Arguments.of("Global (Immutable): Missing =",
+                        Arrays.asList(
+                                //VAL name expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected '=' : invalid immutable definition. index: 11", 11)
+                ),
+                Arguments.of("Global (Immutable): Missing Expression",
+                        Arrays.asList(
+                                //VAL name = ;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 15", 15)
+                ),
+                Arguments.of("Global (Immutable): VALID TEMPLATE",
+                        Arrays.asList(
+                                //VAL name = ; ;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, ";", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 11", 11)
+                ),
+                Arguments.of("Global (Immutable): Missing Semicolon",
+                        Arrays.asList(
+                                //VAL name = expr
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11)
+                        ),
+                        new ParseException("Expected ';' : invalid immutable definition. index: 15", 15)
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void testExpressionStatement(String test, List<Token> tokens, Ast.Statement.Expression expected) {
         test(tokens, expected, Parser::parseStatement);
     }
@@ -1923,25 +1995,6 @@ final class ParserTests {
         } else {
             Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
         }
-    }
-
-    @ParameterizedTest
-    @MethodSource
-    void testScenarioParseException(String test, List<Token> tokens, ParseException exception) {
-        testParseException(tokens, exception, Parser::parseExpression);
-    }
-    private static Stream<Arguments> testScenarioParseException() {
-        return Stream.of(
-                Arguments.of("Missing Closing Parenthesis",
-                        Arrays.asList(
-                                //012345
-                                //(expr
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr", 1)
-                        ),
-                        new ParseException("Expected ')' : invalid expression grouping. index: 5", 5)
-                )
-        );
     }
 
     private static <T extends Ast> void testParseException(List<Token> tokens, Exception exception, Function<Parser, T> function) {
