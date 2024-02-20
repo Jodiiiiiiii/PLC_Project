@@ -44,7 +44,7 @@ public final class Parser {
 
         // make sure remaining file is empty
         if(tokens.has(0))
-            throw new ParseException("Expected end of file : only globals and functions permitted in source file. index: " + getErrorIndex(), getErrorIndex());
+            throw new ParseException("Expected end of file : source file must be composed of all globals followed by all functions. index: " + getErrorIndex(), getErrorIndex());
 
         return new Ast.Source(globals, functions);
     }

@@ -216,6 +216,118 @@ final class ParserTests {
                                                 new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
                                         )))
                         )
+                ),
+                Arguments.of("Globals and Function",
+                        Arrays.asList(
+                                //VAL name = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAR name;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAR name = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAL name = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                //VAL name = [expr1,expr2];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, "]", 23),
+                                new Token(Token.Type.OPERATOR, ";", 24),
+                                //VAL name = [expr1,expr2,expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20),
+                                //FUN name(param1) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25),
+                                //FUN name(param1, param2, param3) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global("name", false, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr"))),
+                                        new Ast.Global("name", true, Optional.empty()),
+                                        new Ast.Global("name", true, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr"))),
+                                        new Ast.Global("name", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                new Ast.Expression.Access(Optional.empty(), "expr"))))),
+                                        new Ast.Global(
+                                                "name",
+                                                true,
+                                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr2"))))),
+                                        new Ast.Global(
+                                                "name",
+                                                true,
+                                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr3")))))
+                                ),
+                                Arrays.asList(
+                                        new Ast.Function("name", Arrays.asList(), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")))),
+                                        new Ast.Function("name", Arrays.asList("param1"), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")))),
+                                        new Ast.Function("name", Arrays.asList("param1", "param2", "param3"), Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")))))
+                        )
                 )
         );
     }
@@ -818,6 +930,90 @@ final class ParserTests {
                                 new Token(Token.Type.IDENTIFIER, "END", 40)
                         ),
                         new ParseException("Expected Identifier after ',' : invalid function definition. index: 29", 29)
+                ),
+                Arguments.of("Function Before Global",
+                        Arrays.asList(
+                                //VAL name = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAR name;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAR name = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAL name = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                //VAL name = [expr1,expr2];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, "]", 23),
+                                new Token(Token.Type.OPERATOR, ";", 249),
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20),
+                                //VAL name = [expr1,expr2,expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 250),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                //FUN name(param1) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25),
+                                //FUN name(param1, param2, param3) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected end of file : source file must be composed of all globals followed by all functions. index: 250", 250)
                 )
         );
     }
