@@ -128,7 +128,7 @@ final class ParserTests {
 
     private static Stream<Arguments> testAssignmentStatement() {
         return Stream.of(
-                Arguments.of("Assignment",
+                Arguments.of("Assignment: Standard",
                         Arrays.asList(
                                 //name = value;
                                 new Token(Token.Type.IDENTIFIER, "name", 0),
@@ -140,10 +140,53 @@ final class ParserTests {
                                 new Ast.Expression.Access(Optional.empty(), "name"),
                                 new Ast.Expression.Access(Optional.empty(), "value")
                         )
+                ),
+                Arguments.of("Assignment: Different Types",
+                        Arrays.asList(
+                                //TRUE = list[1.2];
+                                new Token(Token.Type.IDENTIFIER, "TRUE", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.IDENTIFIER, "list", 7),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.DECIMAL, "1.2", 12),
+                                new Token(Token.Type.OPERATOR, "]", 15),
+                                new Token(Token.Type.OPERATOR, ";", 16)
+                        ),
+                        new Ast.Statement.Assignment(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(new BigDecimal("1.2"))), "list")
+                        )
                 )
         );
     }
 
+    @ParameterizedTest
+    @MethodSource
+    void testAssignmentParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement);
+    }
+    private static Stream<Arguments> testAssignmentParseException() {
+        return Stream.of(
+                Arguments.of("Missing Value",
+                        Arrays.asList(
+                                //name = ;
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.OPERATOR, ";", 12)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 12", 12)
+                ),
+                Arguments.of("Missing Semicolon",
+                        Arrays.asList(
+                                //name = value;
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.IDENTIFIER, "value", 7)
+                        ),
+                        new ParseException("Expected ';' : invalid assignment statement. index: 12", 12)
+                )
+        );
+    }
 
     @ParameterizedTest
     @MethodSource
