@@ -84,7 +84,44 @@ final class ParserTests {
                                 new Token(Token.Type.OPERATOR, ")", 5),
                                 new Token(Token.Type.OPERATOR, ";", 6)
                         ),
-                        new Ast.Statement.Expression(new Ast.Expression.Function("name", Arrays.asList()))
+                        new Ast.Statement.Expression(new Ast.Expression.Function("name", Arrays.asList())
+                        )
+                ),
+                Arguments.of("Variable Expression",
+                        Arrays.asList(
+                                //name;
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, ";", 6)
+                        ),
+                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "name")
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testExpressionStatementParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement);
+    }
+    private static Stream<Arguments> testExpressionStatementParseException() {
+        return Stream.of(
+                Arguments.of("Invalid Expression",
+                        Arrays.asList(
+                                //;     ;
+                                new Token(Token.Type.OPERATOR, ";", 0),
+                                new Token(Token.Type.OPERATOR, ";", 6)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 0", 0)
+                ),
+                Arguments.of("Missing Semicolon",
+                        Arrays.asList(
+                                //name()
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.OPERATOR, ")", 5)
+                        ),
+                        new ParseException("Expected ';' : invalid expression statement. index: 6", 6)
                 )
         );
     }
