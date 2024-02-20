@@ -243,7 +243,7 @@ public final class Parser {
         while(!peek("END") && !peek("CASE") && !peek("DEFAULT") && !peek("ELSE"))
         {
             statements.add(parseStatement());
-        } // TODO: account for case where block terminal is never found
+        }
         return statements;
     }
 
