@@ -117,7 +117,7 @@ final class ParserTests {
                                 Arrays.asList()
                         )
                 ),
-                Arguments.of("List (Three Elements)",
+                Arguments.of("List (Multiple Elements)",
                         Arrays.asList(
                                 //VAL name = expr;
                                 new Token(Token.Type.IDENTIFIER, "LIST", 0),
@@ -268,7 +268,7 @@ final class ParserTests {
                         ),
                         new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 15", 15)
                 ),
-                Arguments.of("Global (Immutable): VALID TEMPLATE",
+                Arguments.of("Global (Immutable): Invalid Expression",
                         Arrays.asList(
                                 //VAL name = ; ;
                                 new Token(Token.Type.IDENTIFIER, "VAL", 0),
@@ -288,6 +288,93 @@ final class ParserTests {
                                 new Token(Token.Type.IDENTIFIER, "expr", 11)
                         ),
                         new ParseException("Expected ';' : invalid immutable definition. index: 15", 15)
+                ),
+                Arguments.of("Global (Mutable/Declaration): Missing Identifier",
+                        Arrays.asList(
+                                //VAR ;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid mutable definition. index: 15", 15)
+                ),
+                Arguments.of("Global (Mutable/Declaration): Invalid Identifier",
+                        Arrays.asList(
+                                //VAR ; ;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid mutable definition. index: 4", 4)
+                ),
+                Arguments.of("Global (Mutable/Declaration): Missing Semicolon",
+                        Arrays.asList(
+                                //VAR name
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4)
+                        ),
+                        new ParseException("Expected ';' : invalid mutable definition. index: 8", 8)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Missing Identifier",
+                        Arrays.asList(
+                                //VAR = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid mutable definition. index: 9", 9)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Invalid Identifier",
+                        Arrays.asList(
+                                //VAR ; = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid mutable definition. index: 4", 4)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Missing =",
+                        Arrays.asList(
+                                //VAR name expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected ';' : invalid mutable definition. index: 11", 11)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Missing Expression",
+                        Arrays.asList(
+                                //VAR name = ;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 15", 15)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Invalid Expression",
+                        Arrays.asList(
+                                //VAR name = =;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, "=", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 11", 11)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Missing Semicolon",
+                        Arrays.asList(
+                                //VAR name = expr
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11)
+                        ),
+                        new ParseException("Expected ';' : invalid mutable definition/initialization. index: 15", 15)
                 )
         );
     }
