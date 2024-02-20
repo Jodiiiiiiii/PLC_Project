@@ -316,7 +316,7 @@ public final class Parser {
 
             // check for semicolon - required
             if(!peek(";"))
-                throw new ParseException("Expected ';' : invalid declaration statement. index: " + getErrorIndex(), getErrorIndex());
+                throw new ParseException("Expected ';' : invalid initialization statement. index: " + getErrorIndex(), getErrorIndex());
             match(";");
 
             // return declaration with initialization
