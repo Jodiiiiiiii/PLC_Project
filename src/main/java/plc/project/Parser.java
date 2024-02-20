@@ -202,21 +202,22 @@ public final class Parser {
             parameters.add(tokens.get(0).getLiteral());
             match(Token.Type.IDENTIFIER);
         }
-        while(!peek(")")) // additional arguments TODO: account for case where ')' is never found
+        while(peek(","))
         {
             // comma - required to separate arguments
-            if(!peek(",")) // invalid argument separation
-                throw new ParseException("Expected ',' (for more arguments) or ')' (to close function definition). index: " + getErrorIndex(), getErrorIndex());
             match(",");
 
             // argument - required since not closed with ")"
             if(!peek(Token.Type.IDENTIFIER))
-                throw new ParseException("Expected Identifier : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+                throw new ParseException("Expected Identifier after ',' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
             parameters.add(tokens.get(0).getLiteral());
+            match(Token.Type.IDENTIFIER);
         }
 
         // ) - required
-        match(")"); // guaranteed since we broke out of loop
+        if(!peek(")"))
+            throw new ParseException("Expected ')' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+        match(")");
 
         // DO - required
         if(!peek("DO"))

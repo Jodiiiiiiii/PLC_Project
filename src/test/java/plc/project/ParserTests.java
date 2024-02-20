@@ -46,7 +46,105 @@ final class ParserTests {
                                 Arrays.asList()
                         )
                 ),
-                Arguments.of("Function",
+                Arguments.of("Global - Mutable (Declaration)",
+                        Arrays.asList(
+                                //VAR name;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(new Ast.Global("name", true, Optional.empty())),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("Global - Mutable (Initialization)",
+                        Arrays.asList(
+                                //VAR name = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(new Ast.Global("name", true, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("List (One Element)",
+                        Arrays.asList(
+                                //VAL name = expr;
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global(
+                                                "name",
+                                                true,
+                                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                        new Ast.Expression.Access(Optional.empty(), "expr")))))),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("List (Two Elements)",
+                        Arrays.asList(
+                                //VAL name = expr;
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, "]", 23),
+                                new Token(Token.Type.OPERATOR, ";", 24)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global(
+                                                "name",
+                                                true,
+                                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr2")))))),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("List (Three Elements)",
+                        Arrays.asList(
+                                //VAL name = expr;
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global(
+                                                "name",
+                                                true,
+                                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr3")))))),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("Function (0 Parameters)",
                         Arrays.asList(
                                 //FUN name() DO stmt; END
                                 new Token(Token.Type.IDENTIFIER, "FUN", 0),
@@ -63,6 +161,60 @@ final class ParserTests {
                                 Arrays.asList(new Ast.Function("name", Arrays.asList(), Arrays.asList(
                                         new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
                                 )))
+                        )
+                ),
+                Arguments.of("Function (1 Parameter)",
+                        Arrays.asList(
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(new Ast.Function("name",
+                                        Arrays.asList(
+                                                "param1"
+                                        ),
+                                        Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                                )))
+                        )
+                ),
+                Arguments.of("Function (Multiple Parameters)",
+                        Arrays.asList(
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(new Ast.Function("name",
+                                        Arrays.asList(
+                                                "param1",
+                                                "param2",
+                                                "param3"
+                                        ),
+                                        Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                                        )))
                         )
                 )
         );
