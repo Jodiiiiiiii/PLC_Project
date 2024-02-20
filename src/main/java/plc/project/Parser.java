@@ -190,7 +190,7 @@ public final class Parser {
 
         // ( - required
         if(!peek("("))
-            throw new ParseException("Missing ')' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+            throw new ParseException("Missing '(' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
         match("(");
 
         // arguments
