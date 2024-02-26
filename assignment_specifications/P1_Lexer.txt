@@ -1,0 +1,258 @@
+P1: Lexer
+Due: Tue Feb 6, 2024 11:59pmDue: Tue Feb 6, 2024 11:59pm2/6/2024
+100/100*100/100* Points
+Attempt
+
+Review Feedback
+SUBMITTED: Feb 2, 2024 4:35pmSUBMITTED: Feb 2, 2024 4:35pm2/2/2024
+Attempt 3 Score:100/100
+
+Add Comment
+Anonymous Grading:no
+Unlimited Attempts Allowed
+
+Details
+
+In this assignment, you will implement the Lexer for our language. This
+is the first step in the parsing process which takes input source code,
+represented as a sequence of characters, and turns them into tokens -
+the building blocks of our grammar - for the Parser to use in the next part.
+
+Also, note the Crafting Interpreters link below is /highly/ recommended
+to help you understand both the lexing process, the implementation
+approach we are using, and especially the /peek/ and /match/ methods
+defined in lecture.
+
+
+    Submission
+
+You will submit |Lexer.java|, which implements your Lexer. You will not
+modify and not submit the |Token| and |ParseException| classes. Prior to
+submitting you should test your Lexer with the provided test class as
+well as implement your own additional test cases to perform a
+comprehensive evaluation of your solution. You will not submit |
+LexerTests.java| nor will you submit additional test cases you create.
+
+You should test and re-test your lexer prior to submitting. You should
+also examine this specification and create your own test scenarios.  You
+will not submit any additional tests that you have added.  
+
+/All work is due by 11:59 PM EST on the assigned date/. Here is the
+submission schedule.
+
+  * The first test submission is *Monday, January 29*.
+  * The second (and last) test submission is *Wednesday, January 31.*
+  * The final submission is due Saturday, February 3.
+  * *Saturday, February 3* is now an extra test submission (the last
+    test submission for P1).
+  * The final submission is extended and now due *Tuesday, February 6*.
+
+
+    Lexer Overview
+
+Recall that the job of the Lexer is to combine characters into tokens
+which can be processed by the Parser. For example, the input |1234| is
+formed by the characters |['1', '2', '3', '4']|, which should produce
+an |INTEGER| token. More complex input, such as |LET x = 5;|, will
+produce multiple tokens (specifically, these tokens in this order: 
+IDENTIFIER, IDENTIFIER, OPERATOR, INTEGER, and OPERATOR; see below for
+more).
+
+If the Lexer is unable to parse something successfully (for example, an
+unterminated string), then it will throw a |ParseException|. It may seem
+oddly named for now, but lexing is part of the parsing process and we
+also use |ParseException| for parsing errors observed in subsequent
+parts of the project.
+
+
+      Crafting Interpreters
+
+The Scanning (Links to an external site.) <https://
+www.craftinginterpreters.com/scanning.html> (https://
+www.craftinginterpreters.com/scanning.htmlLinks to an external site.
+<https://www.craftinginterpreters.com/scanning.html>) section of
+Crafting Interpreters provides a good overview of the lexing process and
+was a starting point for the Lexer architecture below. I highly
+recommend reading it to help with your understanding of the Lexer process.
+
+
+      Grammar
+
+A grammar for our language will be released following the completion of
+HW1, due to the overlap in content between HW1 and P1. For now, detailed
+textual descriptions (see the section Token Types below) provide the
+rules for our Token Types - these are going to seem more complicated
+than they really are, but it is good practice and you can (and are
+encouraged to) ask clarifying questions as needed. /Understanding
+written software requirements is a really important skill/!
+
+Notice that the rules (and thus the Types themselves) correspond to a
+provided |lex| method. You should ensure all lexing for a rule is
+encapsulated within that rule's lex method - specifically, the |
+lexToken| method should *never* change the state of the char stream
+itself; it's only job is to delegate to the proper rule.
+
+The rules |integer| and |decimal| combine to form the definition of the
+method |lexNumber|.
+
+Using regular expressions, a grammar for our Lexer is defined here.  It
+is written in a specific form optimal for our
+approach. *Literals* / *terminals* are *enclosed in single quotes* so
+that you can clearly identify where and what they are.  In addition, you
+can cut/paste the grammar into /bottlecaps/ to view a graphical form of
+the grammar:
+
+  * https://www.bottlecaps.de/rr/uiLinks to an external site. <https://
+    www.bottlecaps.de/rr/ui> (with IPv6)
+  * https://rr.red-dove.com/uiLinks to an external site. <https://
+    rr.red-dove.com/ui> (without IPv6)
+
+identifier ::= ( '@' | [A-Za-z] ) [A-Za-z0-9_-]*
+integer ::= '0' | '-'? [1-9] [0-9]*
+decimal ::= '-'? ('0' | [1-9] [0-9]*) '.' [0-9]+
+character ::= ['] ([^'\n\r\\] | escape) [']
+string ::= '"' ([^"\n\r\\] | escape)* '"'
+escape ::= '\' [bnrt'"\\]
+operator ::= [!=] '='? | '&&' | '||' | 'any character'
+
+whitespace ::= [ \b\n\r\t] 
+
+Observe that there is a top-to-bottom flow for this grammar.  Therefore,
+when the operator rule lists |'any character'|, this piece serves as a
+catchall for things not covered by previous rules.  However, because of
+previous rules in the top-down flow, characters such as letters and
+digits will also never be operators.
+
+
+      Token Types
+
+We will use 6 types of tokens, defined below. You will need to implement
+lexing for all of these. The |LexerTests| class below includes tests for
+the provided examples, and you should add additional ones as you see fit
+in order to comprehensively evaluate your solution.
+
+  * |IDENTIFIER|: Represents keywords and names used for variables,
+    functions, and so on. Allows alphanumeric characters, underscores,
+    and hyphens (|[A-Za-z0-9_-]|), but cannot start with a digit, an
+    underscore, or a hyphen.  Optionally, can begin with an |@| (but
+    cannot contain an |@| anywhere other than the initial character).
+      o Examples: |getName|, |thelegend27|
+      o Non-Examples: |-five|, |1fish2fish3fishbluefish| (note these /do
+        not fail/, they are just lexed as something more complex than an
+        identifier)
+  * |INTEGER|: Represents integer numbers.  Leading zeros are not
+    permitted within the same integer (note, these also /do no fail/,
+    they are just lexed as something more complex than a single
+    integer).  Trailing zeros are allowed, of course since they form new
+    integer values!  For example, ten (10) is different than one hundred
+    (100).  An optional sign |-| is allowed to immediately prefix a non-
+    zero integer, however the integer must be non-zero. An integer zero
+    is merely just zero.
+      o Examples: |1|, |12345|, |-1|
+      o Non-Examples: |01| (note this /do not fail/, it is just lexed as
+        something more complex than a single integer)
+  * |DECIMAL|: Represents decimal numbers.  As in HW1, adecimal number
+    is formed by two integer values, where both integers are present and
+    separated by a decimal point. The left most digit on the lefthand
+    side of the decimal point must be non-zero (i.e., there are no
+    leading zeros) unless the only digit to the left of the decimal
+    point is a zero. Trailing zeros are allowed. Any decimal may be
+    immediately preceded by an optional sign |-|, prefixing the decimal
+    as negative.
+      o The *two integers separated by a decimal point* requirement
+        means a period not followed by digits is not part of a decimal.
+        For example |5.toString()| starts with an |INTEGER|.
+      o Examples: |123.456|, |-1.0|
+      o Non-Examples:|1|, |1.|, |.5| (as above, note these /do
+        not fail/, they are just lexed as something more complex/
+        different than a single decimal number)
+  * |CHARACTER|: A character literal. Similar to string literals below,
+    however start and end with a single quote (|'|) and must contain one
+    and only one character. Escape characters are also supported
+    starting with a backslash (|\|), which must be followed by one of |
+    bnrt'"\| (and are considered one character).  The character cannot
+    be a single quote (|'|), without being preceded by a backslash (|\|)
+    since the single quote closes a character literal. Character
+    literals cannot span multiple lines, i.e., the opening and closing
+    quotes must be on the same line.
+      o Examples: |'c'|, |'\n'|
+      o Non-Examples: |''|, |'abc'| (note these should throw
+        ParseExceptions with the index at the missing/invalid character)
+  * |STRING|: A string literal. As in our Regex homework, strings start
+    and end with a double quote (|"|) and support escape characters
+    starting with a backslash (|\|), which must be followed by one of |
+    bnrt'"\|. Characters cannot be a double quote (|"|), without being
+    preceded by a backslash (|\|) since the double quote closes a string
+    literal. String literals cannot span multiple lines, i.e., the
+    opening and closing quotes must be on the same line. This is
+    particularly important for strings, which could cause cascading
+    errors if they covered multiple lines (try compiling an unterminated
+    string vs an unterminated block comment and see what happens).
+      o Examples: |""|, |"abc"|, |"Hello,\nWorld!"|
+      o Non-Examples: |"unterminated|, |"invalid\escape"| (note these
+        should throw ParseExceptions with the index at the missing/
+        invalid character)
+  * |OPERATOR|: Any other character, excluding whitespace. Comparison
+    (|!=|, |==|) and compound expression (|&&|, ||||) operators are
+    special cases and will be combined within a single token.  For all
+    other characters, an |OPERATOR| token is only that single character.
+      o Examples: |(|, |!=|
+      o Non-Examples: | | (space), |\t| (tab)
+  * Whitespace characters (| \b\n\r\t|) should be skipped by the Lexer
+    and not emitted as tokens. However, they are still meaningful when
+    determining where a token starts/ends (for example, |12| is one |
+    INTEGER| token, but |1 2| is two |INTEGER| tokens).
+
+
+      Examples
+
+  * |LET x = 5;|
+      o |Token(IDENTIFIER, "LET", 0)|
+      o |Token(IDENTIFIER, "x", 4)|
+      o |Token(OPERATOR, "=", 6)|
+      o |Token(INTEGER, "5", 8)|
+      o |Token(OPERATOR, ";", 9)|
+  * |print("Hello, World!");|
+      o |Token(IDENTIFIER, "print", 0)|
+      o |Token(OPERATOR, "(", 5)|
+      o |Token(STRING, "\"Hello, World!\"", 6)|
+      o |Token(OPERATOR, ")", 21)|
+      o |Token(OPERATOR, ";", 22)|
+
+
+    Provided Code
+
+These files provide a structured design that will incorporate into the
+grading system.  Sample test cases are also included to assist you in
+beginning your solution evaluation.  Look closely at the test cases
+provided to identify that the input given is what the Lexer expects to
+receive and the anticipated output is what the Lexer is intended to
+produce.  You can use these examples to assist in constructing your own
+additional test cases.
+
+  * Source Files (|src/*main*/java/plc/project|)
+      o Lexer.java <https://ufl.instructure.com/courses/498750/files/
+        83712372?wrap=1>Download Lexer.java <https://
+        ufl.instructure.com/courses/498750/files/83712372/download?
+        download_frd=1>
+      o ParseException.java <https://ufl.instructure.com/courses/498750/
+        files/83712375?wrap=1>Download ParseException.java <https://
+        ufl.instructure.com/courses/498750/files/83712375/download?
+        download_frd=1>
+      o Token.java <https://ufl.instructure.com/courses/498750/files/
+        83712374?wrap=1>Download Token.java <https://
+        ufl.instructure.com/courses/498750/files/83712374/download?
+        download_frd=1>
+  * Test Files (|src/*test*/java/plc/project|)
+      o LexerTests.java <https://ufl.instructure.com/courses/498750/
+        files/83712376?wrap=1>Download LexerTests.java <https://
+        ufl.instructure.com/courses/498750/files/83712376/download?
+        download_frd=1>
+
+Lexer-2.java
+Previous ModulePrevious <https://ufl.instructure.com/courses/498750/
+modules/items/10895480>New AttemptNext ModuleNext<https://
+ufl.instructure.com/courses/498750/modules/items/10900525>
+
+3ec0ee23-75ad-4cf5-bf72-8aa4edd055b2
+Previous: Project Setup [GitHub + IntelliJ]Next: Lexer Test Submission

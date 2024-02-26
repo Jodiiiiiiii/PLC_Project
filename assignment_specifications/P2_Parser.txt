@@ -1,0 +1,301 @@
+P2: Parser
+Due: Sat Feb 24, 2024 11:59pmDue: Sat Feb 24, 2024 11:59pm2/24/2024
+Ungraded, 100 Possible Points100 Points Possible
+Attempt
+
+Submitted on Feb 20, 2024 1:12pmSubmitted on Feb 20, 2024 1:12pm2/20/2024
+NEXT UP: Review Feedback
+Attempt 4 Score:N/A
+
+Add Comment
+Unlimited Attempts Allowed
+
+Details
+
+In this assignment, you will implement a solution that parses the
+complete grammar of our language. This is the complete second step in
+the compilation/interpretation process which takes the tokens produced
+by the Lexer in the previous part and turns them into an Abstract Syntax
+Tree (AST).  The AST is a tree-based representation of our language.
+
+The Crafting Interpreters link below is /highly/ recommend to help you
+understand both the parsing process as well as the implementation
+approach we are using, including our usage of peek and match.
+
+
+    Submission
+
+You will submit |Parser.java|, which implements your Parser. You will
+not modify and not submit any other files, including those provided to
+you -- |Ast.java|, |ParserTests.java|, |ParseException.java|, and |
+Token.java|.
+
+Prior to submitting you should test your Parser with the provided test
+class as well as implement your own additional test cases to perform a
+comprehensive evaluation of your solution. You should test and re-test
+your Parser prior to submitting. Again, you will not submit |Ast.java|,
+|ParserTests.java|, |ParseException.java|, and |Token.java| nor will you
+submit additional test cases you create.
+
+/All work is due by 11:59 PM EST on the assigned date/. Here is the
+submission schedule.
+
+  * The first test submission is *Monday**, February 19*.
+  * The second test submission is *Wedneday**, February 21*.
+  * The final submission is due *Saturday, February 24*.
+
+Remember, you are required to complete -- Submit Your GitHub Link
+<https://ufl.instructure.com/courses/498750/assignments/5915167> -- in
+order for your project work to be graded.
+
+
+    Parser Overview
+
+Recall that the job of the Parser is to convert the tokens emitted by
+the Lexer into an Abstract Syntax Tree (AST) which represents the
+structural meaning of the code. For example, the expressions |1 + 2 * 3|
+ and |1 * 2 + 3| are similar, but their AST's are quite different due to
+operator precedence [note in both cases, our grammar assigns higher
+precedence to |*| over |+|, examine the grammar closely to ensure you
+see that this is true]:
+
+| 1 + 2 * 3          1 * 2 + 3 
+
+     +                  +     
+    / \                / \    
+   1   *              *   3   
+      / \            / \      
+     2   3          1   2
+|
+
+Our parser will be implemented using a process called recursive descent
+parsing, which means each reference to another rule in our grammar
+corresponds with a call to the appropriate parse function.
+
+
+    Error Handling
+
+If the parser is unable to parse something successfully (for example, an
+unexpected token), then it will throw a |ParseException|. The index of
+the exception will be the character stream index of the invalid token
+(recall, you have stored this value within your token object and it can
+be accessed via |token.getIndex()|).
+
+If the next expected token is missing and there is no explicit invalid
+token [i.e., all tokens are valid up until the end of the token stream]
+then the character stream index after the last token will provide the
+index value [the location where the next expected token should have
+been]. The invalid structure here is that a token is missing and thus
+invalid. You will need to compute the value using the last token's index
+and literal length to identify the character stream index where the
+token should have been found.
+
+Here are two examples:
+
+  * |IF cond THEN ...| -> |new ParseException("Expected DO.", index = 8)
+    |, as |8| is the index of the incorrect |THEN| token.  Examine our
+    grammar to identify that |THEN| is not the identifier we are using
+    to open the statement block associated with the |IF| condition.
+  * |IF cond| -> |new ParseException("Expected DO.", index = 7|, as |7|
+     is the index of the character after the last valid token. Examine
+    our grammar to identify how the |statement| production has not been
+    successfully matched, thus causing this exception.
+
+You do not need to handle the edge case of a previous token not being
+present since our |source| rule allows empty input and thus does not
+cause an exception.
+
+
+    Crafting Interpreters
+
+The Parsing  (Links to an external site.) <https://
+www.craftinginterpreters.com/parsing-expressions.html> (https://
+www.craftinginterpreters.com/parsing-expressions.htmlLinks to an
+external site. <https://www.craftinginterpreters.com/parsing-
+expressions.html>) section of Crafting Interpreters provides a good
+overview of the parsing process and was a starting point for the parser
+architecture provided here in P2. The Crafting Interpreters parser is
+slightly more complex as they submit more functionality, so make sure
+you only implement what is defined in our grammar. I highly recommend
+reading the Crafting Interpreters Parsing <https://
+www.craftinginterpreters.com/parsing-expressions.html> discussion to
+help with your understanding of the parsing process and this assignment.
+
+
+    Grammar
+
+Here is the grammar for our language and Lexer.  Recall, this assignment
+is P2b: Parser [Complete], where you will implement the complete parser,
+parsing all elements of our complete grammar (given below and the same
+as the complete grammar shown in HW2 and P2a -- remember P2b subsumes
+P2a). The grammar is written in a specific form optimal for recursive
+descent parsing. *Literals* / *terminals* are *enclosed in single
+quotes* so that you can clearly identify where and what they are. In
+addition, you can cut/paste the grammar into /bottlecaps/ to view a
+graphical form of the grammar [note, literals must be placed within
+single quotes within /bottlecaps///red/-/dove/ thus we use the same
+standard here to make cutting and pasting effective]:
+
+  * https://www.bottlecaps.de/rr/uiLinks to an external site. <https://
+    www.bottlecaps.de/rr/ui> (with IPv6)
+  * https://rr.red-dove.com/uiLinks to an external site. <https://
+    rr.red-dove.com/ui> (without IPv6)
+
+To view the railroad diagram within bottlecaps/red-dove, cut and paste
+the grammar into the text area under the "Edit Grammar" tab.  Then,
+select the "View Diagram" tab.
+
+ (Links to an external site.)
+
+source ::= global* function*
+
+global ::= ( list | mutable | immutable ) ';'
+list ::= 'LIST' identifier '=' '[' expression (',' expression)* ']'
+mutable ::= 'VAR' identifier ('=' expression)?
+immutable ::= 'VAL' identifier '=' expression
+
+function ::= 'FUN' identifier '(' (identifier (',' identifier)* )? ')' 'DO' block 'END'
+
+block ::= statement*
+
+statement ::=
+    'LET' identifier ('=' expression)? ';' |
+    'SWITCH' expression ('CASE' expression ':' block)* 'DEFAULT' block 'END' | 
+    'IF' expression 'DO' block ('ELSE' block)? 'END' |
+    'WHILE' expression 'DO' block 'END' |
+    'RETURN' expression ';' |
+    expression ('=' expression)? ';'
+
+expression ::= logical_expression
+
+logical_expression ::= comparison_expression (('&&' | '||') comparison_expression)*
+comparison_expression ::= additive_expression (('<' | '>' | '==' | '!=') additive_expression)*
+additive_expression ::= multiplicative_expression (('+' | '-') multiplicative_expression)*
+multiplicative_expression ::= primary_expression (('*' | '/' | '^') primary_expression)*
+
+primary_expression ::=
+    'NIL' | 'TRUE' | 'FALSE' |
+    integer | decimal | character | string |
+    '(' expression ')' |
+    identifier ('(' (expression (',' expression)*)? ')')? |
+    identifier '[' expression ']'
+
+identifier ::= ( '@' | [A-Za-z] ) [A-Za-z0-9_-]*
+integer ::= '0' | '-'? [1-9] [0-9]*
+decimal ::= '-'? ('0' | [1-9] [0-9]*) '.' [0-9]+
+character ::= ['] ([^'\n\r\\] | escape) [']
+string ::= '"' ([^"\n\r\\] | escape)* '"'
+escape ::= '\' [bnrt'"\\]
+operator ::= [!=] '='? | '&&' | '||' | 'any character'
+
+whitespace ::= [ \b\n\r\t] 
+
+Variable types will be addressed during P4: Analyzer in our project
+sequence.  In order to do this, the Parser will be updated at that time
+to handle variable types.  For now, observe that our grammar does not
+currently associate a type with a variable, but when we do include types
+the Lexer will not change, all types will merely be lexed as identifiers.
+
+
+    AST Representation
+
+The |Ast| class contains subclasses representing the more specific
+elements of the AST and the code that is being parsed. There is not a
+one-to-one relationship between rules in our grammar and the AST. HW2
+will help you introduce you to the resources and details provided in P2.
+Similarly, the P2 specification provides information (the grammar, the
+AST node descriptions that follow and so on) useful when answering HW2
+questions.  If you have not worked on Homework 2, it will be helpful to
+begin there and then review P2 again.
+
+The following classes are contained within |Ast|:
+
+  * |Source|: An entire source file (globals + functions).
+  * |Global|: Global declarations.  For our language, the reference to
+    list space in memory and the size of the list are both static. 
+    However, /*lists* are considered *mutable*/, since the index
+    positions within the list can be modified.
+  * |Function|: Function definitions.
+  * |Statement|: Structural parts of the code that perform side effects
+    like assigning variables or modifying control flow.
+      o |Expression|: A statement that is simply an expression (such as
+        a function call). This is |Ast.Statement.Expression|.  Do not
+        confuse it with |Ast.Expression|!
+      o |Declaration|: The declaration (and optional initialization) of
+        variables.
+      o |Assignment|: The assignment of values. The receiver is an
+        expression and not the name of a variable because assignment
+        applies to individual variables (e.g., |x = y|) and to list
+        access (e.g., |a[0] = z|).  Note, in order to access the list,
+        both the list identifier and index offset expression are required.
+      o |If|: An if statement with an optional else branch. When the
+        else branch is not defined, the list of else statements will be
+        empty.
+      o |Switch|: A switch statement.
+      o |Case|: A case statement within the switch statement. Note: the
+        |DEFAULT| is a case statement that does not have a value.
+      o |Return|: A return statement. Note that a value must be
+        provided, unlike languages like Java which have |void| return types.
+  * |Expression|
+      o |Literal|: Contains literal values, such as booleans, integers,
+        or strings. You will need to convert values from the lexer into
+        the appropriate type.
+          + Nil is represented using |null|. Note this means |
+            getLiteral()| can return |null|, so be careful!
+          + Boolean values are represented with the |Boolean| class.
+          + Integer values are represented with the |BigInteger|
+             classLinks to an external site. <https://docs.oracle.com/
+            en/java/javase/21/docs/api/java.base/java/math/
+            BigInteger.html>, which supports arbitrary precision.
+          + Decimal values are represented with the |BigDecimal|
+             classLinks to an external site. <https://docs.oracle.com/
+            en/java/javase/21/docs/api/java.base/java/math/
+            BigDecimal.html>, which supports arbitrary precision.
+          + Character values are represented with the |Character| class.
+            You will need to remove the surrounding single quotes (|'|)
+            from the literal returned by the Lexer and replace any
+            escape characters (hint, see |String#replace|).
+          + String values are represented with the |String| class. You
+            will need to remove the surrounding double quotes (|"|) from
+            the literal returned by the Lexer and replace any escape
+            characters (hint, see |String#replace|).
+      o |Group|: A grouped expression (generally used for changing
+        priority).
+      o |Binary|: A binary expression, including additive,
+        multiplicative, comparison, and logical expressions from the
+        grammar. For logical expressions, the operator will be the
+        literal symbolic strings, such as |&&|, defined by our grammar.
+      o |Access|: An access expression, representing accessing a global
+        or variable. The /offset/ is an Optional valueLinks to an
+        external site. <https://docs.oracle.com/en/java/javase/21/docs/
+        api/java.base/java/util/Optional.html>, which is present to
+        represent accessing the index offset position of a list. Note,
+        not all accessing will require an index.
+      o |Function|: A function call expression.
+      o |PlcList|: A list of /values/ within our language (the Plc
+        prefix is used to distinguish our list from Java's usage of List).
+
+
+    Provided Code
+
+These files provide a structured design that will incorporate into the
+grading system.  Sample test cases are also included to assist you in
+beginning your solution evaluation.  Look closely at the test cases
+provided to identify that the input given is what the Parser expects to
+receive [a list of tokens] and the anticipated output is what the Parser
+is intended to produce [an AST].  You can use these examples to assist
+in constructing your own additional test cases.
+
+  * Source Files (|src/main/java/plc/project|)
+      o Ast.java <https://ufl.instructure.com/courses/498750/files/
+        83712390?wrap=1>Download Ast.java <https://ufl.instructure.com/
+        courses/498750/files/83712390/download?download_frd=1>
+      o Parser.java <https://ufl.instructure.com/courses/498750/files/
+        85224214?wrap=1>Download Parser.java <https://
+        ufl.instructure.com/courses/498750/files/85224214/download?
+        download_frd=1>
+  * Test Files (|src/test/java/plc/project|)
+      o ParserTests.java <https://ufl.instructure.com/courses/498750/
+        files/85484494?wrap=1>Download ParserTests.java <https://
+        ufl.instructure.com/courses/498750/files/85484494/download?
+        download_frd=1>

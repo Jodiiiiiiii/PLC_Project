@@ -1,0 +1,516 @@
+P3: Interpreter
+Due: Sat Mar 23, 2024 11:59pmDue: Sat Mar 23, 2024 11:59pm3/23/2024
+Ungraded, 100 Possible Points100 Points Possible
+Attempt
+
+In Progress
+NEXT UP: Submit Assignment
+
+Add Comment
+Unlimited Attempts Allowed
+
+Details
+
+In this assignment, you will implement a solution that interprets or
+"evaluates" source code written in our language. The Interpreter process
+is performed by traversing the AST using the Visitor pattern. The
+classes |Environment| and |Scope| assist in managing the state and scope
+of the source code being interpreted. Your focus will be on implementing
+the evaluation of the different |Ast| classes in the Interpreter itself.
+
+
+    Submission
+
+You will submit |Interpreter.java|, which implements your Interpreter.
+You will not submit nor modify |Ast.java|, |Environment.java|, and |
+Scope.java|.  Prior to submitting you should test your Interpreter with
+the provided test class as well as implement your own additional test
+cases to perform a comprehensive evaluation of your solution.  You
+should test and re-test your Interpreter prior to submitting.  You will
+not submit |InterpreterTests.java| nor will you submit additional test
+cases you create.
+
+/All work is due by 11:59 PM EST on the assigned date/. Here is the
+submission schedule.
+
+  * The first test submission is due by*Saturday**, March 2.*
+  * The second test submission is due by*Saturday, March 9*.
+  * The third test submission is due by *Saturday, March 16 (an extra
+    submission over Spring Break)*.
+  * The fourth test submission is due by *Wednesday, March 20*.
+  * The final submission is due *Saturday, March 23*.
+
+Remember, you are required to complete -- Submit Your GitHub Link
+<https://ufl.instructure.com/courses/498750/assignments/5915167>-- and
+-- regularly commit to your GitHub repository in order for your project
+work to be graded.  The TAs have posted repository guidelines and tips
+in Teams.
+
+
+    Interpreter Overview
+
+The Interpreter is responsible for evaluating code while traversing the
+AST. To do this, use the visitor pattern where each |visit| method
+evaluates the corresponding |Ast| class, returning the appropriate value
+(if any). Our Interpreter is going to be dynamic, and so will need to
+take into account the possibility of failures like undefined variables
+or invalid types.
+
+For example, evaluating the AST represented by |1 + 2 * 3| returns the
+runtime value of the number |7|. The wording here is important - the
+runtime value of |7| is a |PlcObject| containing a |BigInteger| opposed
+to just an |int| or any other combination/construction.
+
+Values in the specification will generally be represented as unwrapped
+values, so |NIL| means |Environment.NIL|.
+
+
+      Managing Scope
+
+Scopes are used to track identifiers and the functions/variables they
+reference. The same name/label can be used in different scopes (such as
+a global and as a function parameter).  Using an object hierarchy, as we
+have provided in |Scope.java|, to represent the scope is one solution to
+creating this functionality.  The implementation of the |Scope| class is
+provided, but you must understand how it is designed and implemented in
+order to use it properly.
+
+For example, in Java we could implement code like this:
+
+int x = 0;
+if (true) {
+    x = 1;
+    int y = 2;
+}
+
+After this code fragment is evaluated:
+
+  * What/where are |x| and |y|?
+  * Does |x| equal |0| or |1|?
+  * Does |y| equal |2|?
+
+The value of |x| has indeed changed from its initial value of |0| and
+now equals |1|.  Since |x| has been defined outside the scope of the if
+statement block, it is accessible after its declaration, including
+within the if statement block and the code that follows the if statement
+block.
+
+Meanwhile, the variable |y| is only available within the scope of the if
+statement block and not outside of it.  Once the if statement has
+completed, |y| is no longer available.  Meaning, after the if statement
+|y| is not anything all -- it is simply undefined -- and no longer has a
+value associated with it, |2| or otherwise.
+
+Additionally, our process for evaluating a |RETURN| will be managed
+through throwing |Return| exceptions. Our specially implemented class |
+Return|, is a subclass to |Exception|, tying it into the Java Exception
+hierarchy and making a new Exception class distinct from our previously
+used ParserExceptions [P1/P2] or RuntimeExceptions here in P3 [the
+exceptions will use to declare a problem or invalid state while
+interpreting, see section *Error Handling* below]. The possibility of
+throwing |Return| exceptions for return values will require the usage of
+a block |finally| to restore the scope. Remember, a |finally| block
+executes after both the |try| statement block and the corresponding |
+catch|, thus |finally| will execute no matter what. See |
+Interpreter.java| [defines the |Return| as an inner class], section Ast
+Types below, our lecture discussion, and Oracle's Java Tutorials (linked
+here) for more details about our special |Return| exception class and
+the |finally| clause.
+
+  * Exceptions:  https://docs.oracle.com/javase/tutorial/essential/
+    exceptions/index.htmlLinks to an external site. <https://
+    docs.oracle.com/javase/tutorial/essential/exceptions/index.html>
+  * |finally|:  https://docs.oracle.com/javase/tutorial/essential/
+    exceptions/finally.htmlLinks to an external site. <https://
+    docs.oracle.com/javase/tutorial/essential/exceptions/finally.html> 
+
+The elements in our grammar that will create a new scope, will be the
+productions that include statement blocks.  Specifically, these elements
+are:
+
+  * |function|
+  * |if|
+  * |switch|
+  * |while|
+
+Note, |Source| is not on this list, because it will use the base (root)
+scope already created at the instantiation of the interpreter. Every
+other child scope will be contained within this scope.
+
+
+      Error Handling
+
+*Whenever evaluation /fails/, your Interpreter will throw a |
+RuntimeException|*. Previously, we used a custom |ParseException|
+ because we had index information to provide to the developer (the user
+who is writing code in our language). During the Interpreter's
+evaluation, we do not have any special state information to report to
+the developer. Ideally, we would report state information such as line
+numbers and stack traces, but expanding our implementation to include
+these features is easier said than done... and not part of this project
+assignment.
+
+Note that many of the provided classes and helper functions already
+handle some error conditions and serve as examples for this process. 
+For example, the |scope.lookup| methods (see |Scope.java|) handle the
+case of a variable/function being undefined. Likewise, |requireType|
+ also assists in handling errors.
+
+
+      Crafting Interpreters
+
+The following sections of Crafting Interpreters will be helpful when
+implementing the Interpreter, and cover nearly all of the important
+parts of this project. However, remember that this is a different
+language, with a different grammar, and at times different behaviors. As
+always, use references and examples for what they are.
+
+  * Evaluating Expressions (Links to an external site.) <https://
+    www.craftinginterpreters.com/evaluating-expressions.html>
+  * Statements and State (Links to an external site.) <https://
+    www.craftinginterpreters.com/statements-and-state.html>
+  * Control Flow (Links to an external site.) <https://
+    www.craftinginterpreters.com/control-flow.html>
+  * Functions (Links to an external site.)Links to an external site.
+    <https://www.craftinginterpreters.com/functions.html>
+  * Return Statements (Links to an external site.) <https://
+    www.craftinginterpreters.com/functions.html#return-statements>
+
+
+      Ast Types
+
+Following the Visitor design pattern, each |Ast| class has its own |
+visit| method, which behave as follows:
+
+AST Class 	Specification 	Examples
+Key for examples 	Key for examples 	
+
+  * *First level* bullet points include the source input and the state
+    of the scope before the example executes.
+      o *Second level* bullet points define results, return values, and
+        the scope state after execution.
+
+|Ast.*Source*| 	
+
+Evaluates globals followed by functions. Returns the result of calling
+the |main/0| function (named |main| with /arity/ |0|, a function's /
+arity/ is the number of parameters it expects to receive). If the |main|
+function does not exist within source, the evaluation /fails/.
+
+	
+
+  * |FUN main() DO RETURN 0; END|
+      o |0|
+  * |VAR x = 1; VAR y = 10; FUN main() DO x + y; END|
+      o |NIL| (the statement |x + y|is evaluated, but not returned)
+
+|Ast.*Global*| 	
+
+Defines a variable in the current scope.  Following the grammar for
+which variables must be initialized.  For any variables that are not
+required to be initialized at declaration, use //|NIL| if no initial
+value is defined.
+
+Returns |NIL|.
+
+	
+
+  * |VAR name;|, scope = |{}|
+      o |NIL|
+      o scope = |{name = NIL}|
+  * |VAL name = 1;|, scope = |{}|
+      o |NIL|
+      o scope = |{name = 1}|
+  * |LIST list = [1, 5, 10];| , scope = |{}|
+      o |NIL|
+      o scope = |{list = [1, 5, 10]}|
+
+|Ast.*Function*| 	
+
+Defines a function in the current scope. The callback function (lambda)
+should implement the behavior of calling this function, which needs to
+do the following:
+
+  * Set the scope to be a new child of the scope /where the function was
+    defined/ (hint: you need to capture this in a variable -- modifying
+    the design given by adding this variable).
+      o Remember to restore the scope when finished!
+  * Define variables for the incoming arguments, using the parameter
+    names. You may assume the correct number of arguments are provided
+    (the calling location is responsible for making a correct call to
+    the function, therefore the /arity/ match is checked at that point).
+  * Evaluate the function's statements. Return the value contained in
+    a |Return| exception if thrown, otherwise |NIL| (note, the |RETURN|
+    node will do the throwing, see below).
+
+Finally, |visit(Ast.Function)| should itself return |NIL|. Note that
+there are two levels of return here, one in |visit| and the other within
+the lambda expression.
+
+There is an example of defining |print|as a lambda function in the
+constructor of |Interpreter|.
+
+	
+
+  * |FUN main() DO RETURN 0; END|
+      o |NIL|
+      o scope = |{main = ... }|, where evaluating |main()| return |0|
+  * |FUN square(x) DO RETURN x * x; END|
+      o |NIL|
+      o scope = |{square = ... }|, where evaluating |square(10)|
+         returns |100|
+
+|Ast.Statement.*Expression*| 	Evaluates the expression. Returns |NIL|. 	
+
+  * |print("Hello, World!");|
+      o |NIL|
+      o prints |Hello, World!|
+
+|Ast.Statement.*Declaration*| 	
+
+Defines a local variable in the current scope, defaulting to //|NIL| if
+no initial value is defined. Returns |NIL|.
+
+Yes, this is similar to |Ast.*Global*|, but within a different scope and
+always mutable.
+
+	
+
+  * |LET name;|, scope = |{}|
+      o |NIL|
+      o scope = |{name = NIL}|
+  * |LET name = 1;|, scope = |{}|
+      o |NIL|
+      o scope = |{name = 1}|
+
+|Ast.Statement.*Assignment*| 	
+
+First, ensure that the receiver is an |Ast.Expression.*Access*| (any
+other type is not assignable causing the evaluation to /fail/). Lookup
+and set the variable in the current scope.  When assigning to a list,
+use the offset to determine the list location to modify.
+
+Assignments to an immutable variable will cause the evaluation to /fail/.
+
+Returns |NIL|.
+
+ 
+
+	
+
+  * |variable = 1;|, scope = |{variable = "variable"}|
+      o |NIL|
+      o scope = |{variable = 1}|
+  * |list[2] = 3;|, scope = |{list = [1, 5, 10]}|
+      o |NIL|
+      o scope = |{list = [1, 5, 3]}|
+
+|Ast.Statement.*If*| 	
+
+Ensure the condition evaluates to a |Boolean| (hint: use |requireType|),
+otherwise the evaluation /fails/. Inside of a new scope, if the
+condition is |TRUE|, evaluate |thenStatements|, otherwise evaluate |
+elseStatements|. Returns |NIL|.
+
+	
+
+  * |IF TRUE DO num = 1; END|, scope = |{num = NIL}|
+      o |NIL|
+      o scope = |{num = 1}|
+  * |IF FALSE DO ELSE num = 10; END|, scope = |{num = NIL}|
+      o |NIL|
+      o scope = |{num = 10}|
+
+|Ast.Statement.*Switch*| 	
+
+Inside of a new scope, if the condition is equivalent to a |CASE| value,
+evaluate the |statements| for that case, otherwise evaluate the |
+statements| of the |DEFAULT|.
+
+Returns |NIL|.
+
+	
+
+  * |SWITCH letter CASE 'y': print("yes"); letter = 'n'; DEFAULT:
+    print("no"); END|, scope = |{letter = 'y'}|
+      o |NIL|
+      o scope = |{letter = 'n'}|
+      o prints |"yes"|
+
+|Ast.Statement.*While*| 	
+
+Ensure the condition evaluates to a |Boolean| (hint: use |requireType|),
+otherwise the evaluation /fails/. If the condition is |TRUE|, evaluate
+the statements and repeat.
+
+  * Remember to re-evaluate the condition itself each iteration!
+
+Returns |NIL|.
+
+	
+
+  * |WHILE num < 10 DO num = num + 1; END|, scope = |{num = 0}|
+      o |NIL|
+      o scope = |{num = 10}|
+
+|Ast.Statement.*Return*| 	
+
+Evaluates the value and throws it inside in a |Return| exception
+(defined at the bottom of |Interpreter.java|).
+
+  * The implementation of |Ast.*Function*| will |catch| any |Return|
+     exceptions and complete the behavior.
+
+	
+
+  * |RETURN 1;|
+      o throws |Return| exception with |value = 1|
+      o Note: the |Return|exception class is private in |Interpreter|,
+        you must change its visibility to include in tests.
+
+|Ast.Expression.*Literal*| 	Returns the literal value as a |PlcObject|
+ (hint: use |Environment.create| as needed). 	
+
+  * |NIL|
+      o |NIL|
+  * |1|
+      o |1|
+
+|Ast.Expression.*Group*| 	Evaluates the contained expression, returning
+its value. 	
+
+  * |(1)|
+      o |1|
+  * |(1 + 10)|
+      o |11|
+
+|Ast.Expression.*Binary*| 	
+
+Evaluates arguments based on the specific binary operator, returning the
+appropriate result for the operation (hint: use |requireType| and |
+Environment.create| as needed).  Whenever something is observed but not
+permitted, the evaluation /fails/.
+
+  * |&&|/||||:
+      o Evaluate the LHS expression, which must be a |Boolean|.
+        Following short circuiting rules, evaluate the LHS expression,
+        which also must be a |Boolean|, if necessary.
+  * |<|/|>|:
+      o Evaluate the LHS expression, which must be |Comparable|, and
+        compare it to the RHS expression, which must be /the same type
+        (class) as the LHS/.
+      o You will need to determine how to use |Comparable| (hint: review
+        our lectures at the beginning of the semester and check out the
+        Java docs).
+  * |==|/|!=|:
+      o Evaluate both operands and test for equality using |
+        Objects.equals| (this is *not* the standard equals method,
+        consider what this does by reading the Java docs and recalling
+        what we have said about |==|/|!=| ).
+  * |+|:
+      o Evaluate both the LHS and RHS expressions.
+        If *either* expression is a |String|, the result is their
+        concatenation. Else, if the LHS is a |BigInteger/BigDecimal|,
+        then the RHS must also be the same type (a |BigInteger/
+        BigDecimal|) and the result is their addition, otherwise the
+        evaluation /fails/.
+  * |-|/|*|:
+      o Evaluate both the LHS and RHS expressions. If the LHS is a |
+        BigInteger/BigDecimal|, then the RHS must also be the same type
+        (a |BigInteger/BigDecimal|) and the result is their subtraction/
+        multiplication, otherwise the evaluation /fails/.
+  * |/|:
+      o Evaluate both the LHS and RHS expressions. If the LHS is a |
+        BigInteger/BigDecimal|, then the RHS must also be the same type
+        (a |BigInteger/BigDecimal|) and the result is their division,
+        otherwise throw an exception.
+      o For |BigDecimal|, use |RoundingMode.HALF_EVEN|, which rounds
+        midpoints to the nearest even value (|1.5|, |2.5|→ |2.0|). This
+        is actually the default mode in Python, which can catch
+        developers off-guard as they often do not expect this behavior.
+      o If the denominator is zero, the evaluation /fails/.
+  * |^|:
+      o Evaluate both the LHS (base) and RHS (exponent) expressions.
+        Both the exponent and the base are required to be type |
+        BigInteger|, otherwise the evaluation /fails/.  The result is
+        the LHS (base) raised to the power of the RHS (exponent). Note,
+        the value of a |BigInteger| might be larger than the range of an
+        Integer, requiring you to perform calculations yourself.
+
+	
+
+  * |TRUE && FALSE|
+      o |FALSE|
+  * |TRUE || undefined|
+      o |TRUE| (without visiting |undefined|)
+  * |1 < 10|
+      o |TRUE|
+  * |1 == 10|
+      o |FALSE|
+  * |"a" + "b"|
+      o |"ab"|
+  * |1 + 10|
+      o |11|
+  * |1.2 / 3.4|
+      o |0.4|
+
+|Ast.Expression.*Access*| 	
+
+Return the value of the appropriate variable in the current scope. For a
+list, evaluate the offset and return the value of the appropriate offset.
+
+List offset indices are 0 through length - 1. Any offset that evaluates
+to a type other than |BigInteger| causes the evaluation to /fail/.
+
+	
+
+  * |variable|, scope = |{variable = "variable"}|
+      o |"variable"|
+  * |list[1]|, scope = |{list = [1, 5, 10]}|
+      o |5|
+
+|Ast.Expression.*Function*| 	Return the value of invoking the
+appropriate function in the current scope with the evaluated arguments. 	
+
+  * |function()|, scope = |{function = ...}| where |function| takes no
+    arguments and returns |"function"|
+      o |"function"|
+
+|Ast.Expression.*PlcList*| 	Returns the list as a |PlcObject|. 	
+
+  * |[1, 5, 10]|, scope = |{}|
+      o |[1, 5, 10]|
+
+
+    Provided Code
+
+These files provide a structured design that will incorporate into the
+grading system.  Sample test cases are also included to assist you in
+beginning your solution evaluation.  Look closely at the test cases
+provided to identify that the input given is what the Parser produces
+and what the Interpreter expect to receive [an AST].  As well, examine
+the test cases output to see what the Parser is intended to produce
+[evaluated results; updated scope].  You can use these examples to
+assist in constructing your own additional test cases.
+
+  * Source Files (|src/main/java/plc/project|)
+      o Ast.java <https://ufl.instructure.com/courses/498750/files/
+        83712341?wrap=1>Download Ast.java <https://ufl.instructure.com/
+        courses/498750/files/83712341/download?download_frd=1>
+      o Environment.java <https://ufl.instructure.com/courses/498750/
+        files/83712366?wrap=1>Download Environment.java <https://
+        ufl.instructure.com/courses/498750/files/83712366/download?
+        download_frd=1>
+      o Interpreter.java <https://ufl.instructure.com/courses/498750/
+        files/83712345?wrap=1>Download Interpreter.java <https://
+        ufl.instructure.com/courses/498750/files/83712345/download?
+        download_frd=1>
+      o Scope.java <https://ufl.instructure.com/courses/498750/files/
+        83712339?wrap=1>Download Scope.java <https://
+        ufl.instructure.com/courses/498750/files/83712339/download?
+        download_frd=1>
+  * Test Files (|src/test/java/plc/project|)
+      o InterpreterTests.java <https://ufl.instructure.com/courses/
+        498750/files/85646206?wrap=1>Download InterpreterTests.java
+        <https://ufl.instructure.com/courses/498750/files/85646206/
+        download?download_frd=1>
