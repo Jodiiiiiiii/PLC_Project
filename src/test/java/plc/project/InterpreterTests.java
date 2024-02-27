@@ -50,8 +50,8 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testGlobal(String test, Ast.Global ast, Object expected) {
-        Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
-        Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
+        Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null)); // confirms Interpreter returns NIL
+        Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue()); // checks values of globals
     }
 
     private static Stream<Arguments> testGlobal() {
@@ -75,15 +75,15 @@ final class InterpreterTests {
         Optional<Ast.Expression> value = Optional.of(new Ast.Expression.PlcList(values));
         Ast.Global ast = new Ast.Global("list", true, value);
 
-        Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
-        Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
+        Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null)); // confirms interpreter returns NIL
+        Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue()); // checks values in (global) list
     }
 
     @ParameterizedTest
     @MethodSource
     void testFunction(String test, Ast.Function ast, List<Environment.PlcObject> args, Object expected) {
-        Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
-        Assertions.assertEquals(expected, scope.lookupFunction(ast.getName(), args.size()).invoke(args).getValue());
+        Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null)); // confirms that visiting the Function itself returns NIL
+        Assertions.assertEquals(expected, scope.lookupFunction(ast.getName(), args.size()).invoke(args).getValue()); // confirms that function returns proper value (or NIL if none)
     }
 
     private static Stream<Arguments> testFunction() {
@@ -119,18 +119,18 @@ final class InterpreterTests {
         try {
             test(new Ast.Statement.Expression(
                     new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("Hello, World!")))
-            ), Environment.NIL.getValue(), new Scope(null));
-            Assertions.assertEquals("Hello, World!" + System.lineSeparator(), out.toString());
+            ), Environment.NIL.getValue(), new Scope(null)); // ensures statement expression returns NIL
+            Assertions.assertEquals("Hello, World!" + System.lineSeparator(), out.toString()); // ensures print statement (expression call) actually happens
         } finally {
-            System.setOut(sysout);
+            System.setOut(sysout); // resets System's output stream even if exception is thrown
         }
     }
 
     @ParameterizedTest
     @MethodSource
     void testDeclarationStatement(String test, Ast.Statement.Declaration ast, Object expected) {
-        Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
-        Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
+        Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null)); // confirms Interpreter returns NIL
+        Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue()); // confirms variable declared to proper value (or NIL)
     }
 
     private static Stream<Arguments> testDeclarationStatement() {
@@ -156,8 +156,8 @@ final class InterpreterTests {
         test(new Ast.Statement.Assignment(
                 new Ast.Expression.Access(Optional.empty(),"variable"),
                 new Ast.Expression.Literal(BigInteger.ONE)
-        ), Environment.NIL.getValue(), scope);
-        Assertions.assertEquals(BigInteger.ONE, scope.lookupVariable("variable").getValue().getValue());
+        ), Environment.NIL.getValue(), scope); // ensures Interpreter returns NIL
+        Assertions.assertEquals(BigInteger.ONE, scope.lookupVariable("variable").getValue().getValue()); // ensures variable is assigned to value
     }
 
     @Test
@@ -171,9 +171,9 @@ final class InterpreterTests {
         test(new Ast.Statement.Assignment(
                 new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(2))), "list"),
                 new Ast.Expression.Literal(BigInteger.valueOf(3))
-        ), Environment.NIL.getValue(), scope);
+        ), Environment.NIL.getValue(), scope); // ensures Interpreter returns NIL
 
-        Assertions.assertEquals(expected, scope.lookupVariable("list").getValue().getValue());
+        Assertions.assertEquals(expected, scope.lookupVariable("list").getValue().getValue()); // ensures list index is assigned to value
     }
 
     @ParameterizedTest
@@ -181,8 +181,8 @@ final class InterpreterTests {
     void testIfStatement(String test, Ast.Statement.If ast, Object expected) {
         Scope scope = new Scope(null);
         scope.defineVariable("num", true, Environment.NIL);
-        test(ast, Environment.NIL.getValue(), scope);
-        Assertions.assertEquals(expected, scope.lookupVariable("num").getValue().getValue());
+        test(ast, Environment.NIL.getValue(), scope); // ensures Interpreter returns NIL
+        Assertions.assertEquals(expected, scope.lookupVariable("num").getValue().getValue()); // ensures variable num is assigned according to if
     }
 
     private static Stream<Arguments> testIfStatement() {
@@ -231,13 +231,13 @@ final class InterpreterTests {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
         try {
-            test(ast, Environment.NIL.getValue(), scope);
-            Assertions.assertEquals("yes" + System.lineSeparator(), out.toString());
+            test(ast, Environment.NIL.getValue(), scope); // ensures Interpreter returns NIL
+            Assertions.assertEquals("yes" + System.lineSeparator(), out.toString()); // ensures "yes" was printed
         } finally {
             System.setOut(sysout);
         }
 
-        Assertions.assertEquals('n', scope.lookupVariable("letter").getValue().getValue());
+        Assertions.assertEquals('n', scope.lookupVariable("letter").getValue().getValue()); // ensures letter variable was assigned to 'n'
     }
 
     @Test
@@ -257,14 +257,14 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(BigInteger.ONE)
                         )
                 ))
-        ),Environment.NIL.getValue(), scope);
-        Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("num").getValue().getValue());
+        ),Environment.NIL.getValue(), scope); // ensures Interpreter returns NIL
+        Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("num").getValue().getValue()); // ensures variable "num" has reached 10 by end of loop
     }
 
     @ParameterizedTest
     @MethodSource
     void testLiteralExpression(String test, Ast ast, Object expected) {
-        test(ast, expected, new Scope(null));
+        test(ast, expected, new Scope(null)); // ensures Interpreter returns literal value
     }
 
     private static Stream<Arguments> testLiteralExpression() {
@@ -287,7 +287,7 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testGroupExpression(String test, Ast ast, Object expected) {
-        test(ast, expected, new Scope(null));
+        test(ast, expected, new Scope(null)); // ensures Interpreter returns evaluated value
     }
 
     private static Stream<Arguments> testGroupExpression() {
@@ -308,7 +308,7 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testBinaryExpression(String test, Ast ast, Object expected) {
-        test(ast, expected, new Scope(null));
+        test(ast, expected, new Scope(null)); // ensures Interpreter returns evaluated value
     }
 
     private static Stream<Arguments> testBinaryExpression() {
@@ -377,7 +377,7 @@ final class InterpreterTests {
     void testAccessExpression(String test, Ast ast, Object expected) {
         Scope scope = new Scope(null);
         scope.defineVariable("variable", true, Environment.create("variable"));
-        test(ast, expected, scope);
+        test(ast, expected, scope); // ensures Interpreter returns accessed value from variable
     }
 
     private static Stream<Arguments> testAccessExpression() {
@@ -397,6 +397,7 @@ final class InterpreterTests {
 
         Scope scope = new Scope(null);
         scope.defineVariable("list", true, Environment.create(list));
+        // ensures Interpreter returns proper value from list (at proper index)
         test(new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(1))), "list"), BigInteger.valueOf(5), scope);
     }
 
@@ -405,7 +406,7 @@ final class InterpreterTests {
     void testFunctionExpression(String test, Ast ast, Object expected) {
         Scope scope = new Scope(null);
         scope.defineFunction("function", 0, args -> Environment.create("function"));
-        test(ast, expected, scope);
+        test(ast, expected, scope); // ensures Interpreter returns evaluated function value
     }
 
     private static Stream<Arguments> testFunctionExpression() {
@@ -418,7 +419,7 @@ final class InterpreterTests {
                 // print("Hello, World!")
                 Arguments.of("Print",
                         new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
-                        Environment.NIL.getValue()
+                        Environment.NIL.getValue() // nothing returned from print function, so NIL here
                 )
         );
     }
@@ -434,7 +435,7 @@ final class InterpreterTests {
 
         Ast ast = new Ast.Expression.PlcList(values);
 
-        test(ast, expected, new Scope(null));
+        test(ast, expected, new Scope(null)); // ensures Interpreter returns list of values
     }
 
     private static Scope test(Ast ast, Object expected, Scope scope) {
