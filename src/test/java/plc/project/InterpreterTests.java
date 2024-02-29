@@ -1076,6 +1076,20 @@ final class InterpreterTests {
         test(ast, expected, new Scope(null)); // ensures Interpreter returns list of values
     }
 
+    @Test
+    void testPlcListNesting() {
+        // [1, 5+2, 10]
+        List<Object> expected = Arrays.asList(BigInteger.ONE, BigInteger.valueOf(7), BigInteger.TEN);
+
+        List<Ast.Expression> values = Arrays.asList(new Ast.Expression.Literal(BigInteger.ONE),
+                new Ast.Expression.Binary("+", new Ast.Expression.Literal(BigInteger.valueOf(5)), new Ast.Expression.Literal(BigInteger.valueOf(2))),
+                new Ast.Expression.Literal(BigInteger.TEN));
+
+        Ast ast = new Ast.Expression.PlcList(values);
+
+        test(ast, expected, new Scope(null)); // ensures Interpreter returns list of values
+    }
+
     private static Scope test(Ast ast, Object expected, Scope scope) {
         Interpreter interpreter = new Interpreter(scope);
         if (expected != null) {

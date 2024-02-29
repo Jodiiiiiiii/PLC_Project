@@ -209,7 +209,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // iterate through expressions to store values
+        List<Ast.Expression> expressions = ast.getValues();
+        List<Object> objects = new ArrayList<>();
+        for (Ast.Expression expr : expressions)
+        {
+            objects.add(visit(expr).getValue());
+        }
+        // return list of values (objects)
+        return Environment.create(objects);
     }
 
     /**
