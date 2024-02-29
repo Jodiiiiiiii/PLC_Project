@@ -1066,11 +1066,12 @@ final class InterpreterTests {
         test(new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(-1))), "list"), null, scope);
     }
 
+    // TODO: possibly create some more thorough unit tests for function expressions (once I understand a bit better how they work + lambdas)
     @ParameterizedTest
     @MethodSource
     void testFunctionExpression(String test, Ast ast, Object expected) {
         Scope scope = new Scope(null);
-        scope.defineFunction("function", 0, args -> Environment.create("function"));
+        scope.defineFunction("function", 0, args -> Environment.create("function45"));
         test(ast, expected, scope); // ensures Interpreter returns evaluated function value
     }
 
@@ -1079,12 +1080,17 @@ final class InterpreterTests {
                 // function()
                 Arguments.of("Function",
                         new Ast.Expression.Function("function", Arrays.asList()),
-                        "function"
+                        "function45"
                 ),
                 // print("Hello, World!")
                 Arguments.of("Print",
                         new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
                         Environment.NIL.getValue() // nothing returned from print function, so NIL here
+                ),
+                // printf
+                Arguments.of("Invalid lookup",
+                        new Ast.Expression.Function("printf", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
+                        null
                 )
         );
     }

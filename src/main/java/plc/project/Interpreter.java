@@ -3,10 +3,7 @@ package plc.project;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
@@ -216,7 +213,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // lookup function
+        Environment.Function function = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+        // gather arguments into List
+        List<Ast.Expression> expressions = ast.getArguments();
+        List<Environment.PlcObject> arguments = new ArrayList<>();
+        for(Ast.Expression expr : expressions)
+            arguments.add(visit(expr));
+        // invoke/return function call
+        return function.invoke(arguments);
     }
 
     @Override
