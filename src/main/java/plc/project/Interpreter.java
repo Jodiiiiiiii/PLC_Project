@@ -80,7 +80,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // check for null literal
+        if(ast.getLiteral() == null) return Environment.NIL;
+
+        // else return new PLC object constructed from literal
+        return Environment.create(ast.getLiteral());
     }
 
     @Override

@@ -272,7 +272,9 @@ final class InterpreterTests {
                 // NIL
                 Arguments.of("Nil", new Ast.Expression.Literal(null), Environment.NIL.getValue()), //remember, special case
                 // TRUE
-                Arguments.of("Boolean", new Ast.Expression.Literal(true), true),
+                Arguments.of("Boolean: true", new Ast.Expression.Literal(true), true),
+                // FALSE
+                Arguments.of("Boolean: false", new Ast.Expression.Literal(false), false),
                 // 1
                 Arguments.of("Integer", new Ast.Expression.Literal(BigInteger.ONE), BigInteger.ONE),
                 // 1.0
