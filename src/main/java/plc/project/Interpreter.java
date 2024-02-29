@@ -183,7 +183,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 BigInteger base = requireType(BigInteger.class, lhs);
                 BigInteger exp = requireType(BigInteger.class, rhs);
                 BigInteger result = BigInteger.ONE;
-                for(BigInteger i = BigInteger.ZERO; i.abs().compareTo(exp.abs()) < 0; i = i.add(BigInteger.ONE))
+                for(BigInteger i = BigInteger.ZERO; i.compareTo(exp.abs()) < 0; i = i.add(BigInteger.ONE))
                 {
                     if(exp.compareTo(BigInteger.ZERO) > 0)
                         result = result.multiply(base);

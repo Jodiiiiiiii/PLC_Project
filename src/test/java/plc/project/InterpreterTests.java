@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 final class InterpreterTests {
@@ -315,10 +316,66 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testBinaryExpression() {
         return Stream.of(
+                // null && FALSE
+                Arguments.of("Null",
+                        new Ast.Expression.Binary("&&",
+                                new Ast.Expression.Literal(null),
+                                new Ast.Expression.Literal(false)
+                        ),
+                        null
+                ),
                 // TRUE && FALSE
-                Arguments.of("And",
+                Arguments.of("And: False",
                         new Ast.Expression.Binary("&&",
                                 new Ast.Expression.Literal(true),
+                                new Ast.Expression.Literal(false)
+                        ),
+                        false
+                ),
+                // TRUE && TRUE
+                Arguments.of("And: True",
+                        new Ast.Expression.Binary("&&",
+                                new Ast.Expression.Literal(true),
+                                new Ast.Expression.Literal(true)
+                        ),
+                        true
+                ),
+                // FALSE && undefined
+                Arguments.of("And (Short Circuit)",
+                        new Ast.Expression.Binary("&&",
+                                new Ast.Expression.Literal(false),
+                                new Ast.Expression.Access(Optional.empty(), "undefined")
+                        ),
+                        false
+                ),
+                // 1 && TRUE
+                Arguments.of("And (First Not Boolean)",
+                        new Ast.Expression.Binary("&&",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(true)
+                        ),
+                        null
+                ),
+                // TRUE && 1
+                Arguments.of("And (Second Not Boolean)",
+                        new Ast.Expression.Binary("&&",
+                                new Ast.Expression.Literal(true),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        null
+                ),
+                // FALSE || TRUE
+                Arguments.of("Or: True",
+                        new Ast.Expression.Binary("||",
+                                new Ast.Expression.Literal(false),
+                                new Ast.Expression.Literal(true)
+                        ),
+                        true
+                ),
+                // FALSE || FALSE
+                Arguments.of("Or: False",
+                        new Ast.Expression.Binary("||",
+                                new Ast.Expression.Literal(false),
                                 new Ast.Expression.Literal(false)
                         ),
                         false
@@ -331,21 +388,293 @@ final class InterpreterTests {
                         ),
                         true
                 ),
+                // 1 || TRUE
+                Arguments.of("Or (Not Boolean First)",
+                        new Ast.Expression.Binary("||",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(true)
+                        ),
+                        null
+                ),
+                // FALSE || 1
+                Arguments.of("Or (Not Boolean Second)",
+                        new Ast.Expression.Binary("||",
+                                new Ast.Expression.Literal(false),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        null
+                ),
                 // 1 < 10
-                Arguments.of("Less Than",
+                Arguments.of("Less Than: True",
                         new Ast.Expression.Binary("<",
                                 new Ast.Expression.Literal(BigInteger.ONE),
                                 new Ast.Expression.Literal(BigInteger.TEN)
                         ),
                         true
                 ),
+                // 10 < 1
+                Arguments.of("Less Than: False",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal(BigInteger.TEN),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        false
+                ),
+                // Optional.of(1) < 10
+                Arguments.of("Less Than: non-comparable",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal(Optional.of(BigInteger.ONE)),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        null
+                ),
+                // 1.0 < 10
+                Arguments.of("Less Than: Different Types",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        null
+                ),
+                // 1.0 < 10.0
+                Arguments.of("Less Than: Decimal",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        true
+                ),
+                // 'a' < 'b'
+                Arguments.of("Less Than: Character",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal('a'),
+                                new Ast.Expression.Literal('b')
+                        ),
+                        true
+                ),
+                // "abc" < "def"
+                Arguments.of("Less Than: String",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal("abc"),
+                                new Ast.Expression.Literal("def")
+                        ),
+                        true
+                ),
+                // 1 > 10
+                Arguments.of("Greater Than: False",
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        false
+                ),
+                // 10 > 1
+                Arguments.of("Greater Than: True",
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(BigInteger.TEN),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        true
+                ),
+                // Optional.of(1) > 10
+                Arguments.of("Greater Than: non-comparable",
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(Optional.of(BigInteger.ONE)),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        null
+                ),
+                // 1.0 > 10
+                Arguments.of("Greater Than: Different Types",
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        null
+                ),
+                // 1.0 > 10.0
+                Arguments.of("Greater Than: Decimal",
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        false
+                ),
+                // 'a' > 'b'
+                Arguments.of("Greater Than: Character",
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal('a'),
+                                new Ast.Expression.Literal('b')
+                        ),
+                        false
+                ),
+                // "abc" > "def"
+                Arguments.of("Greater Than: String",
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal("abc"),
+                                new Ast.Expression.Literal("def")
+                        ),
+                        false
+                ),
                 // 1 == 10
-                Arguments.of("Equal",
+                Arguments.of("Equal: False",
                         new Ast.Expression.Binary("==",
                                 new Ast.Expression.Literal(BigInteger.ONE),
                                 new Ast.Expression.Literal(BigInteger.TEN)
                         ),
                         false
+                ),
+                // 1 == 1
+                Arguments.of("Equal: True",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        true
+                ),
+                // null == 1
+                Arguments.of("Equal: null (false)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(null),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        false
+                ),
+                // null == null
+                Arguments.of("Equal: null (true)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(null),
+                                new Ast.Expression.Literal(null)
+                        ),
+                        true
+                ),
+                // 1.0 == 1.0
+                Arguments.of("Equal: decimal (true)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.ONE)
+                        ),
+                        true
+                ),
+                // 1.0 == 10.0
+                Arguments.of("Equal: decimal (false)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        false
+                ),
+                // 'a' == 'a'
+                Arguments.of("Equal: char (true)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal('a'),
+                                new Ast.Expression.Literal('a')
+                        ),
+                        true
+                ),
+                // 'a' == 'b'
+                Arguments.of("Equal: char (false)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal('a'),
+                                new Ast.Expression.Literal('b')
+                        ),
+                        false
+                ),
+                // "abc" == "abc"
+                Arguments.of("Equal: char (true)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal("abc"),
+                                new Ast.Expression.Literal("abc")
+                        ),
+                        true
+                ),
+                // "abc == "def"
+                Arguments.of("Equal: char (false)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal("abc"),
+                                new Ast.Expression.Literal("def")
+                        ),
+                        false
+                ),
+                // 1 != 10
+                Arguments.of("Not Equal: True",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        true
+                ),
+                // 1 != 1
+                Arguments.of("Not Equal: False",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        false
+                ),
+                // null != 1
+                Arguments.of("Not Equal: null (true)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(null),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        true
+                ),
+                // null != null
+                Arguments.of("Not Equal: null (false)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(null),
+                                new Ast.Expression.Literal(null)
+                        ),
+                        false
+                ),
+                // 1.0 != 1.0
+                Arguments.of("Not Equal: decimal (false)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.ONE)
+                        ),
+                        false
+                ),
+                // 1.0 != 10.0
+                Arguments.of("Not Equal: decimal (true)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        true
+                ),
+                // 'a' != 'a'
+                Arguments.of("Not Equal: char (false)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal('a'),
+                                new Ast.Expression.Literal('a')
+                        ),
+                        false
+                ),
+                // 'a' != 'b'
+                Arguments.of("Not Equal: char (true)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal('a'),
+                                new Ast.Expression.Literal('b')
+                        ),
+                        true
+                ),
+                // "abc" != "abc"
+                Arguments.of("Not Equal: char (false)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal("abc"),
+                                new Ast.Expression.Literal("abc")
+                        ),
+                        false
+                ),
+                // "abc != "def"
+                Arguments.of("Not Equal: char (true)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal("abc"),
+                                new Ast.Expression.Literal("def")
+                        ),
+                        true
                 ),
                 // "a" + "b"
                 Arguments.of("Concatenation",
@@ -355,21 +684,328 @@ final class InterpreterTests {
                         ),
                         "ab"
                 ),
+                // "abc " + "def"
+                Arguments.of("Concatenation: multiple letters",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal("abc "),
+                                new Ast.Expression.Literal("def")
+                        ),
+                        "abc def"
+                ),
+                // "a" + 1.0
+                Arguments.of("Concatenation: plus decimal (weird)",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal("a"),
+                                new Ast.Expression.Literal(BigDecimal.ONE)
+                        ),
+                        "a1" // TODO: verify if this should be "a1.0" instead? the results of this test case are based on how Java concatenates
+                ),
+                // "a" + 1.1
+                Arguments.of("Concatenation: plus decimal",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal("a"),
+                                new Ast.Expression.Literal(new BigDecimal("1.1"))
+                        ),
+                        "a1.1"
+                ),
+                // "a" + 2
+                Arguments.of("Concatenation: plus integer",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal("a"),
+                                new Ast.Expression.Literal(BigInteger.TWO)
+                        ),
+                        "a2"
+                ),
+                // "a" + 'b'
+                Arguments.of("Concatenation: plus char",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal("a"),
+                                new Ast.Expression.Literal('b')
+                        ),
+                        "ab"
+                ),
+                // 2 + "a"
+                Arguments.of("Concatenation: second string only",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal(BigInteger.TWO),
+                                new Ast.Expression.Literal("a")
+                        ),
+                        "2a"
+                ),
+                // 'a' + 'b'
+                Arguments.of("Concatenation: two chars",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal('a'),
+                                new Ast.Expression.Literal('b')
+                        ),
+                        null
+                ),
+                // 'a' + 1
+                Arguments.of("Concatenation: char with number",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal('a'),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        ),
+                        null
+                ),
                 // 1 + 10
-                Arguments.of("Addition",
+                Arguments.of("Addition: Integer",
                         new Ast.Expression.Binary("+",
                                 new Ast.Expression.Literal(BigInteger.ONE),
                                 new Ast.Expression.Literal(BigInteger.TEN)
                         ),
                         BigInteger.valueOf(11)
                 ),
+                // 1.0 + 10.0
+                Arguments.of("Addition: Decimal",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        BigDecimal.valueOf(11)
+                ),
+                // 1.0 + 10
+                Arguments.of("Addition: Mixed Types",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        null
+                ),
+                // 1.0 + null
+                Arguments.of("Addition: null",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(null)
+                        ),
+                        null
+                ),
+                // 1 - 10
+                Arguments.of("Subtraction: Integer",
+                        new Ast.Expression.Binary("-",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        BigInteger.valueOf(-9)
+                ),
+                // 1.0 + 10.0
+                Arguments.of("Subtraction: Decimal",
+                        new Ast.Expression.Binary("-",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        BigDecimal.valueOf(-9)
+                ),
+                // 1.0 - 10
+                Arguments.of("Subtraction: Mixed Types",
+                        new Ast.Expression.Binary("-",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        null
+                ),
+                // 1.0 - null
+                Arguments.of("Subtraction: null",
+                        new Ast.Expression.Binary("-",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(null)
+                        ),
+                        null
+                ),
+                // 1.0 - "abc"
+                Arguments.of("Subtraction: String",
+                        new Ast.Expression.Binary("-",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal("abc")
+                        ),
+                        null
+                ),
+                // 1 * 10
+                Arguments.of("Multiple: Integer",
+                        new Ast.Expression.Binary("*",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        BigInteger.valueOf(10)
+                ),
+                // 1.0 * 10.0
+                Arguments.of("Multiply: Decimal",
+                        new Ast.Expression.Binary("*",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        BigDecimal.valueOf(10)
+                ),
+                // 1.0 * 10
+                Arguments.of("Multiply: Mixed Types",
+                        new Ast.Expression.Binary("*",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        null
+                ),
+                // 1.0 * null
+                Arguments.of("Multiply: null",
+                        new Ast.Expression.Binary("*",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(null)
+                        ),
+                        null
+                ),
+                // 1.0 * "abc"
+                Arguments.of("Multiply: String",
+                        new Ast.Expression.Binary("*",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal("abc")
+                        ),
+                        null
+                ),
                 // 1.2 / 3.4
-                Arguments.of("Division",
+                Arguments.of("Division: Given",
                         new Ast.Expression.Binary("/",
                                 new Ast.Expression.Literal(new BigDecimal("1.2")),
                                 new Ast.Expression.Literal(new BigDecimal("3.4"))
                         ),
                         new BigDecimal("0.4")
+                ),
+                // 1 / 10
+                Arguments.of("Division: Integer (0)",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        BigInteger.valueOf(0)
+                ),
+                // 20 / 2
+                Arguments.of("Division: Integer (non-0)",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(BigInteger.valueOf(20)),
+                                new Ast.Expression.Literal(BigInteger.TWO)
+                        ),
+                        BigInteger.valueOf(10)
+                ),
+                // 1.0 / 10.0
+                Arguments.of("Division: Decimal",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        BigDecimal.valueOf(0)
+                ),
+                // 10.0 / 3.0
+                Arguments.of("Division: Decimal (another)",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(BigDecimal.TEN),
+                                new Ast.Expression.Literal(BigDecimal.valueOf(3))
+                        ),
+                        BigDecimal.valueOf(3)
+                        // TODO: verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
+                ),
+                // 25.0 / 10.0
+                Arguments.of("Division: Decimal (another)",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(BigDecimal.valueOf(25)),
+                                new Ast.Expression.Literal(BigDecimal.valueOf(10))
+                        ),
+                        BigDecimal.valueOf(2)
+                        // TODO: verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
+                ),
+                // 1.0 / 10
+                Arguments.of("Division: Mixed Types",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        null
+                ),
+                // 1.0 / null
+                Arguments.of("Division: null",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(null)
+                        ),
+                        null
+                ),
+                // 1.0 / "abc"
+                Arguments.of("Division: String",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal("abc")
+                        ),
+                        null
+                ),
+                // 2 ^ 2
+                Arguments.of("Exponent: Standard",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.valueOf(2)),
+                                new Ast.Expression.Literal(BigInteger.valueOf(2))
+                        ),
+                        BigInteger.valueOf(4)
+                ),
+                // 2 ^ 0
+                Arguments.of("Exponent: Zero Exponent",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.valueOf(2)),
+                                new Ast.Expression.Literal(BigInteger.valueOf(0))
+                        ),
+                        BigInteger.valueOf(1)
+                ),
+                // 2 ^ -1
+                Arguments.of("Exponent: Negative Exponent",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.valueOf(2)),
+                                new Ast.Expression.Literal(BigInteger.valueOf(-1))
+                        ),
+                        BigInteger.valueOf(0)
+                        // TODO: verify this is correct behavior for negative exponents (question asked in Teams)
+                ),
+                // -2 ^ 2
+                Arguments.of("Exponent: Negative Base (even)",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.valueOf(-2)),
+                                new Ast.Expression.Literal(BigInteger.valueOf(2))
+                        ),
+                        BigInteger.valueOf(4)
+                ),
+                // -2 ^ 3
+                Arguments.of("Exponent: Negative Base (odd)",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.valueOf(-2)),
+                                new Ast.Expression.Literal(BigInteger.valueOf(3))
+                        ),
+                        BigInteger.valueOf(-8)
+                ),
+                // 2 ^ 2.0
+                Arguments.of("Exponent: One Decimal",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.valueOf(2)),
+                                new Ast.Expression.Literal(BigDecimal.valueOf(2))
+                        ),
+                        null
+                ),
+                // 2.0 ^ 2.0
+                Arguments.of("Exponent: Two Decimals",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigDecimal.valueOf(2)),
+                                new Ast.Expression.Literal(BigDecimal.valueOf(2))
+                        ),
+                        null
+                ),
+                // 2.0 ^ 'a'
+                Arguments.of("Exponent: Char",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigDecimal.valueOf(2)),
+                                new Ast.Expression.Literal('a')
+                        ),
+                        null
+                ),
+                // 2.0 ^ "abc"
+                Arguments.of("Exponent: String",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigDecimal.valueOf(2)),
+                                new Ast.Expression.Literal("abc")
+                        ),
+                        null
                 )
         );
     }
@@ -449,5 +1085,4 @@ final class InterpreterTests {
         }
         return interpreter.getScope();
     }
-
 }
