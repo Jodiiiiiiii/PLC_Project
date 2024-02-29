@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
@@ -94,7 +96,105 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
-        throw new UnsupportedOperationException(); //TODO
+
+        // only visit rhs for now (in case of short circuit)
+        Environment.PlcObject lhs = visit(ast.getLeft());
+
+        // logical cases must wait to visit rhs for short circuit cases
+        switch(ast.getOperator()) {
+            // Logical: &&
+            case "&&":
+                // short circuiting: false + &&
+                if (!requireType(Boolean.class, lhs))
+                    return Environment.create(false);
+                else // return processed (ANDed) result (lhs already known to be true, so only rhs matters here)
+                    return Environment.create(requireType(Boolean.class, visit(ast.getRight())));
+                // Logical: ||
+            case "||":
+                // short circuiting: true + ||
+                if (requireType(Boolean.class, lhs))
+                    return Environment.create(true);
+                else // return processed (ORed) result (lhs already known to be false, so only rhs matters here)
+                    return Environment.create(requireType(Boolean.class, visit(ast.getRight())));
+        }
+
+        // all remaining cases allow visiting of rhs
+        Environment.PlcObject rhs = visit(ast.getRight());
+
+        switch(ast.getOperator())
+        {
+            // Comparable: > OR <
+            case ">":
+                // ensure both lhs and rhs are comparable and the same class, then compare
+                return Environment.create(requireType(Comparable.class, lhs).compareTo(requireType(lhs.getValue().getClass(), rhs)) > 0);
+            case "<":
+                // ensure both lhs and rhs are comparable and the same class, then compare
+                return Environment.create(requireType(Comparable.class, lhs).compareTo(requireType(lhs.getValue().getClass(), rhs)) < 0);
+            // Equality
+            case "==":
+                // check for equality using null-safe Objects.equals
+                return Environment.create(Objects.equals(lhs.getValue(), rhs.getValue()));
+            case "!=":
+                // check for equality using null-safe Objects.equals
+                return Environment.create(!Objects.equals(lhs.getValue(), rhs.getValue()));
+            // Addition (string concatenation or numeric addition)
+            case "+":
+                // string concatenation
+                if(lhs.getValue().getClass() == String.class || rhs.getValue().getClass() == String.class)
+                {
+                    return Environment.create(lhs.getValue() + "" + rhs.getValue());
+                }
+                // Numerical addition
+                else
+                {
+                    // standard calculations + type checking
+                    if(lhs.getValue().getClass() == BigDecimal.class) // decimals
+                        return Environment.create(((BigDecimal) lhs.getValue()).add(requireType(BigDecimal.class, rhs)));
+                    else // integers
+                        return Environment.create(requireType(BigInteger.class, lhs).add(requireType(BigInteger.class, rhs)));
+                }
+            // Subtraction/Multiplication
+            case "-":
+                // standard calculations + type checking
+                if(lhs.getValue().getClass() == BigDecimal.class) // decimals
+                    return Environment.create(((BigDecimal) lhs.getValue()).subtract(requireType(BigDecimal.class, rhs)));
+                else // integers
+                    return Environment.create(requireType(BigInteger.class, lhs).subtract(requireType(BigInteger.class, rhs)));
+            case "*":
+                // standard calculations + type checking
+                if(lhs.getValue().getClass() == BigDecimal.class) // decimals
+                    return Environment.create(((BigDecimal) lhs.getValue()).multiply(requireType(BigDecimal.class, rhs)));
+                else // integers
+                    return Environment.create(requireType(BigInteger.class, lhs).multiply(requireType(BigInteger.class, rhs)));
+            // Division
+            case "/":
+                // check first for divide by zero evaluation failure
+                if(rhs.getValue().equals(BigDecimal.valueOf(0.0)) || rhs.getValue().equals(BigInteger.valueOf(0)))
+                    throw new RuntimeException("Cannot divide by zero.");
+                // standard calculations + type checking
+                if(lhs.getValue().getClass() == BigDecimal.class) // decimals
+                    return Environment.create(((BigDecimal) lhs.getValue()).divide(requireType(BigDecimal.class, rhs), RoundingMode.HALF_EVEN));
+                else // integers
+                    return Environment.create(requireType(BigInteger.class, lhs).divide(requireType(BigInteger.class, rhs)));
+            // Exponents
+            case "^":
+                // manually calculate exponent because built-in functions only allow integer exponent,
+                // but value input might actually be larger than the range of an integer
+                BigInteger base = requireType(BigInteger.class, lhs);
+                BigInteger exp = requireType(BigInteger.class, rhs);
+                BigInteger result = BigInteger.ONE;
+                for(BigInteger i = BigInteger.ZERO; i.abs().compareTo(exp.abs()) < 0; i = i.add(BigInteger.ONE))
+                {
+                    if(exp.compareTo(BigInteger.ZERO) > 0)
+                        result = result.multiply(base);
+                    else
+                        result = result.divide(base);
+                }
+
+                return Environment.create(result);
+            default:
+                throw new RuntimeException("Unable to interpret unknown binary operator"); // should not be possible to reach this statement
+        }
     }
 
     @Override
