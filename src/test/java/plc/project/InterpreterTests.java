@@ -1024,6 +1024,11 @@ final class InterpreterTests {
                 Arguments.of("Variable",
                         new Ast.Expression.Access(Optional.empty(), "variable"),
                         "variable"
+                ),
+                // variable2
+                Arguments.of("Variable Missing",
+                        new Ast.Expression.Access(Optional.empty(), "variable2"),
+                        null
                 )
         );
     }
@@ -1037,6 +1042,28 @@ final class InterpreterTests {
         scope.defineVariable("list", true, Environment.create(list));
         // ensures Interpreter returns proper value from list (at proper index)
         test(new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(1))), "list"), BigInteger.valueOf(5), scope);
+    }
+
+    @Test
+    void testListAccessExpressionMissing() {
+        // list[1]
+        List<Object> list = Arrays.asList(BigInteger.ONE, BigInteger.valueOf(5), BigInteger.TEN);
+
+        Scope scope = new Scope(null);
+        //scope.defineVariable("list", true, Environment.create(list)); // removed from scope for this test
+        // ensures Interpreter returns proper value from list (at proper index)
+        test(new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(1))), "list"), null, scope);
+    }
+
+    @Test
+    void testListAccessExpressionIndexOutOfBounds() {
+        // list[1]
+        List<Object> list = Arrays.asList(BigInteger.ONE, BigInteger.valueOf(5), BigInteger.TEN);
+
+        Scope scope = new Scope(null);
+        scope.defineVariable("list", true, Environment.create(list)); // removed from scope for this test
+        // ensures Interpreter returns proper value from list (at proper index)
+        test(new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(-1))), "list"), null, scope);
     }
 
     @ParameterizedTest

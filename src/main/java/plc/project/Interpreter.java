@@ -199,7 +199,19 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if(ast.getOffset().isEmpty()) // variable
+            return scope.lookupVariable(ast.getName()).getValue();
+        else // list
+        {
+            // retrieve data
+            BigInteger offset = requireType(BigInteger.class, visit(ast.getOffset().get()));
+            List<Object> varList = requireType(List.class, scope.lookupVariable(ast.getName()).getValue());
+            // check for index out of bounds
+            if(offset.intValue() > varList.size() - 1)
+                throw new RuntimeException("Invalid List Access: Index Out of Bounds");
+
+            return Environment.create(varList.get(offset.intValue())); // TODO: confirm I can just convert BigInteger to int like this
+        }
     }
 
     @Override
