@@ -33,6 +33,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
             return Environment.create(result);
         });
+
+        // converts from one base to another (???)
+        scope.defineFunction("converter", 2, args -> {
+
+            BigInteger decimal = requireType(BigInteger.class, Environment.create(args.get(0)));
+            BigInteger base = requireType(BigInteger.class, Environment.create(args.get(1)));
+
+            return Environment.NIL; // temp
+        });
     }
 
     public Scope getScope() {
