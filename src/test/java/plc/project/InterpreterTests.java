@@ -1075,6 +1075,17 @@ final class InterpreterTests {
         test(ast, expected, scope); // ensures Interpreter returns evaluated function value
     }
 
+    @Test
+    void testLogarithmExpressionStatement() {
+        Scope scope = new Scope(null);
+        test(   new Ast.Expression.Function(
+                    "logarithm",
+                    List.of(new Ast.Expression.Literal(BigDecimal.valueOf(Math.E)))),
+                BigDecimal.valueOf(1.0),
+                scope
+        );
+    }
+
     private static Stream<Arguments> testFunctionExpression() {
         return Stream.of(
                 // function()

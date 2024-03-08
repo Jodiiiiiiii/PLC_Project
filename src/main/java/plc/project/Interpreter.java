@@ -12,9 +12,26 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     public Interpreter(Scope parent) {
         scope = new Scope(parent);
+
         scope.defineFunction("print", 1, args -> {
             System.out.println(args.get(0).getValue());
             return Environment.NIL;
+        });
+
+        scope.defineFunction("logarithm", 1, args -> {
+
+            // Alternate Type Checking
+            /*
+            // type checking
+            if(!(args.get(0).getValue() instanceof BigDecimal))
+                throw new RuntimeException("expected type BigDecimal. received, " + args.get(0).getValue().getClass().getName() + ".");
+
+            BigDecimal bd1 = (BigDecimal) args.get(0).getValue(); */
+
+            BigDecimal bd2 = requireType(BigDecimal.class, Environment.create(args.get(0).getValue()));
+            BigDecimal result = BigDecimal.valueOf(Math.log(bd2.doubleValue()));
+
+            return Environment.create(result);
         });
     }
 
