@@ -95,7 +95,20 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.While ast) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        while(requireType(Boolean.class, visit(ast.getCondition())))
+        {
+            try{
+                scope = new Scope(scope);
+                for(Ast.Statement stmt : ast.getStatements())
+                    visit(stmt);
+            } finally {
+                // return to parent scope when exiting/looping while loop, regardless of error state
+                scope = scope.getParent();
+                // scope is re-created ever loop of the while loop
+            }
+        }
+
+        return Environment.NIL;
     }
 
     @Override

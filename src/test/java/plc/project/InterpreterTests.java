@@ -241,6 +241,7 @@ final class InterpreterTests {
         Assertions.assertEquals('n', scope.lookupVariable("letter").getValue().getValue()); // ensures letter variable was assigned to 'n'
     }
 
+    // TODO: Test WHILE (waiting on statement visiting to be done)
     @Test
     void testWhileStatement() {
         // WHILE num < 10 DO num = num + 1; END
