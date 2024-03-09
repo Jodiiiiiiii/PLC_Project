@@ -65,7 +65,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Expression ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // simply visit (evaluate) the expression
+        visit(ast.getExpression());
+
+        // always returns NIL on successful execution
+        return Environment.NIL;
     }
 
     @Override
@@ -75,7 +79,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         else
             scope.defineVariable(ast.getName(), true, Environment.NIL);
 
-        return Environment.NIL; // always returns NIL on successful execution
+        // always returns NIL on successful execution
+        return Environment.NIL;
     }
 
     @Override

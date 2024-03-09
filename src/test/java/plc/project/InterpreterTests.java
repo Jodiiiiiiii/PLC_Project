@@ -113,15 +113,31 @@ final class InterpreterTests {
 
     @Test
     void testExpressionStatement() {
-        // print("Hello, World!");
+
         PrintStream sysout = System.out;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        // print("Hello, World!");
         System.setOut(new PrintStream(out));
         try {
             test(new Ast.Statement.Expression(
                     new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("Hello, World!")))
             ), Environment.NIL.getValue(), new Scope(null)); // ensures statement expression returns NIL
             Assertions.assertEquals("Hello, World!" + System.lineSeparator(), out.toString()); // ensures print statement (expression call) actually happens
+        } finally {
+            System.setOut(sysout); // resets System's output stream even if exception is thrown
+        }
+
+        // nested function expression statement
+        // print(logarithm(2
+        System.setOut(new PrintStream(out));
+        try {
+            test(new Ast.Statement.Expression(
+                    new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Function(
+                            "logarithm", Arrays.asList(new Ast.Expression.Literal(BigDecimal.TWO)))
+                    ))
+            ), Environment.NIL.getValue(), new Scope(null)); // ensures statement expression returns NIL
+            Assertions.assertEquals("Hello, World!" + System.lineSeparator() + BigDecimal.valueOf(Math.log(BigDecimal.TWO.doubleValue())) + System.lineSeparator(), out.toString()); // ensures print statement (expression call) actually happens
         } finally {
             System.setOut(sysout); // resets System's output stream even if exception is thrown
         }
@@ -250,6 +266,7 @@ final class InterpreterTests {
         Assertions.assertEquals(expected, scope.lookupVariable("num").getValue().getValue()); // ensures variable num is assigned according to if
     }
 
+    // TODO: Test for If Statements (waiting on all statement visiting to be done)
     private static Stream<Arguments> testIfStatement() {
         return Stream.of(
                 // IF TRUE DO num = 1; END
