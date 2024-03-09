@@ -698,7 +698,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal("a"),
                                 new Ast.Expression.Literal(BigDecimal.ONE)
                         ),
-                        "a1" // TODO: verify if this should be "a1.0" instead? the results of this test case are based on how Java concatenates
+                        "a1.0" // TODO: [Asked in TEAMS] verify if this should be "a1.0" instead? the results of this test case are based on how Java concatenates
                 ),
                 // "a" + 1.1
                 Arguments.of("Concatenation: plus decimal",
@@ -899,7 +899,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(BigDecimal.valueOf(3))
                         ),
                         BigDecimal.valueOf(3)
-                        // TODO: verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
+                        // TODO: [Asked in TEAMS] verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
                 ),
                 // 25.0 / 10.0
                 Arguments.of("Division: Decimal (another)",
@@ -908,7 +908,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(BigDecimal.valueOf(10))
                         ),
                         BigDecimal.valueOf(2)
-                        // TODO: verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
+                        // TODO: [Asked in TEAMS] verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
                 ),
                 // 1.0 / 10
                 Arguments.of("Division: Mixed Types",
@@ -957,7 +957,6 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(BigInteger.valueOf(-1))
                         ),
                         BigInteger.valueOf(0)
-                        // TODO: verify this is correct behavior for negative exponents (question asked in Teams)
                 ),
                 // -2 ^ 2
                 Arguments.of("Exponent: Negative Base (even)",
@@ -1066,7 +1065,6 @@ final class InterpreterTests {
         test(new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(-1))), "list"), null, scope);
     }
 
-    // TODO: possibly create some more thorough unit tests for function expressions (once I understand a bit better how they work + lambdas)
     @ParameterizedTest
     @MethodSource
     void testFunctionExpression(String test, Ast ast, Object expected) {
