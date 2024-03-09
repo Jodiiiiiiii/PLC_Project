@@ -117,7 +117,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if(requireType(Boolean.class, visit(ast.getCondition()))) // true
+            VisitNewScope(ast.getThenStatements());
+        else // false
+            VisitNewScope(ast.getElseStatements());
+
+        // always returns NIL on successful execution
+        return Environment.NIL;
     }
 
     @Override
@@ -133,20 +139,23 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Statement.While ast) {
         while(requireType(Boolean.class, visit(ast.getCondition())))
-        {
-            try{
-                scope = new Scope(scope);
-                for(Ast.Statement stmt : ast.getStatements())
-                    visit(stmt);
-            } finally {
-                // return to parent scope when exiting/looping while loop, regardless of error state
-                scope = scope.getParent();
-                // scope is re-created ever loop of the while loop
-            }
-        }
+            VisitNewScope(ast.getStatements());
 
         // always returns NIL on successful execution
         return Environment.NIL;
+    }
+
+    private void VisitNewScope(List<Ast.Statement> statements) {
+        try{
+            scope = new Scope(scope);
+            // execute list of statements within this scope
+            for(Ast.Statement stmt : statements)
+                visit(stmt);
+        } finally {
+            // return to parent scope when exiting/looping, regardless of error state
+            scope = scope.getParent();
+            // scope is re-created ever loop
+        }
     }
 
     @Override
