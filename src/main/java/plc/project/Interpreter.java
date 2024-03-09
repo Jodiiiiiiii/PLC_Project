@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
@@ -14,21 +13,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         scope = new Scope(parent);
 
         scope.defineFunction("print", 1, args -> {
-            System.out.println(args.get(0).getValue());
+            System.out.println(args.getFirst().getValue());
             return Environment.NIL;
         });
 
         scope.defineFunction("logarithm", 1, args -> {
 
-            // Alternate Type Checking
-            /*
-            // type checking
-            if(!(args.get(0).getValue() instanceof BigDecimal))
-                throw new RuntimeException("expected type BigDecimal. received, " + args.get(0).getValue().getClass().getName() + ".");
+            // Alternate Type Checking: using instanceof operator
 
-            BigDecimal bd1 = (BigDecimal) args.get(0).getValue(); */
-
-            BigDecimal bd2 = requireType(BigDecimal.class, Environment.create(args.get(0).getValue()));
+            BigDecimal bd2 = requireType(BigDecimal.class, Environment.create(args.getFirst().getValue()));
             BigDecimal result = BigDecimal.valueOf(Math.log(bd2.doubleValue()));
 
             return Environment.create(result);
@@ -37,8 +30,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         // converts from one base to another (???)
         scope.defineFunction("converter", 2, args -> {
 
-            BigInteger decimal = requireType(BigInteger.class, Environment.create(args.get(0)));
-            BigInteger base = requireType(BigInteger.class, Environment.create(args.get(1)));
+            //BigInteger decimal = requireType(BigInteger.class, Environment.create(args.get(0)));
+            //BigInteger base = requireType(BigInteger.class, Environment.create(args.get(1)));
 
             return Environment.NIL; // temp
         });
