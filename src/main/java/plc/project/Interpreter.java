@@ -44,6 +44,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
         throw new UnsupportedOperationException(); //TODO
+        // make sure to verify arity on functions called
     }
 
     @Override
@@ -60,7 +61,36 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+
+        // define function (using Java lambda)
+        scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+            try { // enter function's scope
+                scope = new Scope(scope); // define new scope within function
+
+                // create parameter variables in scope
+                for (int i = 0; i < ast.getParameters().size(); i++)
+                    scope.defineVariable(ast.getParameters().get(i), true, args.get(i));
+
+                // evaluate statements, checking for return
+                for (Ast.Statement stmt : ast.getStatements())
+                {
+                    try{
+                        visit(stmt);
+                    }
+                    catch(Return returnVal){
+                        return returnVal.value;
+                    }
+                }
+
+                // no return statement found, so return NIL
+                return Environment.NIL;
+            } finally { // exit function's scope
+                scope = scope.getParent(); // return to previous (parent) scope when done
+            }
+        });
+
+        // temp
+        return Environment.NIL;
     }
 
     @Override

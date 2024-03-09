@@ -89,6 +89,7 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testFunction() {
         return Stream.of(
+                // no arguments
                 // FUN main() DO RETURN 0; END
                 Arguments.of("Main",
                         new Ast.Function("main", Arrays.asList(), Arrays.asList(
@@ -97,9 +98,10 @@ final class InterpreterTests {
                         Arrays.asList(),
                         BigInteger.ZERO
                 ),
+                // one argument
                 // FUN square(x) DO RETURN x * x; END
                 Arguments.of("Arguments",
-                        new Ast.Function("main", Arrays.asList("x"), Arrays.asList(
+                        new Ast.Function("square", Arrays.asList("x"), Arrays.asList(
                                 new Ast.Statement.Return(new Ast.Expression.Binary("*",
                                         new Ast.Expression.Access(Optional.empty(), "x"),
                                         new Ast.Expression.Access(Optional.empty(), "x")
@@ -107,6 +109,18 @@ final class InterpreterTests {
                         )),
                         Arrays.asList(Environment.create(BigInteger.TEN)),
                         BigInteger.valueOf(100)
+                ),
+                // multiple arguments
+                // FUN square2(x, y) DO RETURN x * y; END
+                Arguments.of("Arguments",
+                        new Ast.Function("square2", Arrays.asList("x", "y"), Arrays.asList(
+                                new Ast.Statement.Return(new Ast.Expression.Binary("*",
+                                        new Ast.Expression.Access(Optional.empty(), "x"),
+                                        new Ast.Expression.Access(Optional.empty(), "y")
+                                ))
+                        )),
+                        Arrays.asList(Environment.create(BigInteger.TEN), Environment.create(BigInteger.TWO)),
+                        BigInteger.valueOf(20)
                 )
         );
     }
