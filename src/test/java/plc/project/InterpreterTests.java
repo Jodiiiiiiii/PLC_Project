@@ -437,8 +437,6 @@ final class InterpreterTests {
         ),null, scope2); // ensures Interpreter returns NIL
     }
 
-    // TODO: test cases for interpreting Ast.Statement.Return
-
     @ParameterizedTest
     @MethodSource
     void testLiteralExpression(String test, Ast ast, Object expected) {
