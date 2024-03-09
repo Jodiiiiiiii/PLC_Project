@@ -292,6 +292,7 @@ final class InterpreterTests {
 
     @Test
     void testSwitchStatement() {
+        // CASE 1: GIVEN
         // SWITCH letter CASE 'y': print("yes"); letter = 'n'; DEFAULT: print("no"); END
         Scope scope = new Scope(null);
         scope.defineVariable("letter", true, Environment.create('y'));
@@ -320,6 +321,36 @@ final class InterpreterTests {
         }
 
         Assertions.assertEquals('n', scope.lookupVariable("letter").getValue().getValue()); // ensures letter variable was assigned to 'n'
+
+        // CASE 2: DEFAULT
+        // SWITCH letter CASE 'y': print("yes"); letter = 'n'; DEFAULT: print("no"); END
+        Scope scope2 = new Scope(null);
+        scope2.defineVariable("letter", true, Environment.create('x'));
+
+        List<Ast.Statement> statements2 = Arrays.asList(
+                new Ast.Statement.Expression(new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("yes")))),
+                new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(), "letter"),
+                        new Ast.Expression.Literal('n'))
+        );
+
+        List<Ast.Statement.Case> cases2 = Arrays.asList(
+                new Ast.Statement.Case(Optional.of(new Ast.Expression.Literal('y')), statements2),
+                new Ast.Statement.Case(Optional.empty(), Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("no"))))))
+        );
+
+        Ast.Statement.Switch ast2 = new Ast.Statement.Switch(new Ast.Expression.Access(Optional.empty(), "letter"), cases2);
+
+        PrintStream sysout2 = System.out;
+        ByteArrayOutputStream out2 = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(out2));
+        try {
+            test(ast, Environment.NIL.getValue(), scope2); // ensures Interpreter returns NIL
+            Assertions.assertEquals("no" + System.lineSeparator(), out2.toString()); // ensures "yes" was printed
+        } finally {
+            System.setOut(sysout2);
+        }
+
+        Assertions.assertEquals('x', scope2.lookupVariable("letter").getValue().getValue()); // ensures letter variable was assigned to 'n'
     }
 
     // TODO: Test WHILE (waiting on statement visiting to be done)

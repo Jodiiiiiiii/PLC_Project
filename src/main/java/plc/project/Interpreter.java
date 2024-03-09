@@ -133,12 +133,25 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Switch ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // get condition/cases
+        Object conditionVal = visit(ast.getCondition()).getValue();
+        List<Ast.Statement.Case> cases = ast.getCases();
+
+        // check for right case to visit
+        for(Ast.Statement.Case caseToCheck : cases)
+            if(caseToCheck.getValue().isPresent() && visit(caseToCheck.getValue().get()).getValue().equals(conditionVal))
+                return visit(caseToCheck);
+
+        return visit(cases.getLast()); // visit default case if none visited already
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Case ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // visit case statements
+        VisitNewScope(ast.getStatements());
+
+        // always returns NIL on successful execution
+        return Environment.NIL;
     }
 
     @Override
