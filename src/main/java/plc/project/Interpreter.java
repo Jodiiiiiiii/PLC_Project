@@ -48,7 +48,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Global ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // create global, as NIL unless a value is provided
+        if(ast.getValue().isEmpty())
+            scope.defineVariable(ast.getName(), ast.getMutable(), Environment.NIL);
+        else
+            scope.defineVariable(ast.getName(), ast.getMutable(), visit(ast.getValue().get()));
+
+        // always returns NIL on successful execution
+        return Environment.NIL;
     }
 
     @Override
