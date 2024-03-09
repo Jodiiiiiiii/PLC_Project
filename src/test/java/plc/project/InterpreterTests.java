@@ -263,6 +263,8 @@ final class InterpreterTests {
         Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("num").getValue().getValue()); // ensures variable "num" has reached 10 by end of loop
     }
 
+    // TODO: test cases for interpreting Ast.Statement.Return
+
     @ParameterizedTest
     @MethodSource
     void testLiteralExpression(String test, Ast ast, Object expected) {
