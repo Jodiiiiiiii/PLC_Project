@@ -44,7 +44,29 @@ final class InterpreterTests {
                                         new Ast.Expression.Access(Optional.empty(), "x"),
                                         new Ast.Expression.Access(Optional.empty(), "y")                                ))
                         )))
-                ), Environment.NIL.getValue())
+                ), Environment.NIL.getValue()),
+                // missing main
+                // VAR x = 1; VAR y = 10; FUN main() DO x + y; END
+                Arguments.of("Globals & No Return", new Ast.Source(
+                        Arrays.asList(
+                                new Ast.Global("x", true, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                                new Ast.Global("y", true, Optional.of(new Ast.Expression.Literal(BigInteger.TEN)))
+                        ),
+                        Arrays.asList(new Ast.Function("notMain", Arrays.asList(), Arrays.asList(
+                                new Ast.Statement.Expression(new Ast.Expression.Binary("+",
+                                        new Ast.Expression.Access(Optional.empty(), "x"),
+                                        new Ast.Expression.Access(Optional.empty(), "y")                                ))
+                        )))
+                ), null),
+                // only globals (missing main)
+                // VAR x = 1; VAR y = 10; FUN main() DO x + y; END
+                Arguments.of("Globals & No Return", new Ast.Source(
+                        Arrays.asList(
+                                new Ast.Global("x", true, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                                new Ast.Global("y", true, Optional.of(new Ast.Expression.Literal(BigInteger.TEN)))
+                        ),
+                        Arrays.asList()
+                ), null)
         );
     }
 

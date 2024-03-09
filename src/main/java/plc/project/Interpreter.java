@@ -43,8 +43,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
-        // make sure to verify arity on functions called
+        // visit (define) all globals
+        for(Ast.Global global : ast.getGlobals())
+            visit(global);
+        // visit (define) all functions
+        for(Ast.Function function : ast.getFunctions())
+            visit(function);
+
+        // call main
+        return scope.lookupFunction("main", 0).invoke(List.of());
     }
 
     @Override
