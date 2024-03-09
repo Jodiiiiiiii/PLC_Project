@@ -80,7 +80,39 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Assignment ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // ensure receiver (lhs) is a variable or list index
+        if(!(ast.getReceiver() instanceof Ast.Expression.Access receiver))
+            throw new RuntimeException("Expected Access Expression. Only a variable or list index can be assigned with assignment statement.");
+
+        // check for mutability
+        if(!scope.lookupVariable(receiver.getName()).getMutable())
+            throw new RuntimeException("Expected Mutable Variable. " + receiver.getName() + " is immutable");
+
+        if(receiver.getOffset().isPresent()) // list index receiver
+        {
+            // ensure offset is BigInteger
+            BigInteger offset = requireType(BigInteger.class, visit(receiver.getOffset().get()));
+            // ensure var is List
+            List<Object> varList = requireType(List.class, scope.lookupVariable(receiver.getName()).getValue());
+
+            // check for index out of bounds
+            if(offset.intValue() > varList.size() - 1)
+                throw new RuntimeException("Invalid List Access: Index Out of Bounds");
+
+            // modify temporary retrieved list
+            varList.set(offset.intValue(), visit(ast.getValue()).getValue());
+
+            // set list index to new list
+            scope.lookupVariable(receiver.getName()).setValue(Environment.create(varList));
+        }
+        else // variable receiver
+        {
+            // set variable to value
+            scope.lookupVariable(receiver.getName()).setValue(visit(ast.getValue()));
+        }
+
+        // always returns NIL on successful execution
+        return Environment.NIL;
     }
 
     @Override

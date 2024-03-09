@@ -151,7 +151,7 @@ final class InterpreterTests {
     }
 
     @Test
-    void testVariableAssignmentStatement() {
+    void testAssignmentStatement() {
         // variable = 1;
         Scope scope = new Scope(null);
         scope.defineVariable("variable", true, Environment.create("variable"));
@@ -160,6 +160,23 @@ final class InterpreterTests {
                 new Ast.Expression.Literal(BigInteger.ONE)
         ), Environment.NIL.getValue(), scope); // ensures Interpreter returns NIL
         Assertions.assertEquals(BigInteger.ONE, scope.lookupVariable("variable").getValue().getValue()); // ensures variable is assigned to value
+
+        // immutable var access
+        // variable = 1;
+        Scope scope2 = new Scope(null);
+        scope2.defineVariable("variable", false, Environment.create("variable"));
+        test(new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.empty(),"variable"),
+                new Ast.Expression.Literal(BigInteger.ONE)
+        ), null, scope2); // ensures Interpreter returns NIL
+
+        // non-access receiver
+        // 3 = 1;
+        Scope scope3 = new Scope(null);
+        test(new Ast.Statement.Assignment(
+                new Ast.Expression.Literal(BigInteger.valueOf(3)),
+                new Ast.Expression.Literal(BigInteger.ONE)
+        ), null, scope3); // ensures Interpreter returns NIL
     }
 
     @Test
@@ -176,6 +193,52 @@ final class InterpreterTests {
         ), Environment.NIL.getValue(), scope); // ensures Interpreter returns NIL
 
         Assertions.assertEquals(expected, scope.lookupVariable("list").getValue().getValue()); // ensures list index is assigned to value
+
+        // list[0] = 3;
+        List<Object> expected2 = Arrays.asList(BigInteger.valueOf(3), BigInteger.valueOf(5), BigInteger.valueOf(3));
+        List<Object> list2 = Arrays.asList(BigInteger.ONE, BigInteger.valueOf(5), BigInteger.valueOf(3));
+
+        Scope scope2 = new Scope(null);
+        scope2.defineVariable("list", true, Environment.create(list2));
+        test(new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(0))), "list"),
+                new Ast.Expression.Literal(BigInteger.valueOf(3))
+        ), Environment.NIL.getValue(), scope2); // ensures Interpreter returns NIL
+
+        Assertions.assertEquals(expected2, scope2.lookupVariable("list").getValue().getValue()); // ensures list index is assigned to value
+
+        // out of bounds
+        // list[-1] = 3;
+        List<Object> list3 = Arrays.asList(BigInteger.ONE, BigInteger.valueOf(5), BigInteger.valueOf(3));
+
+        Scope scope3 = new Scope(null);
+        scope3.defineVariable("list", true, Environment.create(list3));
+        test(new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(-1))), "list"),
+                new Ast.Expression.Literal(BigInteger.valueOf(3))
+        ), null, scope2); // ensures Interpreter returns NIL
+
+        // out of bounds
+        // list[3] = 3;
+        List<Object> list4 = Arrays.asList(BigInteger.ONE, BigInteger.valueOf(5), BigInteger.valueOf(3));
+
+        Scope scope4 = new Scope(null);
+        scope4.defineVariable("list", true, Environment.create(list4));
+        test(new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(3))), "list"),
+                new Ast.Expression.Literal(BigInteger.valueOf(3))
+        ), null, scope2); // ensures Interpreter returns NIL
+
+        // non-access receiver
+        // (list[2]) = 3;
+        List<Object> list5 = Arrays.asList(BigInteger.ONE, BigInteger.valueOf(5), BigInteger.valueOf(3));
+
+        Scope scope5 = new Scope(null);
+        scope5.defineVariable("list", true, Environment.create(list5));
+        test(new Ast.Statement.Assignment(
+                new Ast.Expression.Group(new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(2))), "list")),
+                new Ast.Expression.Literal(BigInteger.valueOf(3))
+        ), null, scope2); // ensures Interpreter returns NIL
     }
 
     @ParameterizedTest
