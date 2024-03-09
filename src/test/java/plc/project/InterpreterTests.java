@@ -692,13 +692,21 @@ final class InterpreterTests {
                         ),
                         "abc def"
                 ),
-                // "a" + 1.0
+                // "a" + 1.0 ("1.0" defined)
+                Arguments.of("Concatenation: plus decimal (weird)",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal("a"),
+                                new Ast.Expression.Literal("1.0")
+                        ),
+                        "a1.0" // TODO: [Asked in TEAMS] verify if this should be "a1.0" instead? the results of this test case are based on how Java concatenates
+                ),
+                // "a" + 1.0 (BidDecimal.ONE defined)
                 Arguments.of("Concatenation: plus decimal (weird)",
                         new Ast.Expression.Binary("+",
                                 new Ast.Expression.Literal("a"),
                                 new Ast.Expression.Literal(BigDecimal.ONE)
                         ),
-                        "a1.0" // TODO: [Asked in TEAMS] verify if this should be "a1.0" instead? the results of this test case are based on how Java concatenates
+                        "a1" // TODO: [Asked in TEAMS] verify if this should be "a1.0" instead? the results of this test case are based on how Java concatenates
                 ),
                 // "a" + 1.1
                 Arguments.of("Concatenation: plus decimal",
