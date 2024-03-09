@@ -168,6 +168,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
+        // simply visits whatever expression is within the group
         return visit(ast.getExpression());
     }
 
