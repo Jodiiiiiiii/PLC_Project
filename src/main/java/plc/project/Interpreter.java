@@ -70,7 +70,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Declaration ast) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        if(ast.getValue().isPresent())
+            scope.defineVariable(ast.getName(), true, visit(ast.getValue().get()));
+        else
+            scope.defineVariable(ast.getName(), true, Environment.NIL);
+
+        return Environment.NIL; // always returns NIL on successful execution
     }
 
     @Override
@@ -108,6 +113,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             }
         }
 
+        // always returns NIL on successful execution
         return Environment.NIL;
     }
 

@@ -127,6 +127,7 @@ final class InterpreterTests {
         }
     }
 
+    // TODO: Test for Declaration (waiting on statement visiting to be done)
     @ParameterizedTest
     @MethodSource
     void testDeclarationStatement(String test, Ast.Statement.Declaration ast, Object expected) {
