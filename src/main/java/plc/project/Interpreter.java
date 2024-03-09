@@ -115,6 +115,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     public Environment.PlcObject visit(Ast.Statement.Return ast) {
         // simply return the visited evaluation
         throw new Return(visit(ast.getValue()));
+
+        // TODO: figure out and revisit when I know what is meant by "implementation of Ast.Function will catch and Return exceptions and complete behavior"
     }
 
     @Override
