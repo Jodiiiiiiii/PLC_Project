@@ -143,7 +143,6 @@ final class InterpreterTests {
         }
     }
 
-    // TODO: Test for Declaration (waiting on statement visiting to be done)
     @ParameterizedTest
     @MethodSource
     void testDeclarationStatement(String test, Ast.Statement.Declaration ast, Object expected) {
@@ -266,7 +265,6 @@ final class InterpreterTests {
         Assertions.assertEquals(expected, scope.lookupVariable("num").getValue().getValue()); // ensures variable num is assigned according to if
     }
 
-    // TODO: Test for If Statements (waiting on all statement visiting to be done)
     private static Stream<Arguments> testIfStatement() {
         return Stream.of(
                 // IF TRUE DO num = 1; END
@@ -288,6 +286,20 @@ final class InterpreterTests {
                         BigInteger.TEN
                 )
         );
+    }
+
+    @Test
+    void additionalIfTests() {
+        // non-boolean condition
+        // IF 12 DO ELSE num = 10; END
+        Scope scope = new Scope(null);
+        scope.defineVariable("num", true, Environment.NIL);
+        Ast ast2 = new Ast.Statement.If(
+                new Ast.Expression.Literal(BigInteger.valueOf(12)),
+                Arrays.asList(),
+                Arrays.asList(new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(),"num"), new Ast.Expression.Literal(BigInteger.TEN)))
+        );
+        test(ast2, null, scope);
     }
 
     @Test
@@ -353,7 +365,6 @@ final class InterpreterTests {
         Assertions.assertEquals('x', scope2.lookupVariable("letter").getValue().getValue()); // ensures letter variable was assigned to 'n'
     }
 
-    // TODO: Test WHILE (waiting on statement visiting to be done)
     @Test
     void testWhileStatement() {
         // WHILE num < 10 DO num = num + 1; END
@@ -373,6 +384,21 @@ final class InterpreterTests {
                 ))
         ),Environment.NIL.getValue(), scope); // ensures Interpreter returns NIL
         Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("num").getValue().getValue()); // ensures variable "num" has reached 10 by end of loop
+
+        // non-boolean condition
+        // WHILE num DO num = num + 1; END
+        Scope scope2 = new Scope(null);
+        scope2.defineVariable("num", true, Environment.create(BigInteger.ZERO));
+        test(new Ast.Statement.While(
+                        new Ast.Expression.Access(Optional.empty(),"num"),
+                Arrays.asList(new Ast.Statement.Assignment(
+                        new Ast.Expression.Access(Optional.empty(),"num"),
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Access(Optional.empty(),"num"),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                        )
+                ))
+        ),null, scope2); // ensures Interpreter returns NIL
     }
 
     // TODO: test cases for interpreting Ast.Statement.Return
