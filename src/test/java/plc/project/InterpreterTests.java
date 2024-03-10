@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -871,9 +872,13 @@ final class InterpreterTests {
                 Arguments.of("Concatenation: plus decimal (weird)",
                         new Ast.Expression.Binary("+",
                                 new Ast.Expression.Literal("a"),
-                                new Ast.Expression.Literal("1.0")
+                                new Ast.Expression.Literal(new BigDecimal(1.0))
                         ),
-                        "a1.0" // TODO: [Asked in TEAMS] verify if this should be "a1.0" instead? the results of this test case are based on how Java concatenates
+                        "a1" // TODO: still unsure which case I should be doing; depends on how I initialize BigDecimal -> not ideal (re-clarification asked)
+                        // new BigDecimal(1.0) -> "a1"
+                        // BigDecimal.ONE -> "a1"
+                        // new BigDecimal("1.0") -> "a1.0"
+                        // BigDecimal.valueOf(1.0) -> "a1.0"
                 ),
                 // "a" + 1.0 (BidDecimal.ONE defined)
                 Arguments.of("Concatenation: plus decimal (weird)",
@@ -881,7 +886,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal("a"),
                                 new Ast.Expression.Literal(BigDecimal.ONE)
                         ),
-                        "a1" // TODO: [Asked in TEAMS] verify if this should be "a1.0" instead? the results of this test case are based on how Java concatenates
+                        "a1" // TODO: see TODO above
                 ),
                 // "a" + 1.1
                 Arguments.of("Concatenation: plus decimal",
@@ -1078,8 +1083,8 @@ final class InterpreterTests {
                 // 10.0 / 3.0
                 Arguments.of("Division: Decimal (another)",
                         new Ast.Expression.Binary("/",
-                                new Ast.Expression.Literal(BigDecimal.TEN),
-                                new Ast.Expression.Literal(BigDecimal.valueOf(3))
+                                new Ast.Expression.Literal(new BigDecimal(10.0)),
+                                new Ast.Expression.Literal(new BigDecimal(3.0))
                         ),
                         BigDecimal.valueOf(3)
                         // TODO: [Asked in TEAMS] verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
@@ -1091,6 +1096,15 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(BigDecimal.valueOf(10))
                         ),
                         BigDecimal.valueOf(2)
+                        // TODO: [Asked in TEAMS] verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
+                ),
+                // 25.0 / 10.0
+                Arguments.of("Division: Given",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(new BigDecimal("1.2")),
+                                new Ast.Expression.Literal(new BigDecimal("3.4"))
+                        ),
+                        new BigDecimal("0.4")
                         // TODO: [Asked in TEAMS] verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
                 ),
                 // 1.0 / 10
