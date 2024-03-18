@@ -74,6 +74,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testExpressionStatement(String test, List<Token> tokens, Ast.Statement.Expression expected) {
@@ -128,6 +129,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testAssignmentStatement(String test, List<Token> tokens, Ast.Statement.Assignment expected) {
@@ -152,7 +154,7 @@ final class ParserModifiedTests {
         );
     }
 
-
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testIfStatement(String test, List<Token> tokens, Ast.Statement.If expected) {
@@ -199,6 +201,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testWhileStatement(String test, List<Token> tokens, Ast.Statement.While expected) {
@@ -225,6 +228,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testReturnStatement(String test, List<Token> tokens, Ast.Statement.Return expected) {
@@ -245,6 +249,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testLiteralExpression(String test, List<Token> tokens, Ast.Expression.Literal expected) {
@@ -280,6 +285,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testGroupExpression(String test, List<Token> tokens, Ast.Expression.Group expected) {
@@ -314,12 +320,14 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testBinaryExpression(String test, List<Token> tokens, Ast.Expression.Binary expected) {
         test(tokens, expected, Parser::parseExpression);
     }
 
+    // unchanged
     private static Stream<Arguments> testBinaryExpression() {
         return Stream.of(
                 Arguments.of("Binary And",
@@ -373,6 +381,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testAccessExpression(String test, List<Token> tokens, Ast.Expression.Access expected) {
@@ -398,6 +407,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // unchanged
     @ParameterizedTest
     @MethodSource
     void testFunctionExpression(String test, List<Token> tokens, Ast.Expression.Function expected) {
