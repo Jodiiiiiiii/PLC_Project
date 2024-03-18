@@ -125,7 +125,144 @@ final class ParserModifiedTests {
                                 new Token(Token.Type.OPERATOR, ";", 15)
                         ),
                         new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))
-                )
+                ),
+                Arguments.of("Definition",
+                        Arrays.asList(
+                                //LET name;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ";", 6)
+                        ),
+                        new Ast.Statement.Declaration("name", Optional.empty())
+                ),
+                Arguments.of("Initialization",
+                        Arrays.asList(
+                                //LET name = expr;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new Ast.Statement.Declaration("name", Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))
+                ),
+                Arguments.of("No Type/Value",
+                        Arrays.asList(
+                                // Let name;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ";", 9)
+                        ),
+                        new Ast.Statement.Declaration("name", Optional.empty(), Optional.empty()))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testDeclarationParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement);
+    }
+    private static Stream<Arguments> testDeclarationParseException() {
+        return Stream.of(
+                Arguments.of("Definition: missing identifier",
+                        Arrays.asList(
+                                //LET ;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4)
+                        ),
+                        new ParseException("Expected identifier : invalid declaration statement. index: 4", 4)
+                ),
+                Arguments.of("Definition: Invalid identifier",
+                        Arrays.asList(
+                                //LET ; ;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, ";", 6)
+                        ),
+                        new ParseException("Expected identifier : invalid declaration statement. index: 4", 4)
+                ),
+                Arguments.of("Definition: Missing Semicolon",
+                        Arrays.asList(
+                                //LET name
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4)
+                        ),
+                        new ParseException("Expected ';' : invalid declaration statement. index: 8", 8)
+                ),
+                Arguments.of("Initialization: missing identifier",
+                        Arrays.asList(
+                                //LET = expr;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected identifier : invalid declaration statement. index: 9", 9)
+                ),
+                Arguments.of("Initialization: invalid identifier",
+                        Arrays.asList(
+                                //LET = expr;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected identifier : invalid declaration statement. index: 4", 4)
+                ),
+                Arguments.of("Initialization: missing equal sign",
+                        Arrays.asList(
+                                //LET name expr;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected ';' : invalid declaration statement. index: 11", 11)
+                ),
+                Arguments.of("Initialization: missing expression",
+                        Arrays.asList(
+                                //LET name = ;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 15", 15)
+                ),
+                Arguments.of("Initialization: invalid expression",
+                        Arrays.asList(
+                                //LET name = expr;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, ":", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 11", 11)
+                ),
+                Arguments.of("Initialization: missing semicolon",
+                        Arrays.asList(
+                                //LET name = expr;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11)
+                        ),
+                        new ParseException("Expected ';' : invalid initialization statement. index: 15", 15)
+                ),
+                Arguments.of("Invalid type",
+                        Arrays.asList(
+                                // Let name : 1 = expr;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 9),
+                                new Token(Token.Type.INTEGER, "1", 11),
+                                new Token(Token.Type.OPERATOR, "=", 13),
+                                new Token(Token.Type.IDENTIFIER, "expr", 15),
+                                new Token(Token.Type.OPERATOR, ";", 19)
+                        ),
+                        new ParseException("Expected Identifier : invalid declaration type specification. index: 11", 11))
         );
     }
 
@@ -538,4 +675,9 @@ final class ParserModifiedTests {
         }
     }
 
+    private static <T extends Ast> void testParseException(List<Token> tokens, Exception exception, Function<Parser, T> function) {
+        Parser parser = new Parser(tokens);
+        ParseException pe = Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
+        Assertions.assertEquals(exception, pe);
+    }
 }

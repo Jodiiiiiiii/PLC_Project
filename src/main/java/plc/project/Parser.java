@@ -308,6 +308,20 @@ public final class Parser {
         String name = tokens.get(0).getLiteral();
         match(Token.Type.IDENTIFIER);
 
+        Optional<String> typeName;
+        if(peek(":"))
+        {
+            match(":");
+
+            // type - identifier required
+            if(!peek(Token.Type.IDENTIFIER))
+                throw new ParseException("Expected Identifier : invalid declaration type specification. index: " + getErrorIndex(), getErrorIndex());
+            typeName = Optional.of(tokens.get(0).getLiteral());
+            match(Token.Type.IDENTIFIER);
+        }
+        else
+            typeName = Optional.empty();
+
         // Assignment - optional
         if(peek("="))
         {
@@ -321,7 +335,7 @@ public final class Parser {
             match(";");
 
             // return declaration with initialization
-            return new Ast.Statement.Declaration(name, Optional.of(value));
+            return new Ast.Statement.Declaration(name, typeName, Optional.of(value));
         }
 
         // check for semicolon - required
@@ -330,7 +344,7 @@ public final class Parser {
         match(";");
 
         // return declaration without initialization
-        return new Ast.Statement.Declaration(name, Optional.empty());
+        return new Ast.Statement.Declaration(name, typeName, Optional.empty());
     }
 
     /**
