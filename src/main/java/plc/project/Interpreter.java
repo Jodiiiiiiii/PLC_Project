@@ -8,15 +8,18 @@ import java.util.*;
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     private Scope scope = new Scope(null);
+    private Scope functionScope;
 
     public Interpreter(Scope parent) {
         scope = new Scope(parent);
+        functionScope = scope;
 
         scope.defineFunction("print", 1, args -> {
             System.out.println(args.getFirst().getValue());
             return Environment.NIL;
         });
 
+        // TODO: Remove (move to where it is used in test case)
         scope.defineFunction("logarithm", 1, args -> {
 
             // Alternate Type Checking: using instanceof operator
@@ -27,6 +30,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             return Environment.create(result);
         });
 
+        // TODO: Remove
         // converts from one base to another (???)
         scope.defineFunction("converter", 2, args -> {
 
@@ -71,8 +75,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         // define function (using Java lambda)
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+
+            Scope prevScope = scope; // store prev scope before trying to enter scope
+
             try { // enter function's scope
-                scope = new Scope(scope); // define new scope within function
+                scope = new Scope(functionScope); // enter function scope (scope where the function was defined)
 
                 // create parameter variables in scope
                 for (int i = 0; i < ast.getParameters().size(); i++)
@@ -92,11 +99,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 // no return statement found, so return NIL
                 return Environment.NIL;
             } finally { // exit function's scope
-                scope = scope.getParent(); // return to previous (parent) scope when done
+                scope = prevScope; // return to previous (parent) scope when done
             }
         });
 
-        // temp
+        // update function with new scope
+        // (it now contains the current function in addition to all previously defined functions)
+        functionScope = scope;
+
+        // successfully visited (created) function
         return Environment.NIL;
     }
 

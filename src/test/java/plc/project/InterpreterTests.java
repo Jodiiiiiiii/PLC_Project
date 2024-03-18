@@ -67,7 +67,38 @@ final class InterpreterTests {
                                 new Ast.Global("y", true, Optional.of(new Ast.Expression.Literal(BigInteger.TEN)))
                         ),
                         Arrays.asList()
-                ), null)
+                ), null),
+                // Function Scope (Given)
+                //    VAR x = 1;
+                //    VAR y = 2;
+                //    VAR z = 3;
+                //    FUN f(z) DO
+                //        RETURN x + y + z;
+                //    END
+                //    FUN main() DO
+                //        LET y = 4;
+                //        RETURN f(5);
+                //    END
+                Arguments.of("Globals & No Return", new Ast.Source(
+                        Arrays.asList(
+                                new Ast.Global("x", true, Optional.of(new Ast.Expression.Literal(new BigInteger("1")))),
+                                new Ast.Global("y", true, Optional.of(new Ast.Expression.Literal(new BigInteger("2")))),
+                                new Ast.Global("z", true, Optional.of(new Ast.Expression.Literal(new BigInteger("3"))))
+                        ),
+                        Arrays.asList(
+                                new Ast.Function("f", List.of("z"), List.of(new Ast.Statement.Return(
+                                        new Ast.Expression.Binary("+",
+                                                new Ast.Expression.Binary("+",
+                                                        new Ast.Expression.Access(Optional.empty(), "x"),
+                                                        new Ast.Expression.Access(Optional.empty(), "y")),
+                                                new Ast.Expression.Access(Optional.empty(), "z"))
+                                ))),
+                                new Ast.Function("main", List.of(), List.of(
+                                        new Ast.Statement.Declaration("y", Optional.of(new Ast.Expression.Literal(new BigInteger("4")))),
+                                        new Ast.Statement.Return(new Ast.Expression.Function("f", List.of(new Ast.Expression.Literal(new BigInteger("5")))))
+                                ))
+                        )
+                ), new BigInteger("8"))
         );
     }
 
