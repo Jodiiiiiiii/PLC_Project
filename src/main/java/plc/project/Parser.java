@@ -3,6 +3,7 @@ package plc.project;
 // new import statements
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -228,11 +229,24 @@ public final class Parser {
 
         // arguments
         List<String> parameters = new ArrayList<>();
+        List<String> parameterTypes = new ArrayList<>();
         if(!peek(")")) // check for first argument (no comma)
         {
+            // name - identifier required
             if(!peek(Token.Type.IDENTIFIER))
                 throw new ParseException("Expected ')' or Identifier : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
             parameters.add(tokens.get(0).getLiteral());
+            match(Token.Type.IDENTIFIER);
+
+            // : required
+            if(!peek(":"))
+                throw new ParseException("Expected ':' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+            match(":");
+
+            // type - identifier required
+            if(!peek(Token.Type.IDENTIFIER))
+                throw new ParseException("Expected (type) Identifier : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+            parameterTypes.add(tokens.get(0).getLiteral());
             match(Token.Type.IDENTIFIER);
         }
         while(peek(","))
@@ -245,12 +259,37 @@ public final class Parser {
                 throw new ParseException("Expected Identifier after ',' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
             parameters.add(tokens.get(0).getLiteral());
             match(Token.Type.IDENTIFIER);
+
+            // : required
+            if(!peek(":"))
+                throw new ParseException("Expected ':' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+            match(":");
+
+            // type - identifier required
+            if(!peek(Token.Type.IDENTIFIER))
+                throw new ParseException("Expected (type) Identifier : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+            parameterTypes.add(tokens.get(0).getLiteral());
+            match(Token.Type.IDENTIFIER);
         }
 
         // ) - required
         if(!peek(")"))
             throw new ParseException("Expected ')' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
         match(")");
+
+        Optional<String> returnType;
+        if(peek(":"))
+        {
+            match(":");
+
+            // type - identifier required
+            if(!peek(Token.Type.IDENTIFIER))
+                throw new ParseException("Expected (type) Identifier : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+            returnType = Optional.of(tokens.get(0).getLiteral());
+            match(Token.Type.IDENTIFIER);
+        }
+        else
+            returnType = Optional.empty();
 
         // DO - required
         if(!peek("DO"))
@@ -265,7 +304,7 @@ public final class Parser {
             throw new ParseException("Expected \"END\" : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
         match("END");
 
-        return new Ast.Function(name, parameters, statements);
+        return new Ast.Function(name, parameters, parameterTypes, returnType, statements);
     }
 
     /**
