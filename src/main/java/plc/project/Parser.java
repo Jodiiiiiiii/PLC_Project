@@ -158,7 +158,7 @@ public final class Parser {
                 throw new ParseException("Expected ';' : invalid mutable definition/initialization. index: " + getErrorIndex(), getErrorIndex());
             match(";");
 
-            return new Ast.Global(name, true, Optional.of(value));
+            return new Ast.Global(name, typeName, true, Optional.of(value));
         }
 
         // ; - required
@@ -240,12 +240,12 @@ public final class Parser {
 
             // : required
             if(!peek(":"))
-                throw new ParseException("Expected ':' : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+                throw new ParseException("Expected ':' : invalid function definition at first parameter. index: " + getErrorIndex(), getErrorIndex());
             match(":");
 
             // type - identifier required
             if(!peek(Token.Type.IDENTIFIER))
-                throw new ParseException("Expected (type) Identifier : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+                throw new ParseException("Expected (type) Identifier : invalid function definition at first parameter. index: " + getErrorIndex(), getErrorIndex());
             parameterTypes.add(tokens.get(0).getLiteral());
             match(Token.Type.IDENTIFIER);
         }
@@ -284,7 +284,7 @@ public final class Parser {
 
             // type - identifier required
             if(!peek(Token.Type.IDENTIFIER))
-                throw new ParseException("Expected (type) Identifier : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
+                throw new ParseException("Expected return type Identifier : invalid function definition. index: " + getErrorIndex(), getErrorIndex());
             returnType = Optional.of(tokens.get(0).getLiteral());
             match(Token.Type.IDENTIFIER);
         }

@@ -37,7 +37,7 @@ final class ParserModifiedTests {
                 ),
                 Arguments.of("Global - Immutable",
                         Arrays.asList(
-                                //LET name: Type = expr;
+                                //VAL name: Type = expr;
                                 new Token(Token.Type.IDENTIFIER, "VAL", 0),
                                 new Token(Token.Type.IDENTIFIER, "name", 4),
                                 new Token(Token.Type.OPERATOR, ":", 9),
@@ -71,6 +71,1225 @@ final class ParserModifiedTests {
                                         new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
                                 )))
                         )
+                ),
+                Arguments.of("Global - Mutable (Declaration)",
+                        Arrays.asList(
+                                //VAR name : Type;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ";", 21)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(new Ast.Global("name", "Type", true, Optional.empty())),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("Global - Mutable (Initialization)",
+                        Arrays.asList(
+                                //VAR name : Type = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(new Ast.Global("name", "Type", true, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("List (One Element)",
+                        Arrays.asList(
+                                //VAL name : Type = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global(
+                                                "name",
+                                                "Type",
+                                                true,
+                                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                        new Ast.Expression.Access(Optional.empty(), "expr")))))),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("List (Two Elements)",
+                        Arrays.asList(
+                                //VAL name : Type = [expr1,expr2];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, "]", 23),
+                                new Token(Token.Type.OPERATOR, ";", 24)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global(
+                                                "name",
+                                                "Type",
+                                                true,
+                                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr2")))))),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("List (Multiple Elements)",
+                        Arrays.asList(
+                                //VAL name : Type = [expr1,expr2,expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global(
+                                                "name",
+                                                "Type",
+                                                true,
+                                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                                                        new Ast.Expression.Access(Optional.empty(), "expr3")))))),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("Function (0 Parameters)",
+                        Arrays.asList(
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(new Ast.Function("name", Arrays.asList(), List.of(), Optional.empty(), Arrays.asList(
+                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                                )))
+                        )
+                ),
+                Arguments.of("Function (1 Parameter)",
+                        Arrays.asList(
+                                //FUN name(param1 : Type) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(new Ast.Function("name",
+                                        Arrays.asList(
+                                                "param1"
+                                        ),
+                                        List.of("Type"),
+                                        Optional.empty(),
+                                        Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                                        )))
+                        )
+                ),
+                Arguments.of("Function (Multiple Parameters)",
+                        Arrays.asList(
+                                //FUN name(param1 : Type1, param2 : Type2, param3 : Type3) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type1", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type2", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type3", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(new Ast.Function("name",
+                                        Arrays.asList(
+                                                "param1",
+                                                "param2",
+                                                "param3"
+                                        ),
+                                        List.of("Type1", "Type2", "Type3"),
+                                        Optional.empty(),
+                                        Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                                        )))
+                        )
+                ),
+                Arguments.of("Function (Multiple Parameters) with return type",
+                        Arrays.asList(
+                                //FUN name(param1 : Type1, param2 : Type2, param3 : Type3) : ReturnType DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type1", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type2", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type3", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "ReturnType", 17),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(new Ast.Function("name",
+                                        Arrays.asList(
+                                                "param1",
+                                                "param2",
+                                                "param3"
+                                        ),
+                                        List.of("Type1", "Type2", "Type3"),
+                                        Optional.of("ReturnType"),
+                                        Arrays.asList(
+                                                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                                        )))
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testSourceParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseSource);
+    }
+    private static Stream<Arguments> testSourceParseException() {
+        return Stream.of(
+                Arguments.of("List - Missing :",
+                        Arrays.asList(
+                                //VAL name Type = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected ':' : invalid list definition. index: 17", 17)
+                ),
+                Arguments.of("List - Invalid Type",
+                        Arrays.asList(
+                                //VAL name : ; = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.OPERATOR, ";", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected (type) Identifier : invalid list definition. index: 17", 17)
+                ),
+                Arguments.of("Mutable (Declaration) - missing :",
+                        Arrays.asList(
+                                //VAR name Type;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ";", 21)
+                        ),
+                        new ParseException("Expected ':' : invalid list definition. index: 17", 17)
+                ),
+                Arguments.of("Mutable (Declaration) - invalid type",
+                        Arrays.asList(
+                                //VAR name : ;;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 16),
+                                new Token(Token.Type.OPERATOR, ";", 201),
+                                new Token(Token.Type.OPERATOR, ";", 21)
+                        ),
+                        new ParseException("Expected (type) Identifier : invalid list definition. index: 201", 201)
+                ),
+                Arguments.of("Mutable (Initialization) - missing :",
+                        Arrays.asList(
+                                //VAR name Type = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected ':' : invalid list definition. index: 17", 17)
+                ),
+                Arguments.of("Mutable (Initialization) - Invalid Type",
+                        Arrays.asList(
+                                //VAR name : Type = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.OPERATOR, ";", 201),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected (type) Identifier : invalid list definition. index: 201", 201)
+                ),
+                Arguments.of("Function - invalid return type",
+                        Arrays.asList(
+                                //FUN name(param1 : Type) : ; DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.OPERATOR, ":", 16),
+                                new Token(Token.Type.OPERATOR, ";", 200),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25)
+                        ),
+                        new ParseException("Expected return type Identifier : invalid function definition. index: 200", 200)
+                ),
+                Arguments.of("Function (one param) - missing :",
+                        Arrays.asList(
+                                //FUN name(param1 Type) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25)
+                        ),
+                        new ParseException("Expected ':' : invalid function definition at first parameter. index: 17", 17)
+                ),
+                Arguments.of("Function (one param) - invalid identifier",
+                        Arrays.asList(
+                                //FUN name(param1 : ;) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.OPERATOR, ";", 17),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25)
+                        ),
+                        new ParseException("Expected (type) Identifier : invalid function definition at first parameter. index: 17", 17)
+                ),
+                Arguments.of("Function (one param) - missing :",
+                        Arrays.asList(
+                                //FUN name(param1 : Type1, param2 Type2, param3 : Type3) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type1", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.IDENTIFIER, "Type2", 201),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type3", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected ':' : invalid function definition. index: 201", 201)
+                ),
+                Arguments.of("Function (one param) - invalid identifier",
+                        Arrays.asList(
+                                //FUN name(param1 : Type1, param2 : ;, param3 : Type3) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type1", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.OPERATOR, ";", 201),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type3", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected (type) Identifier : invalid function definition. index: 201", 201)
+                ),
+                Arguments.of("Global - Immutable - Missing :",
+                        Arrays.asList(
+                                //VAL name Type = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.IDENTIFIER, "Type", 11),
+                                new Token(Token.Type.OPERATOR, "=", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr", 17),
+                                new Token(Token.Type.OPERATOR, ";", 21)
+                        ),
+                        new ParseException("Expected ':' : invalid list definition. index: 11", 11)
+                ),
+                Arguments.of("Global - Immutable - Invalid Type",
+                        Arrays.asList(
+                                //VAL name : ; = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 9),
+                                new Token(Token.Type.OPERATOR, ";", 11),
+                                new Token(Token.Type.OPERATOR, "=", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr", 17),
+                                new Token(Token.Type.OPERATOR, ";", 21)
+                        ),
+                        new ParseException("Expected (type) Identifier : invalid list definition. index: 11", 11)
+                ),
+                Arguments.of("Global (Immutable): Missing Identifier",
+                        Arrays.asList(
+                                //VAL = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid immutable definition. index: 9", 9)
+                ),
+                Arguments.of("Global (Immutable): Invalid Identifier",
+                        Arrays.asList(
+                                //VAL ; = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid immutable definition. index: 4", 4)
+                ),
+                Arguments.of("Global (Immutable): Missing =",
+                        Arrays.asList(
+                                //VAL name : Type expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected '=' : invalid immutable definition. index: 11", 11)
+                ),
+                Arguments.of("Global (Immutable): Missing Expression",
+                        Arrays.asList(
+                                //VAL name : Type = ;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 15", 15)
+                ),
+                Arguments.of("Global (Immutable): Invalid Expression",
+                        Arrays.asList(
+                                //VAL name : Type = ; ;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, ";", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 11", 11)
+                ),
+                Arguments.of("Global (Immutable): Missing Semicolon",
+                        Arrays.asList(
+                                //VAL name : Type = expr
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11)
+                        ),
+                        new ParseException("Expected ';' : invalid immutable definition. index: 15", 15)
+                ),
+                Arguments.of("Global (Mutable/Declaration): Missing Identifier",
+                        Arrays.asList(
+                                //VAR ;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid mutable definition. index: 15", 15)
+                ),
+                Arguments.of("Global (Mutable/Declaration): Invalid Identifier",
+                        Arrays.asList(
+                                //VAR ; ;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid mutable definition. index: 4", 4)
+                ),
+                Arguments.of("Global (Mutable/Declaration): Missing Semicolon",
+                        Arrays.asList(
+                                //VAR name : Type
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17)
+                        ),
+                        new ParseException("Expected ';' : invalid mutable definition. index: 21", 21)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Missing Identifier",
+                        Arrays.asList(
+                                //VAR = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid mutable definition. index: 9", 9)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Invalid Identifier",
+                        Arrays.asList(
+                                //VAR ; = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected Identifier : invalid mutable definition. index: 4", 4)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Missing =",
+                        Arrays.asList(
+                                //VAR name : Type expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected ';' : invalid mutable definition. index: 11", 11)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Missing Expression",
+                        Arrays.asList(
+                                //VAR name : Type = ;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 15", 15)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Invalid Expression",
+                        Arrays.asList(
+                                //VAR name : Type = =;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.OPERATOR, "=", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 11", 11)
+                ),
+                Arguments.of("Global (Mutable/Initialization): Missing Semicolon",
+                        Arrays.asList(
+                                //VAR name : Type = expr
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11)
+                        ),
+                        new ParseException("Expected ';' : invalid mutable definition/initialization. index: 15", 15)
+                ),
+                Arguments.of("List (One Element): Invalid Identifier",
+                        Arrays.asList(
+                                //VAL name = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.OPERATOR, ";", 5),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected (name) Identifier : invalid list definition. index: 5", 5)
+                ),
+                Arguments.of("List (One Element): Missing Identifier",
+                        Arrays.asList(
+                                //VAL = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected (name) Identifier : invalid list definition. index: 10", 10)
+                ),
+                Arguments.of("List (One Element): Missing =",
+                        Arrays.asList(
+                                //VAL name : Type [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected '=' : invalid list definition. index: 11", 11)
+                ),
+                Arguments.of("List (One Element): Missing [",
+                        Arrays.asList(
+                                //VAL name : Type = expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected '[' : invalid list definition. index: 12", 12)
+                ),
+                Arguments.of("List (One Element): Missing Expression",
+                        Arrays.asList(
+                                //VAL name : Type = [];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 17", 17)
+                ),
+                Arguments.of("List (One Element): Invalid Expression",
+                        Arrays.asList(
+                                //VAL name : Type = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.OPERATOR, "!=", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 12", 12)
+                ),
+                Arguments.of("List (One Element): Missing ]",
+                        Arrays.asList(
+                                //VAL name : Type = [expr;
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        new ParseException("Expected ']' : invalid list definition. index: 18", 18)
+                ),
+                Arguments.of("List (One Element): Missing Semicolon",
+                        Arrays.asList(
+                                //VAL name : Type = [expr]
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17)
+                        ),
+                        new ParseException("Expected ';' : invalid list definition. index: 18", 18)
+                ),
+                Arguments.of("List (One Element): Leading Comma",
+                        Arrays.asList(
+                                //VAL name : Type = [,expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.OPERATOR, ",", 12),
+                                new Token(Token.Type.IDENTIFIER, "expr", 13),
+                                new Token(Token.Type.OPERATOR, "]", 18),
+                                new Token(Token.Type.OPERATOR, ";", 19)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 12", 12)
+                ),
+                Arguments.of("List (One Element): Trailing Comma",
+                        Arrays.asList(
+                                //VAL name : Type = [expr,];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, ",", 13),
+                                new Token(Token.Type.OPERATOR, "]", 18),
+                                new Token(Token.Type.OPERATOR, ";", 19)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 18", 18)
+                ),
+                Arguments.of("List (Multiple Elements): Missing Separating Comma 1",
+                        Arrays.asList(
+                                //VAL name : Type = [expr1 expr2 ,expr3 ];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31)
+                        ),
+                        new ParseException("Expected ']' : invalid list definition. index: 18", 18)
+                ),
+                Arguments.of("List (Multiple Elements): Missing Separating Comma 2",
+                        Arrays.asList(
+                                //VAL name : Type = [expr1,expr2  expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31)
+                        ),
+                        new ParseException("Expected ']' : invalid list definition. index: 25", 25)
+                ),
+                Arguments.of("List (Multiple Elements): Leading Comma",
+                        Arrays.asList(
+                                //VAL name : Type = [,expr1,expr2,expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.OPERATOR, ",", 12),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 13),
+                                new Token(Token.Type.OPERATOR, ",", 18),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 19),
+                                new Token(Token.Type.OPERATOR, ",", 25),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 26),
+                                new Token(Token.Type.OPERATOR, "]", 31),
+                                new Token(Token.Type.OPERATOR, ";", 32)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 12", 12)
+                ),
+                Arguments.of("List (Multiple Elements): Trailing Comma",
+                        Arrays.asList(
+                                //VAL name : Type = [expr1,expr2,expr3,];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, ",", 26),
+                                new Token(Token.Type.OPERATOR, "]", 31),
+                                new Token(Token.Type.OPERATOR, ";", 32)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 31", 31)
+                ),
+                Arguments.of("Function (No Parameters): Invalid Identifier",
+                        Arrays.asList(
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.OPERATOR, ";", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20)
+                        ),
+                        new ParseException("Expected Function Name : invalid function definition. index: 4", 4)
+                ),
+                Arguments.of("Function (No Parameters): Missing Identifier",
+                        Arrays.asList(
+                                //FUN () DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20)
+                        ),
+                        new ParseException("Expected Function Name : invalid function definition. index: 8", 8)
+                ),
+                Arguments.of("Function (No Parameters): Missing (",
+                        Arrays.asList(
+                                //FUN name( DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20)
+                        ),
+                        new ParseException("Missing '(' : invalid function definition. index: 9", 9)
+                ),
+                Arguments.of("Function (No Parameters): Missing )",
+                        Arrays.asList(
+                                //FUN name( DO : Type stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20)
+                        ),
+                        new ParseException("Expected ')' : invalid function definition. index: 14", 14)
+                ),
+                Arguments.of("Function (No Parameters): Missing DO",
+                        Arrays.asList(
+                                //FUN name() stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20)
+                        ),
+                        new ParseException("Expected \"DO\" : invalid function definition. index: 14", 14)
+                ),
+                Arguments.of("Function (No Parameters): Invalid Statement/Block",
+                        Arrays.asList(
+                                //FUN name() DO ; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20)
+                        ),
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 18", 18)
+                ),
+                Arguments.of("Function (No Parameters): Missing END",
+                        Arrays.asList(
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        // still trying to search for another statement within block
+                        new ParseException("Expected valid primary expression : no literal, group, function, or access found. index: 19", 19)
+                ),
+                Arguments.of("Function (No Parameters): INVALID Terminator (Not END)",
+                        Arrays.asList(
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "DEFAULT", 20)
+                        ),
+                        new ParseException("Expected \"END\" : invalid function definition. index: 20", 20)
+                ),
+                Arguments.of("Function (One Parameter): Invalid Parameter",
+                        Arrays.asList(
+                                //FUN name(;) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ";", 9),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25)
+                        ),
+                        new ParseException("Expected ')' or Identifier : invalid function definition. index: 9", 9)
+                ),
+                Arguments.of("Function (One Parameter): Leading Comma",
+                        Arrays.asList(
+                                //FUN name(,param1) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ",", 9),
+                                new Token(Token.Type.IDENTIFIER, "param1", 10),
+                                new Token(Token.Type.OPERATOR, ")", 16),
+                                new Token(Token.Type.IDENTIFIER, "DO", 17),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 20),
+                                new Token(Token.Type.OPERATOR, ";", 24),
+                                new Token(Token.Type.IDENTIFIER, "END", 26)
+                        ),
+                        new ParseException("Expected ')' or Identifier : invalid function definition. index: 9", 9)
+                ),
+                Arguments.of("Function (One Parameter): Trailing COmma",
+                        Arrays.asList(
+                                //FUN name(param1 : Type,) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.OPERATOR, ")", 16),
+                                new Token(Token.Type.IDENTIFIER, "DO", 17),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 18),
+                                new Token(Token.Type.OPERATOR, ";", 24),
+                                new Token(Token.Type.IDENTIFIER, "END", 26)
+                        ),
+                        new ParseException("Expected Identifier after ',' : invalid function definition. index: 16", 16)
+                ),
+                Arguments.of("Function (Multiple Parameters): Invalid Parameter",
+                        Arrays.asList(
+                                //FUN name(param1 : Type, param2 : Type, param3: Type) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected Identifier after ',' : invalid function definition. index: 23", 23)
+                ),
+                Arguments.of("Function (Multiple Parameters): Missing Comma 1",
+                        Arrays.asList(
+                                //FUN name(param1 : Type param2: Type, param3 : Type) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected ')' : invalid function definition. index: 17", 17)
+                ),
+                Arguments.of("Function (Multiple Parameters): Missing Comma 2",
+                        Arrays.asList(
+                                //FUN name(param1 : Type, param2 : Type param3 : Type) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected ')' : invalid function definition. index: 23", 23)
+                ),
+                Arguments.of("Function (Multiple Parameters): Leading Comma",
+                        Arrays.asList(
+                                //FUN name(param1 : Type, param2 : Type, param3 : Type) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ",", 9),
+                                new Token(Token.Type.IDENTIFIER, "param1", 10),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected ')' or Identifier : invalid function definition. index: 9", 9)
+                ),
+                Arguments.of("Function (Multiple Parameters): Trailing Comma",
+                        Arrays.asList(
+                                //FUN name(param1 : Type, param2 : Type, param3 : Type,) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected Identifier after ',' : invalid function definition. index: 29", 29)
+                ),
+                Arguments.of("Function Before Global",
+                        Arrays.asList(
+                                //VAL name : Type = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAL", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAR name : Type;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAR name : Type = expr;
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15),
+                                //VAL name : Type = [expr];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr", 12),
+                                new Token(Token.Type.OPERATOR, "]", 17),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                //VAL name : Type = [expr1,expr2];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, "]", 23),
+                                new Token(Token.Type.OPERATOR, ";", 249),
+                                //FUN name() DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20),
+                                //VAL name : Type = [expr1,expr2,expr3];
+                                new Token(Token.Type.IDENTIFIER, "LIST", 250),
+                                new Token(Token.Type.IDENTIFIER, "name", 5),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, "=", 10),
+                                new Token(Token.Type.OPERATOR, "[", 11),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 12),
+                                new Token(Token.Type.OPERATOR, ",", 17),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 25),
+                                new Token(Token.Type.OPERATOR, "]", 30),
+                                new Token(Token.Type.OPERATOR, ";", 31),
+                                //FUN name(param1 : Type) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 15),
+                                new Token(Token.Type.IDENTIFIER, "DO", 16),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                                new Token(Token.Type.OPERATOR, ";", 23),
+                                new Token(Token.Type.IDENTIFIER, "END", 25),
+                                //FUN name(param1 : Type, param2 : Type, param3 : Type) DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "param1", 9),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 15),
+                                new Token(Token.Type.IDENTIFIER, "param2", 17),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ",", 22),
+                                new Token(Token.Type.IDENTIFIER, "param3", 23),
+                                new Token(Token.Type.OPERATOR, ":", 15),
+                                new Token(Token.Type.IDENTIFIER, "Type", 17),
+                                new Token(Token.Type.OPERATOR, ")", 29),
+                                new Token(Token.Type.IDENTIFIER, "DO", 31),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 34),
+                                new Token(Token.Type.OPERATOR, ";", 38),
+                                new Token(Token.Type.IDENTIFIER, "END", 40)
+                        ),
+                        new ParseException("Expected end of file : source file must be composed of all globals followed by all functions. index: 250", 250)
                 )
         );
     }
