@@ -28,6 +28,7 @@ final class ParserModifiedTests {
         test(tokens, expected, Parser::parseSource);
     }
 
+    // TODO: test globals
     private static Stream<Arguments> testSource() {
         return Stream.of(
                 Arguments.of("Zero Statements",
@@ -96,6 +97,7 @@ final class ParserModifiedTests {
         );
     }
 
+    // done + tested
     @ParameterizedTest
     @MethodSource
     void testDeclarationStatement(String test, List<Token> tokens, Ast.Statement.Declaration expected) {

@@ -73,8 +73,19 @@ public final class Parser {
 
         // name - identifier required
         if(!peek(Token.Type.IDENTIFIER))
-            throw new ParseException("Expected Identifier : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
+            throw new ParseException("Expected (name) Identifier : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
         String name = tokens.get(0).getLiteral();
+        match(Token.Type.IDENTIFIER);
+
+        // : required
+        if(!peek(":"))
+            throw new ParseException("Expected ':' : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
+        match(":");
+
+        // type - identifier required
+        if(!peek(Token.Type.IDENTIFIER))
+            throw new ParseException("Expected (type) Identifier : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
+        String typeName = tokens.get(0).getLiteral();
         match(Token.Type.IDENTIFIER);
 
         // = required
@@ -108,7 +119,7 @@ public final class Parser {
             throw new ParseException("Expected ';' : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
         match(";");
 
-        return new Ast.Global(name, true, Optional.of(new Ast.Expression.PlcList(expressions)));
+        return new Ast.Global(name, typeName, true, Optional.of(new Ast.Expression.PlcList(expressions)));
     }
 
     /**
@@ -122,6 +133,17 @@ public final class Parser {
         if(!peek(Token.Type.IDENTIFIER))
             throw new ParseException("Expected Identifier : invalid mutable definition. index: " + getErrorIndex(), getErrorIndex());
         String name = tokens.get(0).getLiteral();
+        match(Token.Type.IDENTIFIER);
+
+        // : required
+        if(!peek(":"))
+            throw new ParseException("Expected ':' : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
+        match(":");
+
+        // type - identifier required
+        if(!peek(Token.Type.IDENTIFIER))
+            throw new ParseException("Expected (type) Identifier : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
+        String typeName = tokens.get(0).getLiteral();
         match(Token.Type.IDENTIFIER);
 
         // = - optional
@@ -143,7 +165,7 @@ public final class Parser {
             throw new ParseException("Expected ';' : invalid mutable definition. index: " + getErrorIndex(), getErrorIndex());
         match(";");
 
-        return new Ast.Global(name, true, Optional.empty());
+        return new Ast.Global(name, typeName, true, Optional.empty());
     }
 
     /**
@@ -159,6 +181,17 @@ public final class Parser {
         String name = tokens.get(0).getLiteral();
         match(Token.Type.IDENTIFIER);
 
+        // : required
+        if(!peek(":"))
+            throw new ParseException("Expected ':' : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
+        match(":");
+
+        // type - identifier required
+        if(!peek(Token.Type.IDENTIFIER))
+            throw new ParseException("Expected (type) Identifier : invalid list definition. index: " + getErrorIndex(), getErrorIndex());
+        String typeName = tokens.get(0).getLiteral();
+        match(Token.Type.IDENTIFIER);
+
         // = - required
         if(!peek("="))
             throw new ParseException("Expected '=' : invalid immutable definition. index: " + getErrorIndex(), getErrorIndex());
@@ -172,7 +205,7 @@ public final class Parser {
             throw new ParseException("Expected ';' : invalid immutable definition. index: " + getErrorIndex(), getErrorIndex());
         match(";");
 
-        return new Ast.Global(name, false, Optional.of(value));
+        return new Ast.Global(name, typeName, false, Optional.of(value));
     }
 
     /**
