@@ -185,12 +185,26 @@ final class InterpreterTests {
         PrintStream sysout = System.out;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+        Scope scope = new Scope(null);
+        scope.defineFunction("logarithm", 1, args -> {
+
+            // Alternate Type Checking: using instanceof operator
+            Environment.PlcObject bd = Environment.create(args.getFirst().getValue());
+            if(!(bd.getValue() instanceof BigDecimal))
+                throw new RuntimeException("expected BigDecimal value");
+
+            // it is a BigDecimal!
+            BigDecimal result = BigDecimal.valueOf(Math.log(((BigDecimal)bd.getValue()).doubleValue()));
+
+            return Environment.create(result);
+        });
+
         // print("Hello, World!");
         System.setOut(new PrintStream(out));
         try {
             test(new Ast.Statement.Expression(
                     new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("Hello, World!")))
-            ), Environment.NIL.getValue(), new Scope(null)); // ensures statement expression returns NIL
+            ), Environment.NIL.getValue(), scope); // ensures statement expression returns NIL
             Assertions.assertEquals("Hello, World!" + System.lineSeparator(), out.toString()); // ensures print statement (expression call) actually happens
         } finally {
             System.setOut(sysout); // resets System's output stream even if exception is thrown
@@ -204,7 +218,7 @@ final class InterpreterTests {
                     new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Function(
                             "logarithm", Arrays.asList(new Ast.Expression.Literal(BigDecimal.TWO)))
                     ))
-            ), Environment.NIL.getValue(), new Scope(null)); // ensures statement expression returns NIL
+            ), Environment.NIL.getValue(), scope); // ensures statement expression returns NIL
             Assertions.assertEquals("Hello, World!" + System.lineSeparator() + BigDecimal.valueOf(Math.log(BigDecimal.TWO.doubleValue())) + System.lineSeparator(), out.toString()); // ensures print statement (expression call) actually happens
         } finally {
             System.setOut(sysout); // resets System's output stream even if exception is thrown
@@ -1304,6 +1318,20 @@ final class InterpreterTests {
     @Test
     void testLogarithmExpressionStatement() {
         Scope scope = new Scope(null);
+
+        scope.defineFunction("logarithm", 1, args -> {
+
+            // Alternate Type Checking: using instanceof operator
+            Environment.PlcObject bd = Environment.create(args.getFirst().getValue());
+            if(!(bd.getValue() instanceof BigDecimal))
+                throw new RuntimeException("expected BigDecimal value");
+
+            // it is a BigDecimal!
+            BigDecimal result = BigDecimal.valueOf(Math.log(((BigDecimal)bd.getValue()).doubleValue()));
+
+            return Environment.create(result);
+        });
+
         test(   new Ast.Expression.Function(
                     "logarithm",
                     List.of(new Ast.Expression.Literal(BigDecimal.valueOf(Math.E)))),

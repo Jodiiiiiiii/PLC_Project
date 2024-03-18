@@ -18,27 +18,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             System.out.println(args.getFirst().getValue());
             return Environment.NIL;
         });
-
-        // TODO: Remove (move to where it is used in test case)
-        scope.defineFunction("logarithm", 1, args -> {
-
-            // Alternate Type Checking: using instanceof operator
-
-            BigDecimal bd2 = requireType(BigDecimal.class, Environment.create(args.getFirst().getValue()));
-            BigDecimal result = BigDecimal.valueOf(Math.log(bd2.doubleValue()));
-
-            return Environment.create(result);
-        });
-
-        // TODO: Remove
-        // converts from one base to another (???)
-        scope.defineFunction("converter", 2, args -> {
-
-            //BigInteger decimal = requireType(BigInteger.class, Environment.create(args.get(0)));
-            //BigInteger base = requireType(BigInteger.class, Environment.create(args.get(1)));
-
-            return Environment.NIL; // temp
-        });
     }
 
     public Scope getScope() {
