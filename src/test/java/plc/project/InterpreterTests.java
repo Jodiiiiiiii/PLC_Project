@@ -874,7 +874,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal("a"),
                                 new Ast.Expression.Literal(new BigDecimal(1.0))
                         ),
-                        "a1" // TODO: still unsure which case I should be doing; depends on how I initialize BigDecimal -> not ideal (re-clarification asked)
+                        "a1" // objects passed in test cases generate results in consistent manner, no matter objects passed (in other words, its fine)
                         // new BigDecimal(1.0) -> "a1"
                         // BigDecimal.ONE -> "a1"
                         // new BigDecimal("1.0") -> "a1.0"
@@ -886,7 +886,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal("a"),
                                 new Ast.Expression.Literal(BigDecimal.ONE)
                         ),
-                        "a1" // TODO: see TODO above
+                        "a1" // see above for explanation
                 ),
                 // "a" + 1.1
                 Arguments.of("Concatenation: plus decimal",
@@ -1087,7 +1087,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(new BigDecimal(3.0))
                         ),
                         BigDecimal.valueOf(3)
-                        // TODO: [Asked in TEAMS] verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
+                        // behavior depends on initialization of BigDecimal in test case, this is fine because it behaves in a consistent manner for any particular one method
                 ),
                 // 25.0 / 10.0
                 Arguments.of("Division: Decimal (another)",
@@ -1096,7 +1096,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(BigDecimal.valueOf(10))
                         ),
                         BigDecimal.valueOf(2)
-                        // TODO: [Asked in TEAMS] verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
+                        // see above for explanation
                 ),
                 // 25.0 / 10.0
                 Arguments.of("Division: Given",
@@ -1105,7 +1105,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(new BigDecimal("3.4"))
                         ),
                         new BigDecimal("0.4")
-                        // TODO: [Asked in TEAMS] verify that this is correct HALF_EVEN rounding behavior (i.e. that even decimal division always rounds to nearest integer)
+                        // see above for explanation
                 ),
                 // 1.0 / 10
                 Arguments.of("Division: Mixed Types",
