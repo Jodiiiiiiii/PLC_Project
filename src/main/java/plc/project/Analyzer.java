@@ -96,7 +96,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
             // check for out of Java int range
             try {
-                ((BigInteger) literal).intValueExact();
+                int val = ((BigInteger) literal).intValueExact();
             } catch(ArithmeticException e) {
                 throw new RuntimeException("Integer out of range of Java int (32-bit signed int). BigInteger value: " + literal + " too large.");
             }
@@ -119,12 +119,83 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Group ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // check that it is binary expression
+        if(!(ast.getExpression() instanceof Ast.Expression.Binary))
+            throw new RuntimeException("Expected Binary Expression within grouping. No other expression types permitted");
+
+        // analyze expression
+        visit(ast.getExpression());
+        // set type of group to analyzed result type
+        ast.setType(ast.getExpression().getType());
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Binary ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // visit lhs and rhs expressions
+        visit(ast.getLeft());
+        Ast.Expression lhs = ast.getLeft();
+        visit(ast.getRight());
+        Ast.Expression rhs = ast.getRight();
+
+        // set result types
+        String op = ast.getOperator();
+        switch(op) {
+            case "&&":
+            case "||":
+                requireAssignable(Environment.Type.BOOLEAN, lhs.getType());
+                requireAssignable(Environment.Type.BOOLEAN, rhs.getType());
+                ast.setType(Environment.Type.BOOLEAN);
+                break;
+            case ">":
+            case "<":
+            case "==":
+            case "!=":
+                requireAssignable(Environment.Type.COMPARABLE, lhs.getType());
+                requireAssignable(lhs.getType(), rhs.getType()); // must be same Comparable type
+                ast.setType(Environment.Type.BOOLEAN);
+                break;
+            case "+":
+                if(lhs.getType().equals(Environment.Type.STRING)) // lhs = STRING
+                {
+                    requireAssignable(Environment.Type.ANY, rhs.getType());
+                    ast.setType(Environment.Type.STRING);
+                }
+                else if(rhs.getType().equals(Environment.Type.STRING)) // rhs = STRING
+                {
+                    requireAssignable(Environment.Type.ANY, lhs.getType());
+                    ast.setType(Environment.Type.STRING);
+                }
+                else if(lhs.getType().equals(Environment.Type.INTEGER) || lhs.getType().equals(Environment.Type.DECIMAL)) // lhs = DECIMAL/INTEGER
+                {
+                    requireAssignable(lhs.getType(), rhs.getType()); // rhs/return must be same DECIMAL/INTEGER
+                    ast.setType(lhs.getType());
+                }
+                else
+                    throw new RuntimeException("Expected String (concatenation), Decimals, or Integers for for lhs/rhs of '+' operator.");
+                break;
+            case "-":
+            case "*":
+            case "/":
+                if(lhs.getType().equals(Environment.Type.INTEGER) || lhs.getType().equals(Environment.Type.DECIMAL)) // lhs = DECIMAL/INTEGER
+                {
+                    requireAssignable(lhs.getType(), rhs.getType()); // rhs/return must be same DECIMAL/INTEGER
+                    ast.setType(lhs.getType());
+                }
+                else
+                    throw new RuntimeException("Expected Decimals, or Integers for for lhs/rhs of arithmetic operator.");
+                break;
+            case "^":
+                requireAssignable(Environment.Type.INTEGER, lhs.getType());
+                requireAssignable(Environment.Type.INTEGER, rhs.getType());
+                ast.setType(Environment.Type.INTEGER);
+                break;
+            default:
+                throw new RuntimeException("Expected valid operator in Binary ast"); // should never be reached - indicates issue in parser
+        }
+
+        return null;
     }
 
     @Override

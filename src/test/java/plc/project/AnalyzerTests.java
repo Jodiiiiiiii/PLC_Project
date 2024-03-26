@@ -448,6 +448,38 @@ public final class AnalyzerTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+    public void testGroupExpression(String test, Ast.Expression.Group ast, Ast.Expression.Group expected) {
+        test(ast, expected, new Scope(null));
+    }
+
+    private static Stream<Arguments> testGroupExpression() {
+        return Stream.of(
+                Arguments.of("Group Valid",
+                        // TRUE && FALSE
+                        new Ast.Expression.Group(
+                                new Ast.Expression.Binary("&&",
+                                        new Ast.Expression.Literal(Boolean.TRUE),
+                                        new Ast.Expression.Literal(Boolean.FALSE)
+                                )),
+                        init(new Ast.Expression.Group(
+                                init(new Ast.Expression.Binary("&&",
+                                        init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                                        init(new Ast.Expression.Literal(Boolean.FALSE), ast -> ast.setType(Environment.Type.BOOLEAN))
+                                ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("Group Invalid (not binary)",
+                        // TRUE && FALSE
+                        new Ast.Expression.Group(
+                                new Ast.Expression.Literal(Boolean.TRUE)
+                        ),
+                        null
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
     public void testBinaryExpression(String test, Ast.Expression.Binary ast, Ast.Expression.Binary expected) {
         test(ast, expected, new Scope(null));
     }
@@ -473,7 +505,285 @@ public final class AnalyzerTests {
                         ),
                         null
                 ),
-                Arguments.of("String Concatenation",
+                Arguments.of("Logical OR Valid",
+                        // TRUE && FALSE
+                        new Ast.Expression.Binary("||",
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Literal(Boolean.FALSE)
+                        ),
+                        init(new Ast.Expression.Binary("||",
+                                init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                                init(new Ast.Expression.Literal(Boolean.FALSE), ast -> ast.setType(Environment.Type.BOOLEAN))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("Logical OR Invalid",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary("||",
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Literal("FALSE")
+                        ),
+                        null
+                ),
+                Arguments.of("< Invalid (Boolean)",
+                        // TRUE && FALSE
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Literal(Boolean.FALSE)
+                        ),
+                        null
+                ),
+                Arguments.of("< Invalid (diff type w/ bool)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal(Boolean.TRUE)
+                        ),
+                        null
+                ),
+                Arguments.of("< Invalid (diff type of comparable)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal('c')
+                        ),
+                        null
+                ),
+                Arguments.of("> Invalid (Boolean)",
+                        // TRUE && FALSE
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Literal(Boolean.FALSE)
+                        ),
+                        null
+                ),
+                Arguments.of("> Invalid (diff type w/ bool)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal(Boolean.TRUE)
+                        ),
+                        null
+                ),
+                Arguments.of("> Invalid (diff type of comparable)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal('c')
+                        ),
+                        null
+                ),
+                Arguments.of("== Invalid (Boolean)",
+                        // TRUE && FALSE
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Literal(Boolean.FALSE)
+                        ),
+                        null
+                ),
+                Arguments.of("== Invalid (diff type w/ bool)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal(Boolean.TRUE)
+                        ),
+                        null
+                ),
+                Arguments.of("== Invalid (diff type of comparable)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal('c')
+                        ),
+                        null
+                ),
+                Arguments.of("!= Invalid (Boolean)",
+                        // TRUE && FALSE
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Literal(Boolean.FALSE)
+                        ),
+                        null
+                ),
+                Arguments.of("!= Invalid (diff type w/ bool)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal(Boolean.TRUE)
+                        ),
+                        null
+                ),
+                Arguments.of("!= Invalid (diff type of comparable)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal('c')
+                        ),
+                        null
+                ),
+                Arguments.of("> Valid (String)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal("another string")
+                        ),
+                        init(new Ast.Expression.Binary(">",
+                                init(new Ast.Expression.Literal("String"), ast -> ast.setType(Environment.Type.STRING)),
+                                init(new Ast.Expression.Literal("another string"), ast -> ast.setType(Environment.Type.STRING))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("> Valid (Char)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal('c'),
+                                new Ast.Expression.Literal('d')
+                        ),
+                        init(new Ast.Expression.Binary(">",
+                                init(new Ast.Expression.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER)),
+                                init(new Ast.Expression.Literal('d'), ast -> ast.setType(Environment.Type.CHARACTER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("> Valid (Integer)",
+                        // TRUE && "FALSE"
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(new BigInteger("1")),
+                                new Ast.Expression.Literal(new BigInteger("2"))
+                        ),
+                        init(new Ast.Expression.Binary(">",
+                                init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(new BigInteger("2")), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("> Valid (Decimal)",
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(new BigDecimal("1.0")),
+                                new Ast.Expression.Literal(new BigDecimal("2.0"))
+                        ),
+                        init(new Ast.Expression.Binary(">",
+                                init(new Ast.Expression.Literal(new BigDecimal("1.0")), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                init(new Ast.Expression.Literal(new BigDecimal("2.0")), ast -> ast.setType(Environment.Type.DECIMAL))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("< Valid (String)",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal("another string")
+                        ),
+                        init(new Ast.Expression.Binary("<",
+                                init(new Ast.Expression.Literal("String"), ast -> ast.setType(Environment.Type.STRING)),
+                                init(new Ast.Expression.Literal("another string"), ast -> ast.setType(Environment.Type.STRING))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("< Valid (Char)",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal('c'),
+                                new Ast.Expression.Literal('d')
+                        ),
+                        init(new Ast.Expression.Binary("<",
+                                init(new Ast.Expression.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER)),
+                                init(new Ast.Expression.Literal('d'), ast -> ast.setType(Environment.Type.CHARACTER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("< Valid (Integer)",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal(new BigInteger("1")),
+                                new Ast.Expression.Literal(new BigInteger("2"))
+                        ),
+                        init(new Ast.Expression.Binary("<",
+                                init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(new BigInteger("2")), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("< Valid (Decimal)",
+                        new Ast.Expression.Binary("<",
+                                new Ast.Expression.Literal(new BigDecimal("1.0")),
+                                new Ast.Expression.Literal(new BigDecimal("2.0"))
+                        ),
+                        init(new Ast.Expression.Binary("<",
+                                init(new Ast.Expression.Literal(new BigDecimal("1.0")), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                init(new Ast.Expression.Literal(new BigDecimal("2.0")), ast -> ast.setType(Environment.Type.DECIMAL))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("== Valid (String)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal("another string")
+                        ),
+                        init(new Ast.Expression.Binary("==",
+                                init(new Ast.Expression.Literal("String"), ast -> ast.setType(Environment.Type.STRING)),
+                                init(new Ast.Expression.Literal("another string"), ast -> ast.setType(Environment.Type.STRING))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("== Valid (Char)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal('c'),
+                                new Ast.Expression.Literal('d')
+                        ),
+                        init(new Ast.Expression.Binary("==",
+                                init(new Ast.Expression.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER)),
+                                init(new Ast.Expression.Literal('d'), ast -> ast.setType(Environment.Type.CHARACTER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("== Valid (Integer)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(new BigInteger("1")),
+                                new Ast.Expression.Literal(new BigInteger("2"))
+                        ),
+                        init(new Ast.Expression.Binary("==",
+                                init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(new BigInteger("2")), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("== Valid (Decimal)",
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(new BigDecimal("1.0")),
+                                new Ast.Expression.Literal(new BigDecimal("2.0"))
+                        ),
+                        init(new Ast.Expression.Binary("==",
+                                init(new Ast.Expression.Literal(new BigDecimal("1.0")), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                init(new Ast.Expression.Literal(new BigDecimal("2.0")), ast -> ast.setType(Environment.Type.DECIMAL))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("!= Valid (String)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal("String"),
+                                new Ast.Expression.Literal("another string")
+                        ),
+                        init(new Ast.Expression.Binary("!=",
+                                init(new Ast.Expression.Literal("String"), ast -> ast.setType(Environment.Type.STRING)),
+                                init(new Ast.Expression.Literal("another string"), ast -> ast.setType(Environment.Type.STRING))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("!= Valid (Char)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal('c'),
+                                new Ast.Expression.Literal('d')
+                        ),
+                        init(new Ast.Expression.Binary("!=",
+                                init(new Ast.Expression.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER)),
+                                init(new Ast.Expression.Literal('d'), ast -> ast.setType(Environment.Type.CHARACTER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("!= Valid (Integer)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(new BigInteger("1")),
+                                new Ast.Expression.Literal(new BigInteger("2"))
+                        ),
+                        init(new Ast.Expression.Binary("!=",
+                                init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(new BigInteger("2")), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("!= Valid (Decimal)",
+                        new Ast.Expression.Binary("!=",
+                                new Ast.Expression.Literal(new BigDecimal("1.0")),
+                                new Ast.Expression.Literal(new BigDecimal("2.0"))
+                        ),
+                        init(new Ast.Expression.Binary("!=",
+                                init(new Ast.Expression.Literal(new BigDecimal("1.0")), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                init(new Ast.Expression.Literal(new BigDecimal("2.0")), ast -> ast.setType(Environment.Type.DECIMAL))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("String Concatenation (String + other)",
                         // "Ben" + 10
                         new Ast.Expression.Binary("+",
                                 new Ast.Expression.Literal("Ben"),
@@ -482,6 +792,17 @@ public final class AnalyzerTests {
                         init(new Ast.Expression.Binary("+",
                                 init(new Ast.Expression.Literal("Ben"), ast -> ast.setType(Environment.Type.STRING)),
                                 init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.STRING))
+                ),
+                Arguments.of("String Concatenation (String + String)",
+                        // "Ben" + 10
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal("Ben"),
+                                new Ast.Expression.Literal("Franklin")
+                        ),
+                        init(new Ast.Expression.Binary("+",
+                                init(new Ast.Expression.Literal("Ben"), ast -> ast.setType(Environment.Type.STRING)),
+                                init(new Ast.Expression.Literal("Franklin"), ast -> ast.setType(Environment.Type.STRING))
                         ), ast -> ast.setType(Environment.Type.STRING))
                 ),
                 Arguments.of("Integer Addition",
@@ -495,11 +816,81 @@ public final class AnalyzerTests {
                                 init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
                         ), ast -> ast.setType(Environment.Type.INTEGER))
                 ),
-                Arguments.of("Integer Decimal Addition",
+                Arguments.of("Decimal Addition",
+                        // 1 + 10
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        init(new Ast.Expression.Binary("+",
+                                init(new Ast.Expression.Literal(BigDecimal.ONE), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                init(new Ast.Expression.Literal(BigDecimal.TEN), ast -> ast.setType(Environment.Type.DECIMAL))
+                        ), ast -> ast.setType(Environment.Type.DECIMAL))
+                ),
+                Arguments.of("Addition Invalid (chars)",
+                        // 1 + 10
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal('c'),
+                                new Ast.Expression.Literal('d')
+                        ),
+                        null
+                ),
+                Arguments.of("Addition Invalid (booleans)",
+                        // 1 + 10
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                new Ast.Expression.Literal(Boolean.FALSE)
+                        ),
+                        null
+                ),
+                Arguments.of("Integer/Decimal Addition",
                         // 1 + 1.0
                         new Ast.Expression.Binary("+",
                                 new Ast.Expression.Literal(BigInteger.ONE),
                                 new Ast.Expression.Literal(BigDecimal.ONE)
+                        ),
+                        null
+                ),
+                Arguments.of("Exponent Valid",
+                        // 1 + 10
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        init(new Ast.Expression.Binary("^",
+                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.INTEGER))
+                ),
+                Arguments.of("Exponent Invalid (Decimals)",
+                        // 1 + 10
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        null
+                ),
+                Arguments.of("Exponent Invalid (Bool/Integer)",
+                        // 1 + 10
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(Boolean.TRUE)
+                        ),
+                        null
+                ),
+                Arguments.of("Exponent Invalid (Booleans)",
+                        // 1 + 10
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(Boolean.FALSE),
+                                new Ast.Expression.Literal(Boolean.TRUE)
+                        ),
+                        null
+                ),
+                Arguments.of("Exponent Invalid (Decimal/Int)",
+                        // 1 + 10
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TWO)
                         ),
                         null
                 )
