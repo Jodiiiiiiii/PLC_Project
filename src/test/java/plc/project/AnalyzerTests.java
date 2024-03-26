@@ -456,6 +456,81 @@ public final class AnalyzerTests {
                                 )
                         ),
                         null
+                ),
+                Arguments.of("Missing Default",
+                        // SWITCH number CASE 'y': print("yes"); letter = 'n'; DEFAULT: print("no"); END
+                        new Ast.Statement.Switch(
+                                new Ast.Expression.Access(Optional.empty(),"letter"),
+                                Arrays.asList(
+                                        new Ast.Statement.Case(
+                                                Optional.of(new Ast.Expression.Literal('y')),
+                                                Arrays.asList(
+                                                        new Ast.Statement.Expression(new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("yes")))),
+                                                        new Ast.Statement.Assignment(
+                                                                new Ast.Expression.Access(Optional.empty(), "letter"),
+                                                                new Ast.Expression.Literal('n')
+                                                        )
+                                                )
+                                        ),
+                                        new Ast.Statement.Case(
+                                                Optional.of(new Ast.Expression.Literal('c')),
+                                                Arrays.asList(
+                                                        new Ast.Statement.Expression(new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("no"))))
+                                                )
+                                        )
+                                )
+                        ),
+                        null
+                ),
+                Arguments.of("Default Early",
+                        // SWITCH number CASE 'y': print("yes"); letter = 'n'; DEFAULT: print("no"); END
+                        new Ast.Statement.Switch(
+                                new Ast.Expression.Access(Optional.empty(),"letter"),
+                                Arrays.asList(
+                                        new Ast.Statement.Case(
+                                                Optional.empty(),
+                                                Arrays.asList(
+                                                        new Ast.Statement.Expression(new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("yes")))),
+                                                        new Ast.Statement.Assignment(
+                                                                new Ast.Expression.Access(Optional.empty(), "letter"),
+                                                                new Ast.Expression.Literal('n')
+                                                        )
+                                                )
+                                        ),
+                                        new Ast.Statement.Case(
+                                                Optional.of(new Ast.Expression.Literal('c')),
+                                                Arrays.asList(
+                                                        new Ast.Statement.Expression(new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("no"))))
+                                                )
+                                        )
+                                )
+                        ),
+                        null
+                ),
+                Arguments.of("Invalid Statement",
+                        // SWITCH number CASE 'y': print("yes"); letter = 'n'; DEFAULT: print("no"); END
+                        new Ast.Statement.Switch(
+                                new Ast.Expression.Access(Optional.empty(),"letter"),
+                                Arrays.asList(
+                                        new Ast.Statement.Case(
+                                                Optional.of(new Ast.Expression.Literal('c')),
+                                                Arrays.asList(
+                                                        new Ast.Statement.Expression(new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(Long.MAX_VALUE))))),
+                                                        new Ast.Statement.Assignment(
+                                                                new Ast.Expression.Access(Optional.empty(), "letter"),
+                                                                new Ast.Expression.Literal('n')
+                                                        )
+                                                )
+                                        ),
+                                        new Ast.Statement.Case(
+                                                Optional.empty(),
+                                                Arrays.asList(
+                                                        new Ast.Statement.Expression(new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("no"))))
+                                                )
+                                        )
+                                )
+                        ),
+                        null
                 )
         );
     }

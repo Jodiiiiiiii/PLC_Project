@@ -122,12 +122,43 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Switch ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // determine type from condition
+        visit(ast.getCondition());
+        Environment.Type type = ast.getCondition().getType();
+
+        // looks at all cases but default
+        for (int i = 0; i < ast.getCases().size() - 1; i++)
+        {
+            Ast.Statement.Case currCase = ast.getCases().get(i);
+
+            // check for default-case error
+            if(currCase.getValue().isEmpty())
+                throw new RuntimeException("Only the final case of switch-case can be default (no value).");
+
+            // ensure case value type matches condition type
+            visit(currCase.getValue().get());
+            requireAssignable(type, currCase.getValue().get().getType());
+
+            // visit statements in case
+            visit(currCase);
+        }
+
+        // default case
+        // check for default-case error
+        Ast.Statement.Case defaultCase = ast.getCases().getLast();
+        if(defaultCase.getValue().isPresent())
+            throw new RuntimeException("Switch-case must end with default case.");
+        // visit statements in default case
+        visit(defaultCase);
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Case ast) {
-        throw new UnsupportedOperationException();  // TODO
+        VisitNewScope(ast.getStatements());
+
+        return null;
     }
 
     @Override
