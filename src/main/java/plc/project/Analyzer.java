@@ -198,14 +198,45 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
+    // TODO: is this actually done??? Integrate better once I do Globals
     @Override
     public Void visit(Ast.Expression.Access ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if(ast.getOffset().isPresent()) // with offset - list index
+        {
+            // visit offset expression
+            visit(ast.getOffset().get());
+            // require offsets type to be integer
+            requireAssignable(Environment.Type.INTEGER, ast.getOffset().get().getType());
+
+            ast.setVariable(scope.lookupVariable(ast.getName())); // TODO: is this fine even though it is a list -> this at least gets the type right??
+        }
+        else // no offset - variable
+        {
+            ast.setVariable(scope.lookupVariable(ast.getName()));
+        }
+
+        return null;
     }
 
+    // TODO: is this actually done??? Integrate better once I do Globals
     @Override
     public Void visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+
+        // lookup function
+        Environment.Function fun = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+        ast.setFunction(fun);
+
+        // verify parameter types
+        for (int i = 0; i < ast.getArguments().size(); i++)
+        {
+            // visit (determine type of) parameter
+            visit(ast.getArguments().get(i));
+
+            // ensure argument is assignable to parameter type
+            requireAssignable(fun.getParameterTypes().get(i), ast.getArguments().get(i).getType()); // TODO: this felt wrong idk. come back to it
+        }
+
+        return null;
     }
 
     @Override
