@@ -89,7 +89,16 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // verify/visit receiver
+        if(!(ast.getReceiver() instanceof Ast.Expression.Access))
+            throw new RuntimeException("Expected access expression as lhs of assignment statement.");
+        visit(ast.getReceiver());
+
+        // visit value and verify type matches receiver
+        visit(ast.getValue());
+        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+
+        return null;
     }
 
     @Override

@@ -226,6 +226,14 @@ public final class AnalyzerTests {
                                 new Ast.Expression.Literal("string")
                         ),
                         null
+                ),
+                Arguments.of("Invalid Receiver Type",
+                        // variable = "string";
+                        new Ast.Statement.Assignment(
+                                new Ast.Expression.Literal(BigInteger.ONE),
+                                new Ast.Expression.Literal("string")
+                        ),
+                        null
                 )
         );
     }
