@@ -1198,7 +1198,7 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(BigInteger.valueOf(2)),
                                 new Ast.Expression.Literal(BigInteger.valueOf(-1))
                         ),
-                        BigInteger.valueOf(0)
+                        new BigDecimal("0")
                 ),
                 // -2 ^ 2
                 Arguments.of("Exponent: Negative Base (even)",
@@ -1247,6 +1247,14 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal("abc")
                         ),
                         null
+                ),
+                // 2 ^ 1000000
+                Arguments.of("Exponent: Huge RHS",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(new BigInteger("2")),
+                                new Ast.Expression.Literal(new BigInteger("1000000"))
+                        ),
+                        new BigInteger("2").pow(1000000)
                 )
         );
     }

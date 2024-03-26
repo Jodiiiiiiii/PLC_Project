@@ -312,14 +312,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 // but value input might actually be larger than the range of an integer
                 BigInteger base = requireType(BigInteger.class, lhs);
                 BigInteger exp = requireType(BigInteger.class, rhs);
-                BigInteger result = BigInteger.ONE;
-                for(BigInteger i = BigInteger.ZERO; i.compareTo(exp.abs()) < 0; i = i.add(BigInteger.ONE))
-                {
-                    if(exp.compareTo(BigInteger.ZERO) > 0)
-                        result = result.multiply(base);
-                    else
-                        result = result.divide(base);
-                }
+
+                // calculate
+                BigInteger result = base.pow(Math.abs(exp.intValueExact()));
+                // check for negative exponent
+                if(exp.compareTo(BigInteger.ZERO) < 0)
+                    return Environment.create(BigDecimal.ONE.divide(new BigDecimal(result), RoundingMode.HALF_EVEN));
 
                 return Environment.create(result);
             default:
