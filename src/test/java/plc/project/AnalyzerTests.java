@@ -385,6 +385,8 @@ public final class AnalyzerTests {
         );
     }
 
+    // TODO: While unit testing
+
     @ParameterizedTest(name = "{0}")
     @MethodSource
     public void testLiteralExpression(String test, Ast.Expression.Literal ast, Ast.Expression.Literal expected) {
@@ -932,6 +934,7 @@ public final class AnalyzerTests {
                         new Ast.Expression.Function("function", Arrays.asList()),
                         init(new Ast.Expression.Function("function", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 )
+                // TODO: test actually verifying parameter type validation
         );
     }
 

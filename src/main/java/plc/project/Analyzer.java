@@ -71,7 +71,26 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.While ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // verify condition type (BOOLEAN)
+        visit(ast.getCondition());
+        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+
+        // visit while statements in new scope
+        VisitNewScope(ast.getStatements());
+
+        return null;
+    }
+
+    private void VisitNewScope(List<Ast.Statement> statements) {
+        try{
+            scope = new Scope(scope);
+            // execute list of statements within this scope
+            for(Ast.Statement stmt : statements)
+                visit(stmt);
+        } finally {
+            // return to parent scope when exiting/looping, regardless of error state
+            scope = scope.getParent();
+        }
     }
 
     @Override
