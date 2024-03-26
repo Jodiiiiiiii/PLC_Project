@@ -163,7 +163,7 @@ public final class AnalyzerTests {
                         // LET name: Integer;
                         new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()),
                         init(new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()), ast -> {
-                            ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL));
+                            ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL));
                         })
                 ),
                 Arguments.of("Initialization",
@@ -171,7 +171,14 @@ public final class AnalyzerTests {
                         new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
                         init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
                                 init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
-                        )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL)))
+                        )), ast -> ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL)))
+                ),
+                Arguments.of("Initialization with explicit",
+                        // LET name : Integer = 1;
+                        new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                        init(new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.of(
+                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                        )), ast -> ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL)))
                 ),
                 Arguments.of("Missing Type",
                         // LET name;
@@ -181,6 +188,11 @@ public final class AnalyzerTests {
                 Arguments.of("Unknown Type",
                         // LET name: Unknown;
                         new Ast.Statement.Declaration("name", Optional.of("Unknown"), Optional.empty()),
+                        null
+                ),
+                Arguments.of("Non-matching types",
+                        // LET name: Integer = 1.0;
+                        new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.of(new Ast.Expression.Literal(BigDecimal.ONE))),
                         null
                 )
         );

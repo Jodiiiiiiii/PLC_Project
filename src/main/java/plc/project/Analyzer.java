@@ -52,7 +52,39 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        throw new UnsupportedOperationException();  // TODO
+
+        // determine type of new declared variable
+        Environment.Type type;
+        if(ast.getTypeName().isPresent()) { // explicitly defined
+            // explicit type
+            type = Environment.getType(ast.getTypeName().get());
+
+            // value checks/visiting
+            if(ast.getValue().isPresent())
+            {
+                // visit rhs expression
+                visit(ast.getValue().get());
+                // ensure rhs can be assigned to explicit type (if present)
+                requireAssignable(type, ast.getValue().get().getType());
+            }
+        }
+        else { // not explicitly defined
+            if(ast.getValue().isPresent())
+            {
+                // visit rhs expression
+                visit(ast.getValue().get());
+                // determine type from visited rhs
+                type = ast.getValue().get().getType();
+            }
+            else
+                throw new RuntimeException("Expected either explicit or implicit type specification of variable " + ast.getName());
+        }
+
+        // create/set new variable
+        scope.defineVariable(ast.getName(), type.getJvmName(), type, true, Environment.NIL);
+        ast.setVariable(scope.lookupVariable(ast.getName()));
+
+        return null;
     }
 
     @Override
