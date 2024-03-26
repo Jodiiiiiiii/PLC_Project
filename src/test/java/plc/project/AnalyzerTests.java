@@ -393,19 +393,54 @@ public final class AnalyzerTests {
 
     private static Stream<Arguments> testLiteralExpression() {
         return Stream.of(
+                Arguments.of("Nil",
+                        // NIL
+                        new Ast.Expression.Literal(null),
+                        init(new Ast.Expression.Literal(null), ast -> ast.setType(Environment.Type.NIL))
+                ),
                 Arguments.of("Boolean",
                         // TRUE
                         new Ast.Expression.Literal(true),
                         init(new Ast.Expression.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN))
                 ),
-                Arguments.of("Integer Valid",
+                Arguments.of("Character",
+                        // 'c'
+                        new Ast.Expression.Literal('c'),
+                        init(new Ast.Expression.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER))
+                ),
+                Arguments.of("String",
+                        // "str"
+                        new Ast.Expression.Literal("str"),
+                        init(new Ast.Expression.Literal("str"), ast -> ast.setType(Environment.Type.STRING))
+                ),
+                Arguments.of("Integer Valid (Max)",
                         // 2147483647
                         new Ast.Expression.Literal(BigInteger.valueOf(Integer.MAX_VALUE)),
                         init(new Ast.Expression.Literal(BigInteger.valueOf(Integer.MAX_VALUE)), ast -> ast.setType(Environment.Type.INTEGER))
                 ),
+                Arguments.of("Integer Valid (Min)",
+                        // 2147483647
+                        new Ast.Expression.Literal(BigInteger.valueOf(Integer.MIN_VALUE)),
+                        init(new Ast.Expression.Literal(BigInteger.valueOf(Integer.MIN_VALUE)), ast -> ast.setType(Environment.Type.INTEGER))
+                ),
                 Arguments.of("Integer Invalid",
                         // 9223372036854775807
                         new Ast.Expression.Literal(BigInteger.valueOf(Long.MAX_VALUE)),
+                        null
+                ),
+                Arguments.of("Decimal Valid (Max)",
+                        // Max Double
+                        new Ast.Expression.Literal(BigDecimal.valueOf(Double.MAX_VALUE)),
+                        init(new Ast.Expression.Literal(BigDecimal.valueOf(Double.MAX_VALUE)), ast -> ast.setType(Environment.Type.DECIMAL))
+                ),
+                Arguments.of("Decimal Valid (Min)",
+                        // Min Double
+                        new Ast.Expression.Literal(BigDecimal.valueOf(Double.MIN_VALUE)),
+                        init(new Ast.Expression.Literal(BigDecimal.valueOf(Double.MIN_VALUE)), ast -> ast.setType(Environment.Type.DECIMAL))
+                ),
+                Arguments.of("Decimal Invalid",
+                        // Min Double
+                        new Ast.Expression.Literal(new BigDecimal("2").pow(1000000)),
                         null
                 )
         );

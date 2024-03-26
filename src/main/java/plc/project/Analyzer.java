@@ -81,7 +81,40 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Object literal = ast.getLiteral();
+        if(literal == null) // NIL
+            ast.setType(Environment.Type.NIL);
+        else if(literal instanceof Boolean) // BOOLEAN
+            ast.setType(Environment.Type.BOOLEAN);
+        else if(literal instanceof Character) // CHARACTER
+            ast.setType(Environment.Type.CHARACTER);
+        else if(literal instanceof String) // STRING
+            ast.setType(Environment.Type.STRING);
+        else if(literal instanceof BigInteger) // INTEGER
+        {
+            ast.setType(Environment.Type.INTEGER);
+
+            // check for out of Java int range
+            try {
+                ((BigInteger) literal).intValueExact();
+            } catch(ArithmeticException e) {
+                throw new RuntimeException("Integer out of range of Java int (32-bit signed int). BigInteger value: " + literal + " too large.");
+            }
+        }
+        else if(literal instanceof BigDecimal) // DECIMAL
+        {
+            ast.setType(Environment.Type.DECIMAL);
+
+            // check for out of Java double range
+            double val = ((BigDecimal) literal).doubleValue();
+            if(val == Double.NEGATIVE_INFINITY || val == Double.POSITIVE_INFINITY)
+                throw new RuntimeException("Double out of range of Java double (64-bit signed float). BigDecimal value: " + literal + " too large.");
+        }
+        else
+            // should never be able to reach here - indicates an issue in the Parser
+            throw new RuntimeException("Expected valid literal type (null, boolean, character, String, BigInteger, or BigDecimal");
+
+        return null;
     }
 
     @Override
