@@ -519,11 +519,62 @@ public final class AnalyzerTests {
 
     private static Stream<Arguments> testRequireAssignable() {
         return Stream.of(
+                // Integer -> others
                 Arguments.of("Integer to Integer", Environment.Type.INTEGER, Environment.Type.INTEGER, true),
                 Arguments.of("Integer to Decimal", Environment.Type.DECIMAL, Environment.Type.INTEGER, false),
+                Arguments.of("Integer to Character", Environment.Type.CHARACTER, Environment.Type.INTEGER, false),
+                Arguments.of("Integer to String", Environment.Type.STRING, Environment.Type.INTEGER, false),
+                Arguments.of("Integer to Boolean", Environment.Type.BOOLEAN, Environment.Type.INTEGER, false),
                 Arguments.of("Integer to Comparable", Environment.Type.COMPARABLE, Environment.Type.INTEGER,  true),
                 Arguments.of("Integer to Any", Environment.Type.ANY, Environment.Type.INTEGER, true),
-                Arguments.of("Any to Integer", Environment.Type.INTEGER, Environment.Type.ANY, false)
+                // Decimal -> others
+                Arguments.of("Decimal to Integer", Environment.Type.INTEGER, Environment.Type.DECIMAL, false),
+                Arguments.of("Decimal to Decimal", Environment.Type.DECIMAL, Environment.Type.DECIMAL, true),
+                Arguments.of("Decimal to Character", Environment.Type.CHARACTER, Environment.Type.DECIMAL, false),
+                Arguments.of("Decimal to String", Environment.Type.STRING, Environment.Type.DECIMAL, false),
+                Arguments.of("Decimal to Boolean", Environment.Type.BOOLEAN, Environment.Type.DECIMAL, false),
+                Arguments.of("Decimal to Comparable", Environment.Type.COMPARABLE, Environment.Type.DECIMAL,  true),
+                Arguments.of("Decimal to Any", Environment.Type.ANY, Environment.Type.DECIMAL, true),
+                // Character -> others
+                Arguments.of("Character to Integer", Environment.Type.INTEGER, Environment.Type.CHARACTER, false),
+                Arguments.of("Character to Decimal", Environment.Type.DECIMAL, Environment.Type.CHARACTER, false),
+                Arguments.of("Character to Character", Environment.Type.CHARACTER, Environment.Type.CHARACTER, true),
+                Arguments.of("Character to String", Environment.Type.STRING, Environment.Type.CHARACTER, false),
+                Arguments.of("Character to Boolean", Environment.Type.BOOLEAN, Environment.Type.CHARACTER, false),
+                Arguments.of("Character to Comparable", Environment.Type.COMPARABLE, Environment.Type.CHARACTER,  true),
+                Arguments.of("Character to Any", Environment.Type.ANY, Environment.Type.CHARACTER, true),
+                // String -> others
+                Arguments.of("String to Integer", Environment.Type.INTEGER, Environment.Type.STRING, false),
+                Arguments.of("String to Decimal", Environment.Type.DECIMAL, Environment.Type.STRING, false),
+                Arguments.of("String to Character", Environment.Type.CHARACTER, Environment.Type.STRING, false),
+                Arguments.of("String to String", Environment.Type.STRING, Environment.Type.STRING, true),
+                Arguments.of("String to Boolean", Environment.Type.BOOLEAN, Environment.Type.STRING, false),
+                Arguments.of("String to Comparable", Environment.Type.COMPARABLE, Environment.Type.STRING,  true),
+                Arguments.of("String to Any", Environment.Type.ANY, Environment.Type.STRING, true),
+                // Boolean -> others
+                Arguments.of("Boolean to Integer", Environment.Type.INTEGER, Environment.Type.BOOLEAN, false),
+                Arguments.of("Boolean to Decimal", Environment.Type.DECIMAL, Environment.Type.BOOLEAN, false),
+                Arguments.of("Boolean to Character", Environment.Type.CHARACTER, Environment.Type.BOOLEAN, false),
+                Arguments.of("Boolean to String", Environment.Type.STRING, Environment.Type.BOOLEAN, false),
+                Arguments.of("Boolean to Boolean", Environment.Type.BOOLEAN, Environment.Type.BOOLEAN, true),
+                Arguments.of("Boolean to Comparable", Environment.Type.COMPARABLE, Environment.Type.BOOLEAN,  false),
+                Arguments.of("Boolean to Any", Environment.Type.ANY, Environment.Type.BOOLEAN, true),
+                // Comparable -> others
+                Arguments.of("Comparable to Integer", Environment.Type.INTEGER, Environment.Type.COMPARABLE, false),
+                Arguments.of("Comparable to Decimal", Environment.Type.DECIMAL, Environment.Type.COMPARABLE, false),
+                Arguments.of("Comparable to Character", Environment.Type.CHARACTER, Environment.Type.COMPARABLE, false),
+                Arguments.of("Comparable to String", Environment.Type.STRING, Environment.Type.COMPARABLE, false),
+                Arguments.of("Comparable to Boolean", Environment.Type.BOOLEAN, Environment.Type.COMPARABLE, false),
+                Arguments.of("Comparable to Comparable", Environment.Type.COMPARABLE, Environment.Type.COMPARABLE,  true),
+                Arguments.of("Comparable to Any", Environment.Type.ANY, Environment.Type.COMPARABLE, true),
+                // Any -> others
+                Arguments.of("Any to Integer", Environment.Type.INTEGER, Environment.Type.ANY, false),
+                Arguments.of("Any to Decimal", Environment.Type.DECIMAL, Environment.Type.ANY, false),
+                Arguments.of("Any to Character", Environment.Type.CHARACTER, Environment.Type.ANY, false),
+                Arguments.of("Any to String", Environment.Type.STRING, Environment.Type.ANY, false),
+                Arguments.of("Any to Boolean", Environment.Type.BOOLEAN, Environment.Type.ANY, false),
+                Arguments.of("Any to Comparable", Environment.Type.COMPARABLE, Environment.Type.ANY,  false),
+                Arguments.of("Any to Any", Environment.Type.ANY, Environment.Type.ANY, true)
         );
     }
 

@@ -110,7 +110,17 @@ public final class Analyzer implements Ast.Visitor<Void> {
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
-        throw new UnsupportedOperationException();  // TODO
+        // same type or target is any
+        if(target.equals(type) || target.equals(Environment.Type.ANY))
+            return;
+
+        // Comparable
+        if(target.equals(Environment.Type.COMPARABLE) &&
+                (type.equals(Environment.Type.INTEGER) || type.equals(Environment.Type.DECIMAL)
+                || type.equals(Environment.Type.CHARACTER) || type.equals(Environment.Type.STRING)))
+            return;
+
+        throw new RuntimeException("Expected type " + target.getName() + ". Received type " + type.getName());
     }
 
 }
