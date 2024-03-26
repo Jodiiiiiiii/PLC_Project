@@ -220,6 +220,33 @@ public final class AnalyzerTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+    public void testExpressionStatement(String test, Ast.Statement.Expression ast, Ast.Statement.Expression expected) {
+        test(ast, expected, new Scope(null));
+    }
+
+    private static Stream<Arguments> testExpressionStatement() {
+        return Stream.of(
+                Arguments.of("Valid",
+                        new Ast.Statement.Expression(
+                                new Ast.Expression.Function("print", Arrays.asList(
+                                        new Ast.Expression.Literal(BigInteger.ONE)
+                                ))
+                        ),
+                        new Ast.Statement.Expression(
+                                init(new Ast.Expression.Function("print", Arrays.asList(
+                                        init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))
+                        )
+                ),
+                Arguments.of("Invalid - not function",
+                        new Ast.Statement.Expression(new Ast.Expression.Literal(BigInteger.ONE)),
+                        null
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
     public void testIfStatement(String test, Ast.Statement.If ast, Ast.Statement.If expected) {
         test(ast, expected, new Scope(null));
     }
@@ -245,6 +272,34 @@ public final class AnalyzerTests {
                                         )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
                                 ),
                                 Arrays.asList()
+                        )
+                ),
+                Arguments.of("Valid with else",
+                        // IF TRUE DO print(1); END
+                        new Ast.Statement.If(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                Arrays.asList(new Ast.Statement.Expression(
+                                        new Ast.Expression.Function("print", Arrays.asList(
+                                                new Ast.Expression.Literal(BigInteger.ONE)
+                                        ))
+                                )),
+                                Arrays.asList(new Ast.Statement.Expression(
+                                        new Ast.Expression.Function("print", Arrays.asList(
+                                                new Ast.Expression.Literal(BigInteger.TEN)
+                                        ))
+                                ))
+                        ),
+                        new Ast.Statement.If(
+                                init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                                Arrays.asList(new Ast.Statement.Expression(
+                                        init(new Ast.Expression.Function("print", Arrays.asList(
+                                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
+                                ),
+                                Arrays.asList(new Ast.Statement.Expression(
+                                        init(new Ast.Expression.Function("print", Arrays.asList(
+                                                init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
+                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))))
                         )
                 ),
                 Arguments.of("Invalid Condition",

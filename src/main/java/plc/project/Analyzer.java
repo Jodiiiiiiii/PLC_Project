@@ -41,7 +41,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Expression ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if(!(ast.getExpression() instanceof Ast.Expression.Function))
+            throw new RuntimeException("Expected Function Expression. This is the only permitted expression type within statement expression.");
+
+        // visit function expression
+        visit(ast.getExpression());
+
+        return null;
     }
 
     @Override
@@ -56,7 +62,21 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.If ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // verify condition type (BOOLEAN)
+        visit(ast.getCondition());
+        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+
+        // verify thenStatements is not empty
+        if(ast.getThenStatements().isEmpty())
+            throw new RuntimeException("Expected statements in then block of if statement. Empty if blocks not permitted.");
+
+        // visit then statements in new scope
+        VisitNewScope(ast.getThenStatements());
+
+        // visit else statements in new scope
+        VisitNewScope(ast.getElseStatements());
+
+        return null;
     }
 
     @Override
