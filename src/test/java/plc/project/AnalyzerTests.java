@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * Tests have been provided for a few selective parts of the AST, and are not
  * exhaustive. You should add additional tests for the remaining parts and make
- * sure to handle all of the cases defined in the specification which have not
+ * sure to handle all the cases defined in the specification which have not
  * been tested here.
  */
 public final class AnalyzerTests {
@@ -1192,7 +1192,7 @@ public final class AnalyzerTests {
         );
     }
 
-    // TODO: Fucntion Expression Unit Testing (beyond given below)
+    // TODO: Function Expression Unit Testing (beyond given below)
     @ParameterizedTest(name = "{0}")
     @MethodSource
     public void testFunctionExpression(String test, Ast.Expression.Function ast, Ast.Expression.Function expected) {
@@ -1279,7 +1279,24 @@ public final class AnalyzerTests {
                 Arguments.of("Any to String", Environment.Type.STRING, Environment.Type.ANY, false),
                 Arguments.of("Any to Boolean", Environment.Type.BOOLEAN, Environment.Type.ANY, false),
                 Arguments.of("Any to Comparable", Environment.Type.COMPARABLE, Environment.Type.ANY,  false),
-                Arguments.of("Any to Any", Environment.Type.ANY, Environment.Type.ANY, true)
+                Arguments.of("Any to Any", Environment.Type.ANY, Environment.Type.ANY, true),
+                // NIL cases (NIL to others)
+                Arguments.of("NIL to Integer", Environment.Type.INTEGER, Environment.Type.NIL, false),
+                Arguments.of("NIL to Decimal", Environment.Type.DECIMAL, Environment.Type.NIL, false),
+                Arguments.of("NIL to Character", Environment.Type.CHARACTER, Environment.Type.NIL, false),
+                Arguments.of("NIL to String", Environment.Type.STRING, Environment.Type.NIL, false),
+                Arguments.of("NIL to Boolean", Environment.Type.BOOLEAN, Environment.Type.NIL, false),
+                Arguments.of("NIL to Comparable", Environment.Type.COMPARABLE, Environment.Type.NIL,  false),
+                Arguments.of("NIL to Any", Environment.Type.ANY, Environment.Type.NIL, true),
+                // NIL cases (others to NIL)
+                Arguments.of("Integer to NIL", Environment.Type.NIL, Environment.Type.INTEGER, false),
+                Arguments.of("Decimal to NIL", Environment.Type.NIL, Environment.Type.DECIMAL, false),
+                Arguments.of("Character to NIL", Environment.Type.NIL, Environment.Type.CHARACTER, false),
+                Arguments.of("String to NIL", Environment.Type.NIL, Environment.Type.STRING, false),
+                Arguments.of("Boolean to NIL", Environment.Type.NIL, Environment.Type.BOOLEAN, false),
+                Arguments.of("Comparable to NIL", Environment.Type.NIL, Environment.Type.COMPARABLE,  false),
+                Arguments.of("Any to NIL", Environment.Type.NIL, Environment.Type.ANY, false),
+                Arguments.of("NIL to NIL", Environment.Type.NIL, Environment.Type.NIL, true)
         );
     }
 
