@@ -535,7 +535,70 @@ public final class AnalyzerTests {
         );
     }
 
-    // TODO: While unit testing
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    public void testWhileStatement(String test, Ast.Statement.While ast, Ast.Statement.While expected) {
+        test(ast, expected, new Scope(null));
+    }
+
+    private static Stream<Arguments> testWhileStatement() {
+        return Stream.of(
+                Arguments.of("Valid Condition",
+                        // IF TRUE DO print(1); END
+                        new Ast.Statement.While(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                Arrays.asList(new Ast.Statement.Expression(
+                                        new Ast.Expression.Function("print", Arrays.asList(
+                                                new Ast.Expression.Literal(BigInteger.ONE)
+                                        ))
+                                ))
+                        ),
+                        new Ast.Statement.While(
+                                init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                                Arrays.asList(new Ast.Statement.Expression(
+                                        init(new Ast.Expression.Function("print", Arrays.asList(
+                                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
+                                )
+                        )
+                ),
+                Arguments.of("No statements (valid)",
+                        // IF TRUE DO print(1); END
+                        new Ast.Statement.While(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                Arrays.asList()
+                        ),
+                        new Ast.Statement.While(
+                                init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                                Arrays.asList()
+                        )
+                ),
+                Arguments.of("Invalid Condition",
+                        // IF "FALSE" DO print(1); END
+                        new Ast.Statement.While(
+                                new Ast.Expression.Literal("FALSE"),
+                                Arrays.asList(new Ast.Statement.Expression(
+                                        new Ast.Expression.Function("print", Arrays.asList(
+                                                new Ast.Expression.Literal(BigInteger.ONE)
+                                        ))
+                                ))
+                        ),
+                        null
+                ),
+                Arguments.of("Invalid Statement",
+                        // IF TRUE DO print(9223372036854775807); END
+                        new Ast.Statement.While(
+                                new Ast.Expression.Literal(Boolean.TRUE),
+                                Arrays.asList(new Ast.Statement.Expression(
+                                        new Ast.Expression.Function("print", Arrays.asList(
+                                                new Ast.Expression.Literal(BigInteger.valueOf(Long.MAX_VALUE))
+                                        ))
+                                ))
+                        ),
+                        null
+                )
+        );
+    }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
