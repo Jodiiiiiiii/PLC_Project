@@ -27,7 +27,19 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // visit globals
+        for(Ast.Global global : ast.getGlobals())
+            visit(global);
+        // visit functions
+        for(Ast.Function function: ast.getFunctions())
+            visit(function);
+
+        // checks if main/0 exists
+        Environment.Function main = scope.lookupFunction("main", 0);
+        if(main.getReturnType() != Environment.Type.INTEGER)
+            throw new RuntimeException("Expected Integer return type for main/0");
+
+        return null;
     }
 
     @Override

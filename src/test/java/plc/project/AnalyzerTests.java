@@ -33,8 +33,91 @@ public final class AnalyzerTests {
     }
     private static Stream<Arguments> testSource() {
         return Stream.of(
+                Arguments.of("Valid",
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global("value", "Boolean", true, Optional.of(new Ast.Expression.Literal(true)))
+                                ),
+                                Arrays.asList(
+                                        new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ONE)))
+                                        )
+                                )
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(
+                                        init(new Ast.Global("value", "Boolean", true, Optional.of(init(new Ast.Expression.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN)))),
+                                                ast -> ast.setVariable(new Environment.Variable("value", "boolean", Environment.Type.BOOLEAN, true, Environment.NIL)))
+                                ),
+                                Arrays.asList(
+                                        init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))))
+                                        ), ast -> ast.setFunction(new Environment.Function("main", "int", List.of(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                                )
+                        )
+                ),
+                Arguments.of("Globals only - missing main",
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global("value", "Boolean", true, Optional.of(new Ast.Expression.Literal(true)))
+                                ),
+                                Arrays.asList()
+                        ),
+                        null
+                ),
+                Arguments.of("Main only (valid)",
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(
+                                        new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ONE)))
+                                        )
+                                )
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(
+                                        init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))))
+                                        ), ast -> ast.setFunction(new Environment.Function("main", "int", List.of(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                                )
+                        )
+                ),
+                Arguments.of("Empty - missing main",
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList()
+                        ),
+                        null
+                ),
+                Arguments.of("Incorrect main arity",
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global("value", "Boolean", true, Optional.of(new Ast.Expression.Literal(true)))
+                                ),
+                                Arrays.asList(
+                                        new Ast.Function("main", Arrays.asList("param"), Arrays.asList("Integer"), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ONE)))
+                                        )
+                                )
+                        ),
+                        null
+                ),
+                Arguments.of("Missing main",
+                        new Ast.Source(
+                                Arrays.asList(
+                                        new Ast.Global("value", "Boolean", true, Optional.of(new Ast.Expression.Literal(true)))
+                                ),
+                                Arrays.asList(
+                                        new Ast.Function("notMain", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ONE)))
+                                        )
+                                )
+                        ),
+                        null
+                ),
                 // VAR value: Boolean = TRUE; FUN main(): Integer DO RETURN value; END
-                Arguments.of("Invalid Return",
+                Arguments.of("Invalid Return: Given",
                         new Ast.Source(
                                 Arrays.asList(
                                         new Ast.Global("value", "Boolean", true, Optional.of(new Ast.Expression.Literal(true)))
@@ -48,12 +131,11 @@ public final class AnalyzerTests {
                         null
                 ),
                 // FUN main() DO RETURN 0; END
-                Arguments.of("Missing Integer Return Type for Main",
+                Arguments.of("Missing Integer Return Type for Main: Given",
                         new Ast.Source(
                                 Arrays.asList(),
                                 Arrays.asList(
-                                        new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList(
-                                            new Ast.Statement.Return(new Ast.Expression.Literal(new BigInteger("0"))))
+                                        new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()
                                         )
                                 )
                         ),
