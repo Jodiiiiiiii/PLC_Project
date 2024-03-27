@@ -373,7 +373,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        // ensure all expressions are assignable to lsit type
+        // ensure all expressions are assignable to list type
         for(Ast.Expression expr : ast.getValues())
         {
             visit(expr);
