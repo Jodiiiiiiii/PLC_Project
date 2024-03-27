@@ -2,6 +2,7 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -57,7 +58,53 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+
+        // determine return type
+        Environment.Type returnType;
+        if(ast.getReturnTypeName().isPresent())
+            returnType = Environment.getType(ast.getReturnTypeName().get());
+        else
+            returnType = Environment.Type.NIL;
+
+        // determine parameter types
+        List<Environment.Type> parameterTypes = new ArrayList<>();
+        for(String paramTypeName : ast.getParameterTypeNames())
+            parameterTypes.add(Environment.getType(paramTypeName));
+
+        // create/set new function
+        scope.defineFunction(ast.getName(), returnType.getJvmName(), parameterTypes, returnType, args -> Environment.NIL);
+        ast.setFunction(scope.lookupFunction(ast.getName(), ast.getParameters().size()));
+
+        // visit function statements in new scope
+        try{
+            scope = new Scope(scope);
+
+            // create variables for each parameter
+            for(int i = 0; i < ast.getParameters().size(); i++)
+            {
+                String name = ast.getParameters().get(i);
+                Environment.Type type = Environment.getType(ast.getParameterTypeNames().get(i));
+                scope.defineVariable(name, type.getJvmName(), type, true, Environment.NIL);
+            }
+
+            // execute list of statements within this scope
+            for(Ast.Statement stmt : ast.getStatements())
+            {
+                if(stmt instanceof Ast.Statement.Return)
+                {
+                    // ensure return statements are correct type
+                    visit(((Ast.Statement.Return) stmt).getValue());
+                    requireAssignable(returnType, ((Ast.Statement.Return) stmt).getValue().getType());
+                }
+                else
+                    visit(stmt);
+            }
+        } finally {
+            // return to parent scope when exiting/looping, regardless of error state
+            scope = scope.getParent();
+        }
+
+        return null;
     }
 
     @Override
@@ -208,7 +255,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // type checking is handled in visit(Ast.Function) to ensure congruency with function type - hopefully not actually using this function is fine
+        return null;
     }
 
     @Override

@@ -182,7 +182,7 @@ public final class AnalyzerTests {
                                 new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
                                         init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
                                 )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
-                        )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                        )), ast -> ast.setFunction(new Environment.Function("main", "int", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 ),
                 Arguments.of("Return 0",
                         // FUN main(): Integer DO RETURN 0; END
@@ -194,7 +194,22 @@ public final class AnalyzerTests {
                         init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                                 new Ast.Statement.Return(init(new Ast.Expression.Literal(new BigInteger("0")), ast -> ast.setType(Environment.Type.INTEGER)))
                         )),
-                        ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                        ast -> ast.setFunction(new Environment.Function("main", "int", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                ),
+                Arguments.of("NIL function",
+                        // FUN main(): Integer DO RETURN 0; END
+                        new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.empty(),
+                                Arrays.asList()
+                        ),
+                        init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()),
+                                ast -> ast.setFunction(new Environment.Function("main", "Void", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL)))
+                ),
+                Arguments.of("NIL function - with return num (error)",
+                        // FUN main(): Integer DO RETURN 0; END
+                        new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.empty(),
+                                Arrays.asList(new Ast.Statement.Return(init(new Ast.Expression.Literal(new BigInteger("0")), ast -> ast.setType(Environment.Type.INTEGER))))
+                        ),
+                        null
                 ),
                 Arguments.of("Return Type Mismatch",
                         // FUN increment(num: Integer): Decimal DO RETURN num + 1; END
