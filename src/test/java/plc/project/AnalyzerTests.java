@@ -9,6 +9,7 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -72,26 +73,86 @@ public final class AnalyzerTests {
 
     private static Stream<Arguments> testGlobal() {
         return Stream.of(
-                Arguments.of("Declaration",
+                Arguments.of("Declaration (mutable)",
                         // VAR name: Integer;
                         new Ast.Global("name", "Integer", true, Optional.empty()),
                         init(new Ast.Global("name", "Integer", true, Optional.empty()), ast -> {
-                            ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL));
+                            ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL));
                         })
                 ),
-                Arguments.of("Variable Type Mismatch",
+                Arguments.of("Initialization (mutable)",
+                        // VAR name: Integer = 1;
+                        new Ast.Global("name", "Integer", true, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                        init(new Ast.Global("name", "Integer", true, Optional.of(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER)))),
+                            ast -> {
+                                ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL));
+                            })
+                ),
+                Arguments.of("Initialization (mutable) - type mismatch",
+                        // VAR name: Integer = 1.0;
+                        new Ast.Global("name", "Integer", true, Optional.of(new Ast.Expression.Literal(BigDecimal.ONE))),
+                        null
+                ),
+                Arguments.of("Initialization (immutable)",
+                        // VAL name: Integer = 1;
+                        new Ast.Global("name", "Integer", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                        init(new Ast.Global("name", "Integer", false, Optional.of(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER)))),
+                                ast -> {
+                                    ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, false, Environment.NIL));
+                                })
+                ),
+                Arguments.of("Initialization (immutable) - type mismatch",
+                        // VAL name: Integer = 1.0;
+                        new Ast.Global("name", "Integer", false, Optional.of(new Ast.Expression.Literal(BigDecimal.ONE))),
+                        null
+                ),
+                Arguments.of("Variable Type Mismatch : Given",
                         // VAR name: Decimal = 1;
                         new Ast.Global("name", "Decimal", true, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
                         null
                 ),
-                Arguments.of("List Type Mismatch",
-                        // LIST list: Integer = [1.0, 2.0];
-                        new Ast.Global("list", "Integer", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(new Ast.Expression.Literal(new BigDecimal("1.0")), new Ast.Expression.Literal(new BigDecimal("2.0")))))),
-                        null
-                ),
-                Arguments.of("Unknown Type",
+                Arguments.of("Unknown Type: Given",
                         // VAR name: Unknown;
                         new Ast.Global("name", "Unknown", true, Optional.empty()),
+                        null
+                ),
+                Arguments.of("List",
+                        // LIST name: Integer = [1, 2, 3];
+                        new Ast.Global("name", "Integer", true, Optional.of(new Ast.Expression.PlcList(List.of(
+                                new Ast.Expression.Literal(new BigInteger("1")),
+                                new Ast.Expression.Literal(new BigInteger("2")),
+                                new Ast.Expression.Literal(new BigInteger("3"))
+                        )))),
+                        init(new Ast.Global("name", "Integer", true, Optional.of( init(new Ast.Expression.PlcList(List.of(
+                                        init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                        init(new Ast.Expression.Literal(new BigInteger("2")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                        init(new Ast.Expression.Literal(new BigInteger("3")), ast -> ast.setType(Environment.Type.INTEGER))
+                                )), ast -> ast.setType(Environment.Type.INTEGER))
+                        )), ast -> {
+                            ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL));
+                        })
+                ),
+                Arguments.of("List type mismatch (one)",
+                        // LIST name: Integer = [1, 2, 3];
+                        new Ast.Global("name", "Integer", true, Optional.of(new Ast.Expression.PlcList(List.of(
+                                new Ast.Expression.Literal(new BigInteger("1")),
+                                new Ast.Expression.Literal(new BigDecimal("2.0")),
+                                new Ast.Expression.Literal(new BigInteger("3"))
+                        )))),
+                        null
+                ),
+                Arguments.of("List type mismatch (all)",
+                        // LIST name: Integer = [1, 2, 3];
+                        new Ast.Global("name", "Integer", true, Optional.of(new Ast.Expression.PlcList(List.of(
+                                new Ast.Expression.Literal(new BigDecimal("1.0")),
+                                new Ast.Expression.Literal(new BigDecimal("2.0")),
+                                new Ast.Expression.Literal(new BigDecimal("3.0"))
+                        )))),
+                        null
+                ),
+                Arguments.of("List Type Mismatch: Given",
+                        // LIST list: Integer = [1.0, 2.0];
+                        new Ast.Global("list", "Integer", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(new Ast.Expression.Literal(new BigDecimal("1.0")), new Ast.Expression.Literal(new BigDecimal("2.0")))))),
                         null
                 )
         );

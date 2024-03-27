@@ -31,7 +31,28 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Global ast) {
-        throw new UnsupportedOperationException();  // TODO
+
+        // determine type of newly created variable
+        Environment.Type type = Environment.getType(ast.getTypeName());
+
+        // value checking/visiting
+        if(ast.getValue().isPresent())
+        {
+            // send type to PlcList if of type LIST (needed to check each item for type congruence)
+            if(ast.getValue().get() instanceof Ast.Expression.PlcList)
+                ((Ast.Expression.PlcList) ast.getValue().get()).setType(type);
+
+            // visit rhs expression
+            visit(ast.getValue().get());
+            // ensure rhs can be assigned to explicit type
+            requireAssignable(type, ast.getValue().get().getType());
+        }
+
+        // create/set new variable
+        scope.defineVariable(ast.getName(), type.getJvmName(), type, ast.getMutable(), Environment.NIL);
+        ast.setVariable(scope.lookupVariable(ast.getName()));
+
+        return null;
     }
 
     @Override
@@ -352,7 +373,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // ensure all expressions are assignable to lsit type
+        for(Ast.Expression expr : ast.getValues())
+        {
+            visit(expr);
+            requireAssignable(ast.getType(), expr.getType());
+        }
+
+        return null;
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
