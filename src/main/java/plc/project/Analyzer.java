@@ -390,7 +390,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // TODO: is this actually done??? Integrate better once I do Globals
     @Override
     public Void visit(Ast.Expression.Access ast) {
         if(ast.getOffset().isPresent()) // with offset - list index
@@ -400,7 +399,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             // require offsets type to be integer
             requireAssignable(Environment.Type.INTEGER, ast.getOffset().get().getType());
 
-            ast.setVariable(scope.lookupVariable(ast.getName())); // TODO: is this fine even though it is a list -> this at least gets the type right??
+            ast.setVariable(scope.lookupVariable(ast.getName()));
         }
         else // no offset - variable
         {
@@ -410,7 +409,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // TODO: is this actually done??? Integrate better once I do Globals
     @Override
     public Void visit(Ast.Expression.Function ast) {
 
@@ -425,7 +423,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             visit(ast.getArguments().get(i));
 
             // ensure argument is assignable to parameter type
-            requireAssignable(fun.getParameterTypes().get(i), ast.getArguments().get(i).getType()); // TODO: this felt wrong idk. come back to it
+            requireAssignable(fun.getParameterTypes().get(i), ast.getArguments().get(i).getType());
         }
 
         return null;

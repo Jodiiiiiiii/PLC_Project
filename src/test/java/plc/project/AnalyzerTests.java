@@ -1270,12 +1270,12 @@ public final class AnalyzerTests {
         );
     }
 
-    // TODO: Access Expression Unit Testing (beyond given below)
     @ParameterizedTest(name = "{0}")
     @MethodSource
     public void testAccessExpression(String test, Ast.Expression.Access ast, Ast.Expression.Access expected) {
         test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineVariable("variable", "variable", Environment.Type.INTEGER, true, Environment.NIL);
+            scope.defineVariable("variable", "int", Environment.Type.INTEGER, true, Environment.NIL);
+            scope.defineVariable("list", "int", Environment.Type.INTEGER, true, Environment.NIL);
         }));
     }
 
@@ -1284,17 +1284,32 @@ public final class AnalyzerTests {
                 Arguments.of("Variable",
                         // variable
                         new Ast.Expression.Access(Optional.empty(), "variable"),
-                        init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, true, Environment.NIL)))
+                        init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "int", Environment.Type.INTEGER, true, Environment.NIL)))
+                ),
+                Arguments.of("List",
+                        // variable
+                        new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.ONE)), "list"),
+                        init(new Ast.Expression.Access(Optional.of(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))), "list"), ast -> ast.setVariable(new Environment.Variable("list", "int", Environment.Type.INTEGER, true, Environment.NIL)))
+                ),
+                Arguments.of("Variable - not defined",
+                        // variable
+                        new Ast.Expression.Access(Optional.empty(), "variable2"),
+                        null
+                ),
+                Arguments.of("List - invalid offset",
+                        // variable
+                        new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigDecimal.ONE)), "list"),
+                        null
                 )
         );
     }
 
-    // TODO: Function Expression Unit Testing (beyond given below)
     @ParameterizedTest(name = "{0}")
     @MethodSource
     public void testFunctionExpression(String test, Ast.Expression.Function ast, Ast.Expression.Function expected) {
         test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineFunction("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
+            scope.defineFunction("function", "int", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
+            scope.defineFunction("function1", "int", Arrays.asList(Environment.Type.BOOLEAN), Environment.Type.INTEGER, args -> Environment.NIL);
         }));
     }
 
@@ -1303,9 +1318,19 @@ public final class AnalyzerTests {
                 Arguments.of("Function",
                         // function()
                         new Ast.Expression.Function("function", Arrays.asList()),
-                        init(new Ast.Expression.Function("function", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                        init(new Ast.Expression.Function("function", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("function", "int", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                ),
+                Arguments.of("Function (1 param)",
+                        // function(TRUE)
+                        new Ast.Expression.Function("function1", Arrays.asList(new Ast.Expression.Literal(Boolean.TRUE))),
+                        init(new Ast.Expression.Function("function1", Arrays.asList(init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)))),
+                                ast -> ast.setFunction(new Environment.Function("function1", "int", Arrays.asList(Environment.Type.BOOLEAN), Environment.Type.INTEGER, args -> Environment.NIL)))
+                ),
+                Arguments.of("Function (1 param) - incorrect type",
+                        // function(TRUE)
+                        new Ast.Expression.Function("function1", Arrays.asList(new Ast.Expression.Literal(BigDecimal.ONE))),
+                        null
                 )
-                // TODO: test actually verifying parameter type validation
         );
     }
 
