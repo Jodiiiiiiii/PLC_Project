@@ -62,7 +62,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // create/set new variable
-        scope.defineVariable(ast.getName(), type.getJvmName(), type, ast.getMutable(), Environment.NIL);
+        scope.defineVariable(ast.getName(), ast.getName(), type, ast.getMutable(), Environment.NIL);
         ast.setVariable(scope.lookupVariable(ast.getName()));
 
         return null;
@@ -84,7 +84,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             parameterTypes.add(Environment.getType(paramTypeName));
 
         // create/set new function
-        scope.defineFunction(ast.getName(), returnType.getJvmName(), parameterTypes, returnType, args -> Environment.NIL);
+        scope.defineFunction(ast.getName(), ast.getName(), parameterTypes, returnType, args -> Environment.NIL);
         ast.setFunction(scope.lookupFunction(ast.getName(), ast.getParameters().size()));
 
         // visit function statements in new scope
@@ -161,7 +161,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // create/set new variable
-        scope.defineVariable(ast.getName(), type.getJvmName(), type, true, Environment.NIL);
+        scope.defineVariable(ast.getName(), ast.getName(), type, true, Environment.NIL);
         ast.setVariable(scope.lookupVariable(ast.getName()));
 
         return null;

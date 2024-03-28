@@ -47,12 +47,12 @@ public final class AnalyzerTests {
                         new Ast.Source(
                                 Arrays.asList(
                                         init(new Ast.Global("value", "Boolean", true, Optional.of(init(new Ast.Expression.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN)))),
-                                                ast -> ast.setVariable(new Environment.Variable("value", "boolean", Environment.Type.BOOLEAN, true, Environment.NIL)))
+                                                ast -> ast.setVariable(new Environment.Variable("value", "value", Environment.Type.BOOLEAN, true, Environment.NIL)))
                                 ),
                                 Arrays.asList(
                                         init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                                                 new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))))
-                                        ), ast -> ast.setFunction(new Environment.Function("main", "int", List.of(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                                        ), ast -> ast.setFunction(new Environment.Function("main", "main", List.of(), Environment.Type.INTEGER, args -> Environment.NIL)))
                                 )
                         )
                 ),
@@ -79,7 +79,7 @@ public final class AnalyzerTests {
                                 Arrays.asList(
                                         init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                                                 new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))))
-                                        ), ast -> ast.setFunction(new Environment.Function("main", "int", List.of(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                                        ), ast -> ast.setFunction(new Environment.Function("main", "main", List.of(), Environment.Type.INTEGER, args -> Environment.NIL)))
                                 )
                         )
                 ),
@@ -159,7 +159,7 @@ public final class AnalyzerTests {
                         // VAR name: Integer;
                         new Ast.Global("name", "Integer", true, Optional.empty()),
                         init(new Ast.Global("name", "Integer", true, Optional.empty()), ast -> {
-                            ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL));
+                            ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL));
                         })
                 ),
                 Arguments.of("Initialization (mutable)",
@@ -167,7 +167,7 @@ public final class AnalyzerTests {
                         new Ast.Global("name", "Integer", true, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
                         init(new Ast.Global("name", "Integer", true, Optional.of(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER)))),
                             ast -> {
-                                ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL));
+                                ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL));
                             })
                 ),
                 Arguments.of("Initialization (mutable) - type mismatch",
@@ -180,7 +180,7 @@ public final class AnalyzerTests {
                         new Ast.Global("name", "Integer", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
                         init(new Ast.Global("name", "Integer", false, Optional.of(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER)))),
                                 ast -> {
-                                    ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, false, Environment.NIL));
+                                    ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, false, Environment.NIL));
                                 })
                 ),
                 Arguments.of("Initialization (immutable) - type mismatch",
@@ -211,7 +211,7 @@ public final class AnalyzerTests {
                                         init(new Ast.Expression.Literal(new BigInteger("3")), ast -> ast.setType(Environment.Type.INTEGER))
                                 )), ast -> ast.setType(Environment.Type.INTEGER))
                         )), ast -> {
-                            ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL));
+                            ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL));
                         })
                 ),
                 Arguments.of("List type mismatch (one)",
@@ -264,7 +264,7 @@ public final class AnalyzerTests {
                                 new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
                                         init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
                                 )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
-                        )), ast -> ast.setFunction(new Environment.Function("main", "int", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                        )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 ),
                 Arguments.of("Return 0",
                         // FUN main(): Integer DO RETURN 0; END
@@ -276,7 +276,7 @@ public final class AnalyzerTests {
                         init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                                 new Ast.Statement.Return(init(new Ast.Expression.Literal(new BigInteger("0")), ast -> ast.setType(Environment.Type.INTEGER)))
                         )),
-                        ast -> ast.setFunction(new Environment.Function("main", "int", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                        ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 ),
                 Arguments.of("NIL function",
                         // FUN main(): Integer DO RETURN 0; END
@@ -284,7 +284,7 @@ public final class AnalyzerTests {
                                 Arrays.asList()
                         ),
                         init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()),
-                                ast -> ast.setFunction(new Environment.Function("main", "Void", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL)))
+                                ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL)))
                 ),
                 Arguments.of("NIL function - with return num (error)",
                         // FUN main(): Integer DO RETURN 0; END
@@ -321,7 +321,7 @@ public final class AnalyzerTests {
                         // LET name: Integer;
                         new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()),
                         init(new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()), ast -> {
-                            ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL));
+                            ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL));
                         })
                 ),
                 Arguments.of("Initialization",
@@ -329,14 +329,14 @@ public final class AnalyzerTests {
                         new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
                         init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
                                 init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
-                        )), ast -> ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL)))
+                        )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL)))
                 ),
                 Arguments.of("Initialization with explicit",
                         // LET name : Integer = 1;
                         new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
                         init(new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.of(
                                 init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
-                        )), ast -> ast.setVariable(new Environment.Variable("name", "int", Environment.Type.INTEGER, true, Environment.NIL)))
+                        )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL)))
                 ),
                 Arguments.of("Missing Type",
                         // LET name;
@@ -1274,8 +1274,8 @@ public final class AnalyzerTests {
     @MethodSource
     public void testAccessExpression(String test, Ast.Expression.Access ast, Ast.Expression.Access expected) {
         test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineVariable("variable", "int", Environment.Type.INTEGER, true, Environment.NIL);
-            scope.defineVariable("list", "int", Environment.Type.INTEGER, true, Environment.NIL);
+            scope.defineVariable("variable", "variable", Environment.Type.INTEGER, true, Environment.NIL);
+            scope.defineVariable("list", "list", Environment.Type.INTEGER, true, Environment.NIL);
         }));
     }
 
@@ -1284,12 +1284,12 @@ public final class AnalyzerTests {
                 Arguments.of("Variable",
                         // variable
                         new Ast.Expression.Access(Optional.empty(), "variable"),
-                        init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "int", Environment.Type.INTEGER, true, Environment.NIL)))
+                        init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, true, Environment.NIL)))
                 ),
                 Arguments.of("List",
                         // variable
                         new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.ONE)), "list"),
-                        init(new Ast.Expression.Access(Optional.of(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))), "list"), ast -> ast.setVariable(new Environment.Variable("list", "int", Environment.Type.INTEGER, true, Environment.NIL)))
+                        init(new Ast.Expression.Access(Optional.of(init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))), "list"), ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.INTEGER, true, Environment.NIL)))
                 ),
                 Arguments.of("Variable - not defined",
                         // variable
@@ -1308,8 +1308,8 @@ public final class AnalyzerTests {
     @MethodSource
     public void testFunctionExpression(String test, Ast.Expression.Function ast, Ast.Expression.Function expected) {
         test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineFunction("function", "int", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
-            scope.defineFunction("function1", "int", Arrays.asList(Environment.Type.BOOLEAN), Environment.Type.INTEGER, args -> Environment.NIL);
+            scope.defineFunction("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
+            scope.defineFunction("function1", "function1", Arrays.asList(Environment.Type.BOOLEAN), Environment.Type.INTEGER, args -> Environment.NIL);
         }));
     }
 
@@ -1318,13 +1318,13 @@ public final class AnalyzerTests {
                 Arguments.of("Function",
                         // function()
                         new Ast.Expression.Function("function", Arrays.asList()),
-                        init(new Ast.Expression.Function("function", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("function", "int", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                        init(new Ast.Expression.Function("function", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 ),
                 Arguments.of("Function (1 param)",
                         // function(TRUE)
                         new Ast.Expression.Function("function1", Arrays.asList(new Ast.Expression.Literal(Boolean.TRUE))),
                         init(new Ast.Expression.Function("function1", Arrays.asList(init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)))),
-                                ast -> ast.setFunction(new Environment.Function("function1", "int", Arrays.asList(Environment.Type.BOOLEAN), Environment.Type.INTEGER, args -> Environment.NIL)))
+                                ast -> ast.setFunction(new Environment.Function("function1", "function1", Arrays.asList(Environment.Type.BOOLEAN), Environment.Type.INTEGER, args -> Environment.NIL)))
                 ),
                 Arguments.of("Function (1 param) - incorrect type",
                         // function(TRUE)
