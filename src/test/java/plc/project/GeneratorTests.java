@@ -27,19 +27,107 @@ public class GeneratorTests {
 
     private static Stream<Arguments> testSource() {
         return Stream.of(
-                Arguments.of("Hello, World!",
+                Arguments.of("Global - one",
+                        // FUN main(): Integer DO
+                        //     print("Hello, World!");
+                        //     RETURN 0;
+                        // END
+                        new Ast.Source(
+                                Arrays.asList(
+                                        init(new Ast.Global("x", "Integer", true, Optional.of(
+                                                        init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)))),
+                                                ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.INTEGER, true, Environment.NIL)))
+                                ),
+                                Arrays.asList(init(
+                                        new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                        init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                        )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "public class Main {",
+                                "",
+                                "    int x = 1;",
+                                "",
+                                "    public static void main(String[] args) {",
+                                "        System.exit(new Main().main());",
+                                "    }",
+                                "",
+                                "    int main() {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "}"
+                        )
+                ),
+                Arguments.of("Global - ALL",
+                        // FUN main(): Integer DO
+                        //     print("Hello, World!");
+                        //     RETURN 0;
+                        // END
+                        new Ast.Source(
+                                Arrays.asList(
+                                        init(new Ast.Global("x", "Integer", true, Optional.of(
+                                                        init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)))),
+                                                ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.INTEGER, true, Environment.NIL))),
+                                        init(new Ast.Global("xyz", "String", true, Optional.of(
+                                                        init(new Ast.Expression.PlcList(List.of(
+                                                                init(new Ast.Expression.Literal("The Letter 'x'"), ast -> ast.setType(Environment.Type.STRING)),
+                                                                init(new Ast.Expression.Literal("The Letter 'y'"), ast -> ast.setType(Environment.Type.STRING)),
+                                                                init(new Ast.Expression.Literal("The Letter 'z'"), ast -> ast.setType(Environment.Type.STRING))
+                                                        )), ast -> ast.setType(Environment.Type.STRING)))),
+                                                ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.STRING, true, Environment.NIL))),
+                                        init(new Ast.Global("y", "Decimal", true, Optional.empty()),
+                                                ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.DECIMAL, true, Environment.NIL))),
+                                        init(new Ast.Global("z", "Boolean", false, Optional.of(
+                                                        init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)))),
+                                                ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.BOOLEAN, true, Environment.NIL)))
+                                ),
+                                Arrays.asList(init(
+                                        new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                        init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                        )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "public class Main {",
+                                "",
+                                "    int x = 1;",
+                                "    String[] xyz = {\"The Letter 'x'\", \"The Letter 'y'\", \"The Letter 'z'\"};",
+                                "    double y;",
+                                "    final boolean z = true;",
+                                "",
+                                "    public static void main(String[] args) {",
+                                "        System.exit(new Main().main());",
+                                "    }",
+                                "",
+                                "    int main() {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "}"
+                        )
+                ),
+                Arguments.of("Main only",
                         // FUN main(): Integer DO
                         //     print("Hello, World!");
                         //     RETURN 0;
                         // END
                         new Ast.Source(
                                 Arrays.asList(),
-                                Arrays.asList(init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
-                                        new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
-                                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
-                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
-                                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
-                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
+                                Arrays.asList(init(
+                                            new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                    new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                            init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                    )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                    new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                        )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
                         ),
                         String.join(System.lineSeparator(),
                                 "public class Main {",
@@ -55,11 +143,130 @@ public class GeneratorTests {
                                 "",
                                 "}"
                         )
+                ),
+                Arguments.of("Multiple Functions - one param",
+                        // FUN main(): Integer DO
+                        //     print("Hello, World!");
+                        //     RETURN 0;
+                        // END
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(init(
+                                                new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                        new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))),
+                                        init(
+                                                new Ast.Function("otherFunction", Arrays.asList("param1"), Arrays.asList("Integer"), Optional.of("Boolean"), Arrays.asList(
+                                                        new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                                )), ast -> ast.setFunction(new Environment.Function("otherFunction", "otherFunction", Arrays.asList(Environment.Type.INTEGER), Environment.Type.BOOLEAN, args -> Environment.NIL))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "public class Main {",
+                                "",
+                                "    public static void main(String[] args) {",
+                                "        System.exit(new Main().main());",
+                                "    }",
+                                "",
+                                "    int main() {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "    boolean otherFunction(int param1) {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "}"
+                        )
+                ),
+                Arguments.of("Multiple Functions - several params",
+                        // FUN main(): Integer DO
+                        //     print("Hello, World!");
+                        //     RETURN 0;
+                        // END
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(init(
+                                                new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                        new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))),
+                                        init(
+                                                new Ast.Function("otherFunction", Arrays.asList("param1", "param2", "param3"), Arrays.asList("Integer", "String", "Character"), Optional.of("Boolean"), Arrays.asList(
+                                                        new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                                )), ast -> ast.setFunction(new Environment.Function("otherFunction", "otherFunction", Arrays.asList(Environment.Type.INTEGER, Environment.Type.STRING, Environment.Type.CHARACTER), Environment.Type.BOOLEAN, args -> Environment.NIL))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "public class Main {",
+                                "",
+                                "    public static void main(String[] args) {",
+                                "        System.exit(new Main().main());",
+                                "    }",
+                                "",
+                                "    int main() {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "    boolean otherFunction(int param1, String param2, char param3) {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "}"
+                        )
+                ),
+                // TODO: ensure there should not be a space between braces of empty function block (question asked in Microsoft Teams)
+                Arguments.of("Multiple Functions - empty function block",
+                        // FUN main(): Integer DO
+                        //     print("Hello, World!");
+                        //     RETURN 0;
+                        // END
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(init(
+                                                new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                        new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))),
+                                        init(
+                                                new Ast.Function("otherFunction", Arrays.asList("param1", "param2", "param3"), Arrays.asList("Integer", "String", "Character"), Optional.of("Boolean"), List.of(
+                                                )), ast -> ast.setFunction(new Environment.Function("otherFunction", "otherFunction", Arrays.asList(Environment.Type.INTEGER, Environment.Type.STRING, Environment.Type.CHARACTER), Environment.Type.BOOLEAN, args -> Environment.NIL))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "public class Main {",
+                                "",
+                                "    public static void main(String[] args) {",
+                                "        System.exit(new Main().main());",
+                                "    }",
+                                "",
+                                "    int main() {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "    boolean otherFunction(int param1, String param2, char param3) {}",
+                                "",
+                                "}"
+                        )
                 )
         );
     }
 
-    // TODO: unit testing PLCList visit (tied to global)
     @Test
     void testList() {
         // LIST name : Decimal = [1.0, 1.5, 2.0];
@@ -71,9 +278,9 @@ public class GeneratorTests {
         expr3.setType(Environment.Type.DECIMAL);
 
         Ast.Global global = new Ast.Global("list", "Decimal", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(expr1, expr2, expr3))));
-        Ast.Global astList = init(global, ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.DECIMAL, true, Environment.create(Arrays.asList(new Double(1.0), new Double(1.5), new Double(2.0))))));
+        Ast.Global astList = init(global, ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.DECIMAL, true, Environment.create(Arrays.asList(1.0, 1.5, 2.0)))));
 
-        String expected = new String("double[] list = {1.0, 1.5, 2.0};");
+        String expected = "double[] list = {1.0, 1.5, 2.0};";
         test(astList, expected);
     }
 

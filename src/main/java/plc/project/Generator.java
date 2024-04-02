@@ -31,17 +31,90 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // create Main
+        print("public class Main {");
+        newline(0); // extra spacing line
+        indent++;
+
+        // globals
+        for(Ast.Global global : ast.getGlobals()) {
+            newline(indent);
+            print(global);
+        }
+        if(!ast.getGlobals().isEmpty())
+            newline(0); // another spacing line
+
+        // Java main method
+        newline(indent);
+        print("public static void main(String[] args) {");
+        newline(indent + 1);
+        print("System.exit(new Main().main());");
+        newline(indent);
+        print("}");
+        newline(0); // extra spacing line
+
+        // functions
+        for(Ast.Function function : ast.getFunctions()) {
+            newline(indent);
+            print(function);
+            newline(0); // spacing after each function
+        }
+
+        // close Main
+        indent--;
+        newline(indent);
+        print("}");
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Global ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if(ast.getMutable()) // mutable
+        {
+            if(ast.getValue().isPresent() && ast.getValue().get() instanceof Ast.Expression.PlcList) // list
+            {
+                print(ast.getVariable().getType().getJvmName(), "[] ", ast.getName(), " = ", ast.getValue().get(), ";");
+            }
+            else // mutable variable
+            {
+                print(ast.getVariable().getType().getJvmName(), " ", ast.getName());
+
+                if(ast.getValue().isPresent())
+                    print(" = ", ast.getValue().get());
+                print(";");
+            }
+        }
+        else { // immutable
+            print("final ", ast.getVariable().getType().getJvmName(), " ", ast.getName(), " = ", ast.getValue().get(), ";");
+        }
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // function definition
+        print(ast.getFunction().getReturnType().getJvmName(), " ", ast.getName(), "(");
+        // parameters
+        for (int i = 0; i < ast.getParameters().size(); i++)
+        {
+            if(i == ast.getParameters().size()-1) // last parameter (no comma)
+                print(Environment.getType(ast.getParameterTypeNames().get(i)).getJvmName(), " ", ast.getParameters().get(i));
+            else
+                print(Environment.getType(ast.getParameterTypeNames().get(i)).getJvmName(), " ", ast.getParameters().get(i), ", ");
+        }
+        print(") {");
+
+        // statements
+        printIndentedBlock(ast.getStatements());
+
+        // closing brace of function
+        if(!ast.getStatements().isEmpty())
+            newline(indent);
+        print("}");
+
+        return null;
     }
 
     @Override
