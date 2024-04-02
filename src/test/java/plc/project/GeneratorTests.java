@@ -62,7 +62,7 @@ public class GeneratorTests {
     // TODO: unit testing PLCList visit (tied to global)
     @Test
     void testList() {
-        // LIST list: Decimal = [1.0, 1.5, 2.0];
+        // LIST name : Decimal = [1.0, 1.5, 2.0];
         Ast.Expression.Literal expr1 = new Ast.Expression.Literal(new BigDecimal("1.0"));
         Ast.Expression.Literal expr2 = new Ast.Expression.Literal(new BigDecimal("1.5"));
         Ast.Expression.Literal expr3 = new Ast.Expression.Literal(new BigDecimal("2.0"));
@@ -79,23 +79,165 @@ public class GeneratorTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+    void testExpressionStatement(String test, Ast.Statement.Expression ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testExpressionStatement() {
+        return Stream.of(
+                Arguments.of("Function Expression",
+                        new Ast.Statement.Expression(init(
+                                new Ast.Expression.Function("log",
+                                    List.of(init(new Ast.Expression.Literal("Hello World"), ast -> ast.setType(Environment.Type.STRING)))),
+                                    ast -> ast.setFunction(new Environment.Function("log", "log", List.of(Environment.Type.STRING), Environment.Type.NIL, args -> Environment.NIL)))),
+                        "log(\"Hello World\");"
+                ),
+                Arguments.of("Literal Expression",
+                        new Ast.Statement.Expression(
+                                init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER))),
+                        "1;"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
     void testDeclarationStatement(String test, Ast.Statement.Declaration ast, String expected) {
         test(ast, expected);
     }
 
     private static Stream<Arguments> testDeclarationStatement() {
         return Stream.of(
-                Arguments.of("Declaration",
+                Arguments.of("Declaration - int",
                         // LET name: Integer;
                         init(new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL))),
                         "int name;"
                 ),
-                Arguments.of("Initialization",
+                Arguments.of("Initialization - int",
+                        // LET name = 1.0;
+                        init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
+                                init(new Ast.Expression.Literal(new BigInteger("1")),ast -> ast.setType(Environment.Type.INTEGER))
+                        )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL))),
+                        "int name = 1;"
+                ),
+                Arguments.of("declaration - double",
+                        // LET name = 1.0;
+                        init(new Ast.Statement.Declaration("name", Optional.of("Decimal"), Optional.empty()),
+                                ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.DECIMAL, true, Environment.NIL))),
+                        "double name;"
+                ),
+                Arguments.of("Initialization - double",
                         // LET name = 1.0;
                         init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
                                 init(new Ast.Expression.Literal(new BigDecimal("1.0")),ast -> ast.setType(Environment.Type.DECIMAL))
                         )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.DECIMAL, true, Environment.NIL))),
                         "double name = 1.0;"
+                ),
+                Arguments.of("declaration - String",
+                        // LET name = 1.0;
+                        init(new Ast.Statement.Declaration("name", Optional.of("String"), Optional.empty()),
+                                ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.STRING, true, Environment.NIL))),
+                        "String name;"
+                ),
+                Arguments.of("Initialization - String",
+                        // LET name = 1.0;
+                        init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
+                                init(new Ast.Expression.Literal("1.0"),ast -> ast.setType(Environment.Type.STRING))
+                        )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.STRING, true, Environment.NIL))),
+                        "String name = \"1.0\";"
+                ),
+                Arguments.of("declaration - char",
+                        // LET name = 1.0;
+                        init(new Ast.Statement.Declaration("name", Optional.of("char"), Optional.empty()),
+                                ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.CHARACTER, true, Environment.NIL))),
+                        "char name;"
+                ),
+                Arguments.of("Initialization - char",
+                        // LET name = 1.0;
+                        init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
+                                init(new Ast.Expression.Literal('1'),ast -> ast.setType(Environment.Type.CHARACTER))
+                        )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.CHARACTER, true, Environment.NIL))),
+                        "char name = '1';"
+                ),
+                Arguments.of("declaration - bool",
+                        // LET name = 1.0;
+                        init(new Ast.Statement.Declaration("name", Optional.of("Boolean"), Optional.empty()),
+                                ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.BOOLEAN, true, Environment.NIL))),
+                        "boolean name;"
+                ),
+                Arguments.of("Initialization - bool",
+                        // LET name = 1.0;
+                        init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
+                                init(new Ast.Expression.Literal(Boolean.TRUE),ast -> ast.setType(Environment.Type.BOOLEAN))
+                        )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.BOOLEAN, true, Environment.NIL))),
+                        "boolean name = true;"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAssignmentStatement(String test, Ast.Statement.Assignment ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testAssignmentStatement() {
+        return Stream.of(
+                Arguments.of("Initialization - String",
+                        // LET name = 1.0;
+                        new Ast.Statement.Assignment(
+                                init(new Ast.Expression.Access(Optional.empty(), "variable"),
+                                        ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.STRING, true, Environment.NIL))),
+                                init(new Ast.Expression.Literal("Hello World"), ast -> ast.setType(Environment.Type.STRING))
+                                ),
+                        "variable = \"Hello World\";"
+                ),
+                Arguments.of("Initialization - char",
+                        // LET name = 1.0;
+                        new Ast.Statement.Assignment(
+                                init(new Ast.Expression.Access(Optional.empty(), "variable"),
+                                        ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.CHARACTER, true, Environment.NIL))),
+                                init(new Ast.Expression.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER))
+                        ),
+                        "variable = 'c';"
+                ),
+                Arguments.of("Initialization - int",
+                        // LET name = 1.0;
+                        new Ast.Statement.Assignment(
+                                init(new Ast.Expression.Access(Optional.empty(), "variable"),
+                                        ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, true, Environment.NIL))),
+                                init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER))
+                        ),
+                        "variable = 1;"
+                ),
+                Arguments.of("Initialization - double",
+                        // LET name = 1.0;
+                        new Ast.Statement.Assignment(
+                                init(new Ast.Expression.Access(Optional.empty(), "variable"),
+                                        ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.DECIMAL, true, Environment.NIL))),
+                                init(new Ast.Expression.Literal(new BigDecimal("1.02020")), ast -> ast.setType(Environment.Type.DECIMAL))
+                        ),
+                        "variable = 1.02020;"
+                ),
+                Arguments.of("Initialization - bool",
+                        // LET name = 1.0;
+                        new Ast.Statement.Assignment(
+                                init(new Ast.Expression.Access(Optional.empty(), "variable"),
+                                        ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.BOOLEAN, true, Environment.NIL))),
+                                init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN))
+                        ),
+                        "variable = true;"
+                ),
+                Arguments.of("List index assignment",
+                        // LET name = 1.0;
+                        new Ast.Statement.Assignment(
+                                init(new Ast.Expression.Access(
+                                        Optional.of(init(new Ast.Expression.Literal(new BigInteger("2")), ast -> ast.setType(Environment.Type.INTEGER))),
+                                        "variable"),
+                                        ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.BOOLEAN, true, Environment.NIL))),
+                                init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN))
+                        ),
+                        "variable[2] = true;"
                 )
         );
     }
@@ -201,6 +343,102 @@ public class GeneratorTests {
                                 "        System.out.println(\"no\");",
                                 "}"
                         )
+                ),
+                Arguments.of("Switch - default only",
+                        // SWITCH letter
+                        //     DEFAULT
+                        //         print("no");
+                        // END
+                        new Ast.Statement.Switch(
+                                init(new Ast.Expression.Access(Optional.empty(), "letter"), ast -> ast.setVariable(new Environment.Variable("letter", "letter", Environment.Type.CHARACTER, true, Environment.create('y')))),
+                                Arrays.asList(
+                                        new Ast.Statement.Case(
+                                                Optional.empty(),
+                                                Arrays.asList(
+                                                        new Ast.Statement.Expression(
+                                                                init(new Ast.Expression.Function("print", Arrays.asList(init(new Ast.Expression.Literal("no"), ast -> ast.setType(Environment.Type.STRING)))),
+                                                                        ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                )
+                        ),
+                        String.join(System.lineSeparator(),
+                                "switch (letter) {",
+                                "    default:",
+                                "        System.out.println(\"no\");",
+                                "}"
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testWhileStatement(String test, Ast.Statement.While ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testWhileStatement() {
+        return Stream.of(
+                Arguments.of("While - standard",
+                        new Ast.Statement.While(
+                                init(new Ast.Expression.Access(Optional.empty(), "condition"),
+                                        ast -> ast.setVariable(new Environment.Variable("condition", "condition", Environment.Type.BOOLEAN, true, Environment.NIL))),
+                                Arrays.asList(
+                                        new Ast.Statement.Expression(
+                                                init(new Ast.Expression.Function("print", Arrays.asList(init(new Ast.Expression.Literal("yes"), ast -> ast.setType(Environment.Type.STRING)))),
+                                                        ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))
+                                                )
+                                        ),
+                                        new Ast.Statement.Assignment(
+                                                init(new Ast.Expression.Access(Optional.empty(), "letter"), ast -> ast.setVariable(new Environment.Variable("letter", "letter", Environment.Type.CHARACTER, true, Environment.create('y')))),
+                                                init(new Ast.Expression.Literal('n'), ast -> ast.setType(Environment.Type.CHARACTER))
+                                        )
+                                )
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (condition) {",
+                                "    System.out.println(\"yes\");",
+                                "    letter = 'n';",
+                                "}"
+                        )
+                ),
+                // TODO: verify there should not be a space between braces of empty block (asked in Microsoft Teams)
+                Arguments.of("While - empty body",
+                        new Ast.Statement.While(
+                                init(new Ast.Expression.Access(Optional.empty(), "condition"),
+                                        ast -> ast.setVariable(new Environment.Variable("condition", "condition", Environment.Type.BOOLEAN, true, Environment.NIL))),
+                                Arrays.asList()
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (condition) {}"
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testReturnStatement(String test, Ast.Statement.Return ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testReturnStatement() {
+        return Stream.of(
+                Arguments.of("Return - standard",
+                        new Ast.Statement.Return(init(new Ast.Expression.Literal(Boolean.FALSE), ast -> ast.setType(Environment.Type.BOOLEAN))),
+                        "return false;"
+                ),
+                Arguments.of("Return - binary",
+                        new Ast.Statement.Return(
+                                init(new Ast.Expression.Binary("*",
+                                        init(new Ast.Expression.Literal(new BigInteger("5")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                        init(new Ast.Expression.Literal(new BigInteger("10")), ast -> ast.setType(Environment.Type.INTEGER))),
+                                        ast -> ast.setType(Environment.Type.INTEGER))
+                        ),
+                        "return 5 * 10;"
                 )
         );
     }
