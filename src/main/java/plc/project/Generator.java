@@ -85,32 +85,78 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if(ast.getType() == Environment.Type.STRING)
+            print("\"", ast.getLiteral(), "\"");
+        else if(ast.getType() == Environment.Type.CHARACTER)
+            print("'", ast.getLiteral(), "'");
+        else
+            print(ast.getLiteral());
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Group ast) {
-        throw new UnsupportedOperationException(); //TODO
+        print("(", ast.getExpression(), ")");
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Binary ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if(ast.getOperator().equals("^"))
+            print("Math.pow(", ast.getLeft(), ", ", ast.getRight(), ")");
+        else
+            print(ast.getLeft(), " " + ast.getOperator(), " ", ast.getRight());
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Access ast) {
-        throw new UnsupportedOperationException(); //TODO
+        print(ast.getVariable().getJvmName());
+
+        // check for offset
+        if(ast.getOffset().isPresent())
+            print("[", ast.getOffset().get(), "]");
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        print(ast.getFunction().getJvmName(), "(");
+
+        // parameters
+        for(Ast.Expression arg : ast.getArguments())
+        {
+            if(arg.equals(ast.getArguments().getLast()))
+                print(arg);
+            else
+                print(arg, ", ");
+        }
+
+        print(")");
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException(); //TODO
+        print("{");
+
+        // values
+        for(Ast.Expression val : ast.getValues())
+        {
+            if(val.equals(ast.getValues().getLast()))
+                print(val);
+            else
+                print(val, ", ");
+        }
+
+        print("}");
+
+        return null;
     }
 
 }

@@ -59,6 +59,7 @@ public class GeneratorTests {
         );
     }
 
+    // TODO: unit testing PLCList visit (tied to global)
     @Test
     void testList() {
         // LIST list: Decimal = [1.0, 1.5, 2.0];
@@ -206,6 +207,70 @@ public class GeneratorTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+    void testLiteralExpression(String test, Ast.Expression.Literal ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testLiteralExpression() {
+        return Stream.of(
+                Arguments.of("String",
+                        init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING)),
+                        "\"Hello, World!\""
+                ),
+                Arguments.of("Char",
+                        init(new Ast.Expression.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER)),
+                        "'c'"
+                ),
+                Arguments.of("Integer",
+                        init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)),
+                        "1"
+                ),
+                Arguments.of("Decimal",
+                        init(new Ast.Expression.Literal(new BigDecimal("1.20")), ast -> ast.setType(Environment.Type.DECIMAL)),
+                        "1.20"
+                ),
+                Arguments.of("Boolean",
+                        init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                        "true"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testGroupExpression(String test, Ast.Expression.Group ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testGroupExpression() {
+        return Stream.of(
+                Arguments.of("String",
+                        init(new Ast.Expression.Group(
+                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))),
+                                ast -> ast.setType(Environment.Type.STRING)),
+                        "(\"Hello, World!\")"
+                ),
+                Arguments.of("Integer",
+                        init(new Ast.Expression.Group(
+                                init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER))),
+                                ast -> ast.setType(Environment.Type.INTEGER)),
+                        "(1)"
+                ),
+                Arguments.of("Binary",
+                        init(new Ast.Expression.Group(
+                                // 1 + 10
+                                init(new Ast.Expression.Binary("+",
+                                        init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER)),
+                                        init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))),
+                                        ast -> ast.setType(Environment.Type.STRING))),
+                                ast -> ast.setType(Environment.Type.INTEGER)),
+                        "(1 + 10)"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
     void testBinaryExpression(String test, Ast.Expression.Binary ast, String expected) {
         test(ast, expected);
     }
@@ -227,6 +292,63 @@ public class GeneratorTests {
                                 init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
                         ), ast -> ast.setType(Environment.Type.STRING)),
                         "\"Ben\" + 10"
+                ),
+                Arguments.of("Numeric Addition",
+                        // 1 + 10
+                        init(new Ast.Expression.Binary("+",
+                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.STRING)),
+                        "1 + 10"
+                ),
+                Arguments.of("Power Operator",
+                        // 1 + 10
+                        init(new Ast.Expression.Binary("^",
+                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.STRING)),
+                        "Math.pow(1, 10)"
+                ),
+                Arguments.of("Nested Binary Expressions",
+                        // 2 ^ 3 + 1
+                        init(new Ast.Expression.Binary("+",
+                            init(new Ast.Expression.Binary("^",
+                                init(new Ast.Expression.Literal(new BigInteger("2")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(new BigInteger("3")), ast -> ast.setType(Environment.Type.INTEGER)))
+                                , ast -> ast.setType(Environment.Type.STRING)),
+                            init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.INTEGER)),
+                        "Math.pow(2, 3) + 1"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAccessExpression(String test, Ast.Expression.Access ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testAccessExpression() {
+        return Stream.of(
+                Arguments.of("Variable",
+                        // variable
+                        init(new Ast.Expression.Access(
+                                Optional.empty(),
+                                "variable"),
+                                ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, true, Environment.NIL))),
+                        "variable"
+                ),
+                Arguments.of("List Access",
+                        // variable
+                        init(new Ast.Expression.Access(
+                            Optional.of(init(new Ast.Expression.Access(
+                                Optional.empty(),
+                                "expr"),
+                                ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.INTEGER, true, Environment.NIL)))),
+                            "list"),
+                            ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.INTEGER, true, Environment.NIL))),
+                        "list[expr]"
                 )
         );
     }
@@ -245,6 +367,29 @@ public class GeneratorTests {
                                 init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
                         )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))),
                         "System.out.println(\"Hello, World!\")"
+                ),
+                Arguments.of("No Params",
+                        // print("Hello, World!")
+                        init(new Ast.Expression.Function("func", Arrays.asList()),
+                                ast -> ast.setFunction(new Environment.Function("func", "func", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))),
+                        "func()"
+                ),
+                Arguments.of("One Param",
+                        // print("Hello, World!")
+                        init(new Ast.Expression.Function("func", Arrays.asList(
+                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING)))),
+                                ast -> ast.setFunction(new Environment.Function("func", "func", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))),
+                        "func(\"Hello, World!\")"
+                ),
+                // TODO: Are comma-separated arguments separated with a space (question in Microsoft Teams)
+                Arguments.of("Multiple Params",
+                        // print("Hello, World!")
+                        init(new Ast.Expression.Function("func", Arrays.asList(
+                                        init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING)),
+                                        init(new Ast.Expression.Literal(new BigInteger("1")), ast -> ast.setType(Environment.Type.INTEGER)),
+                                        init(new Ast.Expression.Literal(Boolean.FALSE), ast -> ast.setType(Environment.Type.BOOLEAN)))),
+                                ast -> ast.setFunction(new Environment.Function("func", "func", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))),
+                        "func(\"Hello, World!\", 1, false)"
                 )
         );
     }
