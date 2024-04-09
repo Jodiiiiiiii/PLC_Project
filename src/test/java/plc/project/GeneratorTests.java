@@ -228,7 +228,6 @@ public class GeneratorTests {
                                 "}"
                         )
                 ),
-                // TODO: ensure there should not be a space between braces of empty function block (question asked in Microsoft Teams)
                 Arguments.of("Multiple Functions - empty function block",
                         // FUN main(): Integer DO
                         //     print("Hello, World!");
@@ -612,7 +611,6 @@ public class GeneratorTests {
                                 "}"
                         )
                 ),
-                // TODO: verify there should not be a space between braces of empty block (asked in Microsoft Teams)
                 Arguments.of("While - empty body",
                         new Ast.Statement.While(
                                 init(new Ast.Expression.Access(Optional.empty(), "condition"),
@@ -682,8 +680,6 @@ public class GeneratorTests {
                         init(new Ast.Expression.Literal(null), ast -> ast.setType(Environment.Type.NIL)),
                         "null"
                 )
-
-
         );
     }
 
@@ -832,7 +828,6 @@ public class GeneratorTests {
                                 ast -> ast.setFunction(new Environment.Function("func", "func", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))),
                         "func(\"Hello, World!\")"
                 ),
-                // TODO: Are comma-separated arguments separated with a space (question in Microsoft Teams)
                 Arguments.of("Multiple Params",
                         // print("Hello, World!")
                         init(new Ast.Expression.Function("func", Arrays.asList(
