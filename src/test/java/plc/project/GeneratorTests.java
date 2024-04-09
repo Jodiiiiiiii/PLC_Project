@@ -677,7 +677,13 @@ public class GeneratorTests {
                 Arguments.of("Boolean",
                         init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
                         "true"
+                ),
+                Arguments.of("Null/NIL",
+                        init(new Ast.Expression.Literal(null), ast -> ast.setType(Environment.Type.NIL)),
+                        "null"
                 )
+
+
         );
     }
 

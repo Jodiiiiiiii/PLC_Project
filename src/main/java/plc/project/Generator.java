@@ -246,6 +246,8 @@ public final class Generator implements Ast.Visitor<Void> {
             print("\"", ast.getLiteral(), "\"");
         else if(ast.getType() == Environment.Type.CHARACTER)
             print("'", ast.getLiteral(), "'");
+        else if(ast.getType() == Environment.Type.NIL)
+            print("null");
         else
             print(ast.getLiteral());
 
