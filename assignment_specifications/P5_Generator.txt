@@ -1,0 +1,656 @@
+P5: Generator
+Due: Sat Apr 20, 2024 11:59pmDue: Sat Apr 20, 2024 11:59pm4/20/2024
+Ungraded, 100 Possible Points100 Points Possible
+Attempt
+
+Submitted on Apr 2, 2024 8:46pmSubmitted on Apr 2, 2024 8:46pm4/2/2024
+NEXT UP: Review Feedback
+Attempt 2 Score:N/A
+
+Add Comment
+Unlimited Attempts Allowed
+
+Details
+
+In this assignment, you will implement the Generator for our language.
+This is the final step in our compiler process.  The Generator uses the
+AST processed by the Analyzer to perform Java code generation.
+
+
+    Submission
+
+You will submit |Generator.java|, which implements your Generator. Take
+note that |Generator.java| includes structure for implementing the
+Visitor pattern and helping you write your generated Java code (check
+out the methods |newline| and |print|).  You will not submit nor modify
+|Ast.java|, |Environment.java|, and |Scope.java|.  Prior to submitting
+you should test your Generator with the provided test class as well as
+implement your own additional test cases to perform a comprehensive
+evaluation of your solution.  You should test and re-test your Generator
+prior to submitting.  You will not submit |GeneratorTests.java| nor will
+you submit additional test cases you create.
+
+/All work is due by 11:59 PM EST on the assigned date/. Here is the
+submission schedule.
+
+  * The first test submission is due by*Wednesday**, April 10*.
+  * The second test submission is due by *Saturday**, April 13*.
+  * The third test submission is due by*Wednesday**, April 17*.
+  * The final submission is due by *Saturday, April 20*.
+
+
+    Generator Overview
+
+The job of our Generator is to convert the analyzed AST into Java code.
+Recall from our lecture discussion, there are different types of code
+that could be generated. For this project, we have chosen to generate
+Java source code (similar to the process C++ uses, generating C code).
+Then, we can compile and execute the Java source code using the standard
+JVM. As we continue to use the Visitor pattern, the class Generator
+implements the interface Visitor (contained in |Ast.java|, see below).
+
+*Formatting*
+
+The Java source code you generate must be formatted in a consistent
+manner that follows the guidelines described below. The |newline| and |
+print| methods given will assist you in doing this. The |newline| can be
+used by passing in the indent property or by passing a hardcoded number
+for known cases, such as passing |0| for empty (blank) lines.
+
+*/You //are required to follow all formatting, including spaces and
+indentations, in exactly the same manner as it is given here. /*Detailed
+examples follow for all of the nodes in our grammar. As well, examples
+are provided in |GeneratorTests.java|.
+
+
+      AST Types for Code Generation
+
+Each |Ast| class has its own |visit| method, which behave as described
+below.
+
+  * In this project, there are parts of the AST that require the same
+    set of generated statements.  Therefore, it may be helpful, and make
+    your implementation simpler, to create a helper method to handle
+    generating duplicated statements and logic. The methods |
+    requireType| and |requireAssignable| from our previous projects are
+    examples of creating a method to handle code re-use / re-execution.
+  * The display frame for pages here in Canvas does not always format in
+    a manner that clearly shows the structure of the example.  *Cutting
+    and pasting examples into a simple text editor will help show the
+    formatting guidelines given in the example*
+
+  * Note, in the specification:
+      o braces are |{}|, aka curly brackets
+      o brackets are |[]|, aka straight brackets
+      o parenthesis are |()|, aka round brackets
+
+AST Class 	Specification 	Examples
+Key for examples 	Key for examples 	
+
+  * *First level* bullet points include the source input from our language.
+      o *Second level* bullet points are the resulting Java source code.
+
+|Ast.*Source*| 	
+
+Generates a source. This includes a definition for the |Main| class that
+contains our code as well as the |public static void main(String[]
+args)| method used as the entry point for Java.
+
+The order of generation you will follow is:
+
+ 1. the class header, including the opening brace,
+ 2. the source's globals (properties in Java),
+ 3. Java's main method [|main(String[] args)|],
+ 4. the source's functions (methods in Java), and
+ 5. finally the closing brace for the class.
+
+Pay close attention to spacing and indentation; properties are grouped
+together while the generated Java methods are separated by an empty line
+(hint: use |newline(0)| for empty lines, giving it an explicit indent
+of |0|).
+
+The Java |main| method you generate will be:
+
+public static void main(String[] args) {
+    System.exit(new Main().main());
+}
+
+Take note that:
+
+  * |new Main()| creates an instance of our |Main| class.
+  * |.main()| calls our language's |main| method (having a different
+    signature since it does not take arguments).
+  * |System.exit| is used to specify the exit code of a Java program,
+    unlike C/++ which does so automatically. [This is not critical for
+    understanding the assignment, but is another 'flare' to draw
+    attention to important concepts that you will almost certainly use
+    in the future.]
+  * Note, our grammar does not require that the source node include the
+    method |main()| that you are calling. However, one of the functions
+    within a source node will always be main. [As a practice exercise,
+    you can expand the grammar and other elements of our solution to
+    require the presence of such a main function.]
+  * In the complete project solution, our Analyzer verified that one of
+    the methods within the source node was "main".  If we were to thread
+    the solution together from end-to-end, the Analyzer would handle
+    generating the appropriate exception.
+
+Returns |null|.
+
+	
+
+  *
+
+    FUN main(): Integer DO
+        print("Hello, World!");
+        RETURN 0;
+    END
+
+      o
+
+        public class Main {
+
+            public static void main(String[] args) {
+                System.exit(new Main().main());
+            }
+
+            int main() {
+                System.out.println("Hello, World!");
+                return 0;
+            }
+
+        }
+
+  *
+
+    VAR x: Integer;
+    VAR y: Integer = 10;
+    DEF main(): Integer DO
+        RETURN x + y;
+    END
+
+      o
+
+        public class Main {
+
+            int x;
+            int y = 10;
+
+            public static void main(String[] args) {
+                System.exit(new Main().main());
+            }
+
+            int main() {
+                return x + y;
+            }
+
+        }
+
+|Ast.*Global*| 	
+
+Generates a global expression, expressed in Java as a property within
+our generated class Main.
+
+  * The /mutable/ variable will consist of the type name and the
+    variable name stored in the AST separated by a single space
+    character. If a value is present, then an equal sign character with
+    surrounding single spaces is generated followed by the variable
+    value (expression). A semicolon should be generated at the end.
+  * /Immutable/variables in Java are declared by using the |final|
+    modifier.  Therefore, Java code for our /immutable/ variables will
+    be generated using the same structure as a mutable variable with the
+    only addition being to place |final|and a single blank space
+    immediately before the variable type.
+  * /List/variables in Java can be declared and manipulated in multiple
+    ways.  For our solution, we will use the primitive construction of
+    an array (you might see this referred to as a "static" array,
+    "static" is used in this context because the length/initial size of
+    the array will never change after the array reference has been
+    declared).
+      o The generated Java code will consist of the type followed
+        immediately by a pair of brackets, |[]|.  Note there are no
+        spaces between or within the type and the brackets.
+      o Next, a single blank space will follow the brackets and precede
+        the variable name.  Similarly, a single blank space will follow
+        the variable name and precede the equal sign character. 
+        Lastly,a single blank space will follow the equal sign character
+        and precede a pair of braces.
+      o (the PlcList):  The braces will contain a comma separated
+        sequence of the list's initial values.  The first value in the
+        initialization list will be placed immediately after the opening
+        brace, and the closing brace will be placed immediately after
+        the first value if no other values are observed in the
+        initialization list.  If other values are observed, they will be
+        separated by a comma followed by a single blank space. The last
+        element in the initialization list will be placed immediately
+        before the closing brace.
+      o The list declaration will be closed by a semicolon, placed
+        immediately after the closing brace.
+
+Returns |null|.
+
+	
+
+  * |VAR x: String;|
+      o |String x;|
+  * |VAL y: Boolean = TRUE && FALSE;|
+      o |final boolean y = true && false;|
+  * |LIST list: Decimal = [1.0, 1.5, 2.0];|
+      o |double[] list = {1.0, 1.5, 2.0};|
+
+|Ast.*Function*| 	
+
+Generates a function expression, expressed in Java as a method within
+our generated class Main. The function should begin with the function's
+JVM type name followed by the function name, both of which are found in
+the AST. Then generate a comma-separated list of the method parameters
+surrounded by parenthesis, following the same spacing pattern as the
+initialization sequence of a list. Each parameter will consist of a JVM
+type name and the parameter name.  A single space will be placed after
+the list comma and before the next parameter type.  No space will be
+placed after the opening parenthesis and before the closing parenthesis.
+
+Following a single space, the opening brace should be generated on the
+same line. If statements is empty the closing brace should also be on
+the same line, otherwise each statement is generated on a new line with
+increased indentation followed by a closing brace on a new line with the
+original indentation.
+
+Returns |null|.
+
+	
+
+  *
+
+    FUN area(radius: Decimal): Decimal DO
+        RETURN 3.14 * radius * radius
+    END
+
+      o
+
+        double area(double radius) {
+            return 3.14 * radius * radius;
+        }
+
+|Ast.Statement.*Expression*| 	
+
+Generates an expression. It should consist of the generated expression
+found in the AST followed by a semicolon.
+
+Though the Analyzer requires the contained expression be a function
+expression, your generator should still work with other expression types.
+
+Returns |null|.
+
+	
+
+  * |log("Hello World");|
+      o |log("Hello World");|
+  * |1;|
+      o |1;|
+
+|Ast.Statement.*Declaration*| 	
+
+Generates a declaration expression. The expression should consist of the
+type name and the variable name stored in the AST separated by a single
+space. If a value is present, then an equal sign with surrounding single
+spaces is generated followed by the generated variable value. A
+semicolon should be generated at the end.
+
+Returns |null|.
+
+	
+
+  * |LET name: Integer;|
+      o |int name;|
+  * |LET name = 1.0;|
+      o |double num = 1.0;|
+
+|Ast.Statement.*Assignment*| 	
+
+Generates a variable assignment expression. The name should be the
+receiver of the variable stored in the AST and the value should be the
+generated value of the variable. An equal sign character with
+surrounding single spaces should be generated between the name and
+value. A semicolon should be generated at the end.
+
+Returns |null|.
+
+	
+
+  * |variable = "Hello World";|
+      o |variable = "Hello World";|
+
+|Ast.Statement.*If*| 	
+
+Generates an If expression. The expression should consist of the |if|
+keyword, followed by a single space and the generated condition with the
+surrounding parenthesis. The opening brace should be generated on the
+same line. After a single space following the condition's closing
+parenthesis, the opening brace should be generated followed by a newline
+with an increase in the indentation and the generation of all the
+statements each ending with a newline. Following this should be a
+decrease in the indentation and the corresponding closing brace.
+
+If there is an else block, then generate the |else| keyword on the same
+line with the same block formatting. There is *no concept* of */else-if/
+* in our grammar, so nested if statements will still appear nested. If
+there is not an else block, then the entire |else| section is left out
+of the generated code.
+
+Returns |null|.
+
+	
+
+  *
+
+    IF expr DO
+        stmt;
+    END
+
+      o
+
+        if (expr) {
+            stmt;
+        }
+
+  *
+
+    IF expr DO
+        stmt1;
+    ELSE
+        stmt2;
+    END
+
+      o
+
+        if (expr) {
+             stmt1;
+        } else {
+             stmt2;
+        } 
+
+|Ast.Statement.*Switch*| 	
+
+Generates a switch expression. The expression should consist of the |
+switch| keyword, followed by a single space and the generated condition
+with the surrounding parenthesis (no spaces within the parenthesis). The
+opening brace should be generated on the same line after a single space
+and is followed by a newline with an increase in the indentation.
+
+Each case (and the default) statement will begin on its own line (and
+indented one level from the level of the switch keyword). The cases and
+default will immediately follow from the previous line, with no blank
+lines in between them. 
+
+Finally, the switch will close with a decrease in the indentation and a
+closing brace on its own line, immediately following the end of the default.
+
+Returns |null|.
+
+	
+
+  *
+
+    SWITCH letter
+        CASE 'y':
+            print("yes");
+            letter = 'n';
+        DEFAULT
+            print("no");
+    END
+
+      o
+
+        switch (letter) {
+            case 'y':
+                System.out.print("yes");
+                letter = 'n';
+                break;
+            default:
+                System.out.println("no");
+        }
+
+|Ast.Statement.*Case*| 	
+
+Generates a case (or default) expression.  The case (or default) will be
+indented one level from that of the containing switch.  Each statement
+within the case (or default) will be placed on its own line, indented
+one level within the case (or default) itself.
+
+  * Generating a /case/:
+      o the keyword |case| will open the case expression,
+      o followed by a blank space and the expression value, and
+      o closed by the colon, |:|, with no blank space between the value
+        and the colon.
+      o the final statement within every /case/ [/cases/ only, not the /
+        default/] will be a |break;|, indented to the same level as all
+        of the other statements within the case.  Note, while our
+        language separates cases and the default into their own
+        statement blocks for execution, Java does not use syntax [such
+        as a pair of {}s] to create a statement block for each case. 
+        Instead, Java uses a fall through policy, once on the RHS of any
+        case value pair all RHS statements are executed until explicitly
+        told to break out of the switch.  
+  * Generating a /default/:
+      o the keyword |default| will open the default portion of the switch.
+      o a colon, |:|, will follow immediately after with no separation.
+      o recall, in Java a colon follows the keyword |default|.  In our
+        grammar, there is no colon listed after the keyword |DEFAULT|. 
+        This detail does not affect your Generator, but is good review
+        for re-examining your Parser (Remember the Parser will have
+        already parsed the sourced AST and dropped the colon, and the
+        Generator will only be examining the AST).
+      o There will *NOT* be a |break;| statement at the end of the
+        default, since the default always closes the switch [in both our
+        language and Java] the statement is unnecessary.
+
+	
+
+  * See the switch above for an example and context.
+
+|Ast.Statement.*While*| 	
+
+Generates a while loop expression. The expression will consist of the |
+while| keyword followed by a single space and then the generated
+condition expression surrounded by parenthesis.
+
+Following a single space, the opening brace should be generated on the
+same line. If the statements are empty, the closing brace should also be
+on the same line, otherwise each statement is generated on a new line
+with increased indentation followed by a closing brace on a new line
+with the original indentation.
+
+Returns |null|.
+
+	
+
+ 
+
+  *
+
+    WHILE condition DO
+        stmt1;
+        stmt2;
+    END
+
+      o
+
+        while (condition) {
+            stmt1;
+            stmt2;
+        }
+
+|Ast.Statement.*Return*| 	
+
+Generates a return expression. The expression will consist of the |
+return| keyword followed by a single space and the corresponding
+generated expression value. A semicolon should be generated at the end.
+
+Returns |null|.
+
+	
+
+  * |RETURN 5 * 10;|
+      o |return 5 * 10;|
+
+|Ast.Expression.*Literal*| 	
+
+Generates a literal expression. The expression should generate the value
+of the literal found in the AST.
+
+For characters and strings, remember that you will need to include the
+surrounding quotes. You do *not*, however, have to worry about
+converting escape characters back to their escape sequence (though a
+full language would absolutely need to).
+
+  * Note: The BigDecimal class represents numbers with a specific
+    precision, and therefore you need to pay close attention to the
+    precision it has when writing test cases. It is recommended to use
+    the |BigDecimal(String)| constructor for this reason so you know
+    will know precisely what the precision will be.
+
+Returns |null|.
+
+	
+
+  * |TRUE|
+      o |true|
+  * |1|
+      o |1|
+  * |"Hello World"|
+      o |"Hello World"|
+
+|Ast.Expression.*Group*| 	
+
+Generates a group expression. The expression used should be a generated
+expression surrounded by parentheses.
+
+Though the Analyzer requires the contained expression to be a binary
+expression, your generator should still work with other expression types.
+
+Returns |null|.
+
+	
+
+  * |(1)|
+      o |(1)|
+  * |(1 + 10)|
+      o |(1 + 10)|
+
+|Ast.Expression.*Binary*| 	
+
+Generates a binary expression. It should first generate the AST's left
+expression, then generate the corresponding JVM binary operator, and
+lastly generate the right expression. The binary operator should be
+generated with a single space on each side.
+
+  * |^| is a special case, as the power operator is not provided by
+    Java.  Therefore, we will generate a usage of Java's |Math.pow(base,
+    power)| as the expression instead. Notice:
+      o the |M| is capitalized.
+      o |Math.pow(| is contiguous (no whitespace).
+      o a single blank space follows the comma in the |base, power|
+        argument list.
+      o no spaces are placed after |(| or before |)|.
+      o spacing before |M| and after |)| will be defined by where and
+        how the original operation is used, it is simply another
+        expression and will follow the rules of each context as
+        described in the other AST nodes of the specification.
+
+Returns |null|.
+
+	
+
+  * |TRUE && FALSE|
+      o |true && false|
+  * |"Ben" + 10|
+      o |"Ben" + 10|
+  * |2 ^ 3|
+      o |Math.pow(2, 3)|
+  * |2 ^ 3 + 1|
+      o |Math.pow(2, 3) + 1|
+
+|Ast.Expression.*Access*| 	
+Generates an access expression. The name used should be the |jvmName| of
+the variable stored in the AST. If a list is being accessed, then an
+offset is present and will be placed within a brackets with no spaces
+separating any elements of the access (list variable name followed
+immediately by the opening bracket containing the expression which is
+immediately followed by the closing bracket).
+
+Returns |null|.
+
+	
+
+  * |variable|
+      o |variable|
+  * |list[expr]|
+      o |list[expr]|
+
+|Ast.Expression.*Function*| 	
+
+Generates a function expression. The name used should be the |jvmName|
+ of the function stored in the AST. It should be followed by a comma-
+separated list of the generated argument expressions surrounded by
+parenthesis.
+
+Take note, the expression statement is similar.  The difference being
+whether there is only the function call itself or if the function call
+is packaged as an expression statement.  See |Ast.Statement.Expression|
+above for an example.
+
+Returns |null|.
+
+	
+
+  * |print("Hello world")|
+      o |System.out.print("Hello World")|
+
+|Ast.Expression.*PlcList*| 	
+
+Generates a PlcList expression. Note, the PlcList is the RHS
+initialization value within the Global list declaration and does exist
+in our language outside of the list declaration.  For review, here is
+the list specification (copied from Ast.Global above):
+
+  * The braces will contain a comma separated sequence of the list's
+    initial values.  The first value in the initialization list will be
+    placed immediately after the opening brace, and the closing brace
+    will be placed immediately after the first value if no other values
+    are observed in the initialization list.  If other values are
+    observed, they will be separated by a comma followed by a single
+    blank space. The last element in the initialization list will be
+    placed immediately before the closing brace.
+
+Returns |null|.
+
+	
+
+  * |[1.0, 1.5, 2.0]|
+      o |{1.0, 1.5, 2.0}|
+
+
+      Provided Code
+
+The following files are provided to help you help implement the Generator.
+
+These files provide a structured design that will incorporate into the
+grading system. Sample test cases are also included to assist you in
+beginning your solution evaluation. Look closely at the test cases
+provided to identify that the input given is what the Analyzer produces
+and what the Generator expects to receive [an analyzed AST]. As well,
+examine the test case output to see what the Generator is intended to
+produce [Java source with specific formatting]. You can use these
+examples to assist in constructing your own additional test cases.
+
+  * Source Files (|src/main/java/plc/project|)
+      o Generator.java <https://ufl.instructure.com/courses/498750/
+        files/83712399?wrap=1>Download Generator.java <https://
+        ufl.instructure.com/courses/498750/files/83712399/download?
+        download_frd=1>
+  * Test Files (|src/test/java/plc/project|)
+      o GeneratorTests.java <https://ufl.instructure.com/courses/498750/
+        files/83712402?wrap=1>Download GeneratorTests.java <https://
+        ufl.instructure.com/courses/498750/files/83712402/download?
+        download_frd=1>

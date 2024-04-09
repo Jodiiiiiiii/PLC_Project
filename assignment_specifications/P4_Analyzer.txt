@@ -1,0 +1,686 @@
+P4: Analyzer
+Due: Sat Apr 6, 2024 11:59pmDue: Sat Apr 6, 2024 11:59pm4/6/2024
+Ungraded, 100 Possible Points100 Points Possible
+Attempt
+
+Submitted on Mar 27, 2024 8:07pmSubmitted on Mar 27, 2024 8:07pm3/27/2024
+NEXT UP: Review Feedback
+Attempt 2 Score:N/A
+
+Add Comment
+Unlimited Attempts Allowed
+
+Details
+
+In this assignment, you will implement a solution that analyzes the
+source code written in our language. The Analyzer will decorate the AST
+produced by the Parser, updating the AST with attribute data that will
+help perform code generation in P5: Generator <coming soon>. The
+classes |Ast|, |Environment|, and |Scope|have been updated to help with
+the Analyzer solution (but are backwards compatible to prior project
+parts), re-download them all (see section Provided Code below).
+
+
+    Submission
+
+You will submit |Analyzer.java|, which implements your Analyzer. You
+will not submit nor modify |Ast.java|, |Environment.java|, and |
+Scope.java|. Prior to submitting you should test your Analyzer with the
+provided test class as well as implement your own additional test cases
+to perform a comprehensive evaluation of your solution.  You should test
+and re-test your Generator prior to submitting. You will not submit |
+AnalyzerTests.java| (nor will you submit |ParserModifiedTests.java|
+which helps you test our updates to the Parser, see section "Enhancement
+to the Grammar and Parser" as well as the section Provided Code that
+follow) nor will you submit additional test cases you create.
+
+/All work is due by 11:59 PM EST on the assigned date/. Here is the
+submission schedule.
+
+  * The first test submission is due by *Monday, March 18*.
+  * The second test submission is due by *Monday, March 25*.
+  * The third test submission is due by *Saturday, March 30*.
+  * The fourth test submission is due by *Wednesday, April 3*.
+  * The final submission is now due *Saturday, April 6*.
+
+|Parser.java|
+
+You will update the Parser, and for the final project evaluation
+[the *FPE* is due *Tuesday, April 30*] submit the updated version.
+Only |Analyzer.java| will be submitted and graded here during P4.
+Recall, we do not test your combined solution in sequence, instead each
+part is independently evaluated. |AnalyzerTests.java| provides test
+cases showing the construction of the updated AST (including what the
+modified Parser produces) and the independent evaluation process of P4.
+
+
+    Analyzer Overview
+
+The job of semantic analysis (the Analyzer) is to determine if the
+semantic structure of the tokens and AST matches our programming language.
+
+Operations to perform:
+
+  * The AST will be evaluated for consistency and constraints, throwing
+    an exception when constraints are violated.  The complete set of
+    constraints (see section AST Types For Semantic Analysis) is
+    provided below.  Here are two examples 
+      o After declaration, making an assignment to an /immutable/ variable.
+      o The Assignment Receiver must be an Access expression.
+  * Within the AST, type information will be attached to the AST node,
+    providing type information to type validation (here in P4) and the
+    Generator in P5.
+  * Type and variable validation using the structure provided, including
+    using the updated |Environment.java| and |Scope.java|.
+
+
+      Enhancement to the Grammar and Parser
+
+In order for our grammar to include variable types, the declaration of
+Globals and Function parameters must include the type.  The enhanced
+Parser will check for the types being present and throw an exception if
+they are not.
+
+The declaration of local (non-Global) variables must also include the
+type or an assignment so that the type can be inferred from the assigned
+value.  Evaluation of the type or literal assignment (or both) being
+present will be left to the Analyzer.  Since both the type name and
+assigned value are optional, the Parser will populate one or both when
+they are present in the source code.  However, the Parser will not
+evaluate if both the type and the assigned value are missing.  Instead,
+the Analyzer will check for these and if they are both missing throw an
+exception when visiting the Declaration node of the tree.
+
+Note, a type is simply an /identifier/.  We will use a preceding /
+colon/, |*:*|, to separate the type from the name of the variable.  Both
+of these elements, an /identifier/ and a /colon/, are already lexed
+correctly by our Lexer (/identifiers/ as an IDENTIFIER and |*:*| as an
+OPERATOR).  Therefore, no update to the Lexer is required.  The type
+will need to be added into our AST by the Parser whenever a declaration
+is performed.  Five productions have changed (mutable, immutable,
+list, function, and statement) with new elements highlighted in red:
+
+  * |list ::= 'LIST' identifier ':' identifier'=' '[' expression (','
+    expression)* ']'|
+  * |mutable ::= 'VAR' identifier ':' identifier('=' expression)?|
+  * |immutable ::= 'VAL' identifier ':' identifier'=' expression|
+  * |function ::= 'FUN' identifier '(' (identifier ':' identifier (','
+    identifier ':' identifier)* )? ')' (':' identifier)?'DO' block 'END'|
+  * |statement ::= 'LET' identifier (':' identifier)? ('=' expression)?
+    ';' ||
+
+Here is the complete grammar with new elements highlighted in red.  You
+can view a graphical form of our grammar here:
+
+  * https://www.bottlecaps.de/rr/uiLinks to an external site. <https://
+    www.bottlecaps.de/rr/ui> (with IPv6)
+  * https://rr.red-dove.com/uiLinks to an external site. <https://
+    rr.red-dove.com/ui> (without IPv6)
+
+ 
+
+source ::= global* function*
+
+global ::= ( list | mutable | immutable ) ';'
+list ::= 'LIST' identifier ':' identifier '=' '[' expression (',' expression)* ']'
+mutable ::= 'VAR' identifier ':' identifier ('=' expression)?
+immutable ::= 'VAL' identifier ':' identifier '=' expression
+
+function ::= 'FUN' identifier '(' (identifier ':' identifier (',' identifier ':' identifier)* )? ')' (':' identifier)? 'DO' block 'END'
+
+block ::= statement*
+
+statement ::=
+    'LET' identifier (':' identifier)? ('=' expression)? ';' |
+    'SWITCH' expression ('CASE' expression ':' block)* 'DEFAULT' block 'END' | 
+    'IF' expression 'DO' block ('ELSE' block)? 'END' |
+    'WHILE' expression 'DO' block 'END' |
+    'RETURN' expression ';' |
+    expression ('=' expression)? ';'
+
+expression ::= logical_expression
+
+logical_expression ::= comparison_expression (('&&' | '||') comparison_expression)*
+comparison_expression ::= additive_expression (('<' | '>' | '==' | '!=') additive_expression)*
+additive_expression ::= multiplicative_expression (('+' | '-') multiplicative_expression)*
+multiplicative_expression ::= primary_expression (('*' | '/' | '^') primary_expression)*
+
+primary_expression ::=
+    'NIL' | 'TRUE' | 'FALSE' |
+    integer | decimal | character | string |
+    '(' expression ')' |
+    identifier ('(' (expression (',' expression)*)? ')')? |
+    identifier '[' expression ']'
+
+identifier ::= '@'? [A-Za-z] [A-Za-z0-9_-]*
+integer ::= '0' | '-'? [1-9] [0-9]*
+decimal ::= '-'? ('0' | [1-9] [0-9]*) '.' [0-9]+
+character ::= ['] ([^'\n\r\\] | escape) [']
+string ::= '"' ([^"\n\r\\] | escape)* '"'
+escape ::= '\' [bnrt'"\\]
+operator ::= [!=] '='? | '&&' | '||' | 'any character'
+
+whitespace ::= [ \b\n\r\t]
+
+
+      AST Representation for Parsing Variable Types
+
+The |Ast| class contains subclasses representing the more specific
+elements of the AST and the parsed code. There is not a one-to-one
+relationship between rules in our grammar and the AST.
+
+For our language, the names and spelling of our types will be:
+
+  * |Boolean|
+  * |Character|
+  * |Decimal|
+  * |Integer|
+  * |String|
+
+The identifier given within the source at the appropriate position
+(after the colon and prior to the optional assignment) is the type.  No
+type checking (verification) is performed by the Parser, making the
+Parser step merely just a recording of the String value of the type
+name.  Type checking will be performed by the Analyzer.
+
+These classes within |Ast| have been updated to represent variable types:
+
+  * |Global|: Global declarations now include an attribute *typeName*.
+  * |Function|: Function definitions now include
+    attributes *parameterTypeNames* (a list of Strings, corresponding to
+    the order of the types given in the parameter list of the function)
+    and *returnTypeName*.
+  * |Statement|: Structural parts of the code that perform side effects
+    like assigning variables or modifying control flow.
+      o |Declaration|: Variable declarations now include an
+        attribute *typeName*.
+
+Note, the updated |Ast| continues to be backwards compatible to prior
+parts of the project sequence.
+
+
+      Assignable Types
+
+Consider assignment statements in languages like Java. A typed value on
+the RHS of an equals sign is assignable to a typed variable on the LHS,
+if the RHS type is a subtype of the LHS type.  An example is assigning a
+|String| value to an |Object| variable (e.g., |Object obj = "string";|).
+In our language, we do not have inheritance and instead use the
+following rules to determine if one type is assignable to another.
+
+  * When the two types are the same, the assignment can be performed.
+  * When the target type is |Any|, anything from our language can be
+    assigned to it. |Any| in our language is similar to the |Object|
+    class in Java.
+  * When the target type is |Comparable|, it can be assigned any of our
+    defined |Comparable|types: |Integer|, |Decimal|, |Character|, and |
+    String|. You will not need to support any other |Comparable| types.
+  * In all other cases, mismatched assignments will fail throwing a |
+    RuntimeException|.
+
+The principles above also apply to the values returned by functions. The
+return type declared by the function equates to the LHS and the value
+actually being returned corresponds to the RHS of an assignment
+statement. You have already implemented similar principles when
+evaluating the condition of an |if| statement. Whenever a boolean is the
+result of the condition, the |if| will execute properly. Anything other
+than a boolean results in an exception being thrown. 
+
+Implement and use |requireAssignable(Environment.Type target,
+Environment.Type type)| in |Analyzer.java| to identify when a |
+RuntimeException| should be thrown when the target type does not match
+the type being used or assigned.  Note, the method |requireAssignable|
+returns void because either the exception is generated or the
+requirement is met.
+
+
+      AST Types for Semantic Analysis
+
+Each |Ast| class has its own |visit| method, which behave as follows:
+
+AST Class 	Specification 	Examples
+|Ast.*Source*| 	
+
+Visits globals followed by functions (following the left-depth-first
+traversal of the AST). Throws a |RuntimeException| if:
+
+  * A |main/0| function (name = |main|, arity = |0|) does not exist.
+  * The |main/0| function does not have an |Integer| return type.
+
+Returns |null|.
+
+	
+
+These two cases focus on Source node errors and are included in the
+AnalyzerTests.java:
+
+  * |VAR value: Boolean = TRUE; FUN main(): Integer DO RETURN value; END|
+      o throws |RuntimeException|
+  * |FUN main() DO RETURN 0; END|
+      o throws |RuntimeException|
+
+These two cases also fail, but there might be multiple reasons why. In
+addition to the errors observed here in source, another error such as |
+num + 1.0| will throw an exception based upon our binary node analysis
+below:
+
+  * |VAR num: Integer = 1; FUN main(): Integer DO print(num + 1.0); END|
+      o throws |RuntimeException|
+  * |FUN main() DO print("Hello, World!"); END|
+      o throws |RuntimeException|
+
+|Ast.*Global*| 	
+
+Defines a variable in the current scope according to the following, also
+setting it in the Ast (|Ast.Global#setVariable|).
+
+  * The variable's |name| and |jvmName| are both the name of the global.
+  * The variable's |type| is the type registered in the |Environment|
+     with the same name as the one in the AST.
+  * The variable's |value| is |Environment.NIL| (since it is not used by
+    the analyzer)
+
+The value of the global, if present, must be visited /before/ the
+variable is defined (otherwise, the global would be used before it was
+initialized).
+
+Additionally, throws a |RuntimeException| if:
+
+  * The value, if present, is not assignable to the global.
+      o For a value to be assignable, its type must be a subtype of the
+        global's type as defined above (section Assignable Types).
+
+Returns |null|.
+
+	
+
+  * |VAR name: Integer;|, scope = |{}|
+      o scope = |{name: Integer}|
+  * |VAR name: Decimal = 1;|, scope = |{}|
+      o throws |RuntimeException|
+  * |LIST list: Integer = [1.0, 2.0];|, scope = |{}|
+      o throws |RuntimeException|
+
+  * |VAR name: Unknown;|, scope = |{}|
+      o throws |RuntimeException|
+
+|Ast.*Function*| 	
+
+Defines a function in the current scope according to the following, also
+setting it in the Ast (|Ast.Function#setFunction|).
+
+  * The function's |name| and |jvmName| are both the name of the function.
+  * The function's parameter types and return type are retrieved from
+    the environment using the corresponding names in the function.
+  * Examine the grammar and identify that providing a return type in the
+    function declaration is option. Therefore, if the return type is not
+    provided and thus, /not present/ in the AST, the return type will
+    be |Nil|.
+  * The function's |function| (such naming much wow) is |args ->
+    Environment.NIL|, which always returns nil (since it is not used by
+    the analyzer).
+
+Next, visit all of the function's statements inside of a new scope
+containing variables for each parameter. Unlike globals, this is done /
+after/ the function is defined to allow for recursive functions.
+
+Additionally, you will need to coordinate with |Ast.Statement.*Return*|
+ so the expected return type is known (hint: save in a variable).
+
+  * Note: You do *NOT* need to check for missing returns or 'dead' code
+    (statements after a return), both of which are errors in Java.  Such
+    checks are of course useful and possible, however they also extend
+    the complexity required by the implementation.
+
+Returns |null|.
+
+	
+
+  * |FUN main(): Integer DO RETURN 0; END|, scope = |{}|
+      o scope = |{main/0: () -> Integer}|
+  * |FUN increment(num: Integer): Decimal DO RETURN num + 1; END|
+      o throws |RuntimeException|
+
+|Ast.Statement.*Expression*| 	
+
+Validates the expression statement. Throws a |RuntimeException| if:
+
+  * The expression is not an |Ast.Expression.*Function*| (since this is
+    the only type of expression that can cause a side effect).
+
+Returns |null|.
+
+	
+
+  * |print(1);|
+      o success
+  * |1;|
+      o throws |RuntimeException|
+
+|Ast.Statement.*Declaration*| 	
+
+Defines a variable in the current scope according to the following:
+
+  * The variable's |name| and |jvmName| are both the name in the AST.
+  * The variable's |type| is the type registered in the |Environment|
+     with the same name as the one in the AST, if present, or else the
+    type of the value. If neither are present this is an error.
+  * The variable's |value| is |Environment.NIL| (since it is not used by
+    the analyzer).
+
+The value of the declared variable, if present, must be visited /
+before/ the variable is defined (otherwise, the variable would be used
+before it was initialized and also because its type may be needed to
+determine the type of the variable).
+
+Additionally, throws a |RuntimeException| if:
+
+  * The value, if present, is not assignable to the variable (see |
+    Ast.*Global*| for additional details).
+
+Returns |null|.
+
+	
+
+  * |LET name: Integer;|, scope = |{}|
+      o scope = |{name: Integer}|
+  * |LET name = 1;|, scope = |{}|
+      o scope = |{name: Integer}|
+  * |LET name;|
+
+  *
+      o throws |RuntimeException|
+  * |LET name: Unknown;|
+      o throws |RuntimeException|
+
+     
+
+|Ast.Statement.*Assignment*| 	
+
+Validates an assignment statement. Throws a |RuntimeException| if:
+
+  * The receiver is not an access expression (since any other type is
+    not assignable).
+  * The value is not assignable to the receiver (see |Ast.*Global*| for
+    additional details).
+
+In the Interpreter, we had to do additional work to unwrap names in the
+AST. Here, we do *not* need to do that since visiting the AST is
+performing type analysis, not evaluation, and thus the behaviors are
+different.
+
+Returns |null|.
+
+	
+
+  * |variable = 1;|, scope = |{variable: Integer}|
+      o success
+  * |variable = "string"|, scope = |{variable: Integer}|
+      o throws |RuntimeException|
+
+|Ast.Statement.*If*| 	
+
+Validates an if statement. Throws a |RuntimeException| if:
+
+  * The condition is not of type |Boolean|.
+  * The |thenStatements| list is empty.
+
+After handling the condition, visit the then and else statements inside
+of a new scope /for each one/.
+
+Returns |null|.
+
+	
+
+  * |IF TRUE DO print(1); END|
+      o success
+  * |IF "FALSE" DO print(1); END|
+      o throws |RuntimeException|
+  * |IF TRUE DO print(9223372036854775807); END|
+      o throws |RuntimeException|
+  * |IF TRUE DO END|
+      o throws |RuntimeException|
+
+|Ast.Statement.*Switch*| 	
+
+Validates a switch statement. Throws a |RuntimeException| if:
+
+  * The condition defines the value type for each case. If any of the
+    case value types do not match the type of the condition.
+  * The |DEFAULT|(last) case contains a value.  Recall, the final case
+    statement is the default, therefore the value must be empty.
+
+After visiting the condition, visit each case (including the default)
+statement inside of a new scope /for each case/.
+
+Returns |null|.
+
+	
+
+  * |SWITCH letter CASE 'y': print("yes"); letter = 'n'; DEFAULT
+    print("no"); END|, scope = |{letter: Character = 'y'}|
+      o success
+  * |SWITCH number CASE 'y': print("yes"); letter = 'n'; DEFAULT
+    print("no"); END|, scope = |{number: Integer = 1}|
+      o throws |RuntimeException|
+
+|Ast.Statement.*Case*| 	Validates the case statement.  Create a scope
+for the case (note there is a separate scope for each case to ensure the
+cases are independent of one another, similar to the if/else above),
+visiting each statement of the case. 	
+
+  * |CASE 'y': print("yes"); letter = 'n';|, scope = |{letter: Character
+    = 'y'}|
+      o success
+  * |DEFAULT: print("no"); END|
+      o success
+
+|Ast.Statement.*While*| 	
+
+Validates a while statement. Throws a |RuntimeException| if:
+
+  * The value is not of type |Boolean|.
+
+Then, visits all of the while loop's statements in a new scope.
+
+Returns |null|.
+
+	
+
+  * |WHILE TRUE DO END|
+      o success
+
+|Ast.Statement.*Return*| 	
+
+Validates a return statement. Throws a |RuntimeException| if:
+
+  * The value is not assignable to the return type of the function
+    within which the statement is contained.
+      o As hinted in |Ast.*Function*|, you will need to coordinate
+        between these visits to accomplish this.
+
+Note: This visit will only be called as part of visiting a function,
+since otherwise there would not be a return type to consider.
+
+Returns |null|.
+
+	
+
+  * |RETURN 1;|, return type = |Integer|
+      o success
+  * |RETURN 1;|, return type = |String|
+      o throws |RuntimeException|
+
+|Ast.Expression.*Literal*| 	
+
+Validates and sets type of the literal as described below. You will need
+to make use of |instanceof| to figure out what type the literal value is
+(remember to distinguish between the type in our language and the type
+of the Java object!).
+
+  * |Nil|, |Boolean|, |Character|, |String|: No additional behavior.
+  * |Integer|: Throws a |RuntimeException| if the value is out of range
+    of a Java |int| (32-bit signed int). There are methods in |
+    BigInteger| that can help with this, but make sure to throw a |
+    RuntimeException|!
+  * |Decimal|: Throws a |RuntimeException| if the value is out of range
+    of a Java |double| value (64-bit signed float). This is a bit
+    trickier than the previous one, but the method you should use here
+    is |BigDecimal#doubleValue()|. Check the Javadocs to see what
+    happens if the value does not fit into a |double| and go from there.
+
+Returns |null|.
+
+	
+
+  * |TRUE|
+      o |ast.getType() is Boolean|
+  * |2147483647|
+      o |ast.getType() is Integer|
+  * |9223372036854775807|
+      o throws |RuntimeException|
+
+|Ast.Expression.*Group*| 	
+
+Validates a group expression, setting its type to be the type of the
+contained expression. Throws a |RuntimeException| if:
+
+  * The contained expression is not a binary expression (since this is
+    the only type of expression that is affected by precedence).
+
+Returns |null|.
+
+	
+
+  * |(1)|
+      o throws |RuntimeException|
+  * |(1 + 10)|
+      o |ast.getType() is Integer|
+
+|Ast.Expression.*Binary*| 	
+
+Validates a binary expression according to the specific operator below,
+setting its type to the appropriate result type for the operation.
+Errant cases throw a |RuntimeException|.
+
+  * |&&|/||||:
+      o Both operands must be |Boolean|.
+      o Result type will be |Boolean|.
+  * |<|/|>|/|==|/|!=|:
+      o Both operands must be |Comparable| and of the /same type/.
+      o Result type will be |Boolean|.
+  * |+|:
+      o If either side is a |String|, the result is a |String| (and the
+        other side can be anything).
+      o Otherwise, the LHS must be an |Integer|/|Decimal| and both the
+        RHS and result type are the same as the LHS.
+  * |-|/|*|/|/|:
+      o The LHS must be an |Integer|/|Decimal| and both the RHS and
+        result type are the same as the LHS.
+  * |^|:
+      o The LHS must be an |Integer|.
+      o The RHS must be an |Integer|.
+      o The result type will be an |Integer|.
+
+Returns |null|.
+
+	
+
+  * |TRUE && FALSE|
+      o |ast.getType() is Boolean|
+  * |TRUE && "FALSE"|
+      o throws |RuntimeException|
+  * |"Ben" + 10|
+      o |ast.getType() is String|
+  * |1 + 10|
+      o |ast.getType() is Integer|
+  * |1 + 1.0|
+      o throws |RuntimeException|
+
+|Ast.Expression.*Access*| 	
+
+Validates an access expression and sets the variable of the expression
+(|Ast.Expression.Access#setVariable|), which internally sets the type of
+the expression to be the type of the variable. Throws a |
+RuntimeException| if:
+
+  * When an offset is present, the offset type is not an |Integer|.
+
+Returns |null|.
+
+	
+
+  * |variable|, scope = |{variable: Integer}|
+      o |ast.getType() is Integer|
+  * |list[1]|, scope = |{list = [1, 5, 10]}|
+      o |ast.getType() is Integer|
+
+|Ast.Expression.*Function*| 	
+
+Validates a function expression and sets the function of the expression
+(|Ast.Expression.Function#setFunction|), which internally sets the type
+of the expression to be the return type of the function.
+
+Additionally, checks that the provided arguments are assignable to the
+corresponding parameter types of the function.
+
+Returns |null|.
+
+	
+
+  * |function()|, scope = |{function/0: () -> Integer}| 
+      o |ast.getType() is Integer|
+
+|Ast.Expression.*PlcList*| 	
+
+Validates the list. Throws a |RuntimeException| if:
+
+  * The expressions are not assignable to the list type.
+      o For a value to be assignable, its type must be a subtype of the
+        list's type as defined in |Ast.Global|.
+
+Returns |null|.
+
+	Tested in the context of a complete list declaration (see |Ast.Global|).
+
+
+      Provided Code
+
+These files provide a structured design that will incorporate into the
+grading system.  Sample test cases are also included to assist you in
+beginning your solution evaluation.  Look closely at the test cases
+provided to identify that the input given is what the Parser produces
+and what the Analyzer expects to receive [an AST].  As well, examine the
+test case output to see what the Analyzer is intended to produce
+[updated / decorated AST; constraint verification].  You can use these
+examples to assist in constructing your own additional test cases.
+
+This includes new versions of |Ast.java|, |Environment.java|, and |
+Scope.java| as well as an updated |ParserModifiedTests.java| for helping
+you test our modifications to the Parser so that it incorporates types.
+
+  * Source Files (|src/main/java/plc/project|)
+      o Analyzer.java <https://ufl.instructure.com/courses/498750/files/
+        83712396?wrap=1>Download Analyzer.java <https://
+        ufl.instructure.com/courses/498750/files/83712396/download?
+        download_frd=1>
+      o Ast.java <https://ufl.instructure.com/courses/498750/files/
+        83712393?wrap=1>Download Ast.java <https://ufl.instructure.com/
+        courses/498750/files/83712393/download?download_frd=1>
+      o Environment.java <https://ufl.instructure.com/courses/498750/
+        files/83712394?wrap=1>Download Environment.java <https://
+        ufl.instructure.com/courses/498750/files/83712394/download?
+        download_frd=1>
+      o Scope.java <https://ufl.instructure.com/courses/498750/files/
+        83712398?wrap=1>Download Scope.java <https://
+        ufl.instructure.com/courses/498750/files/83712398/download?
+        download_frd=1>
+  * Test Files (|src/test/java/plc/project|)
+      o AnalyzerTests.java <https://ufl.instructure.com/courses/498750/
+        files/83712397?wrap=1>Download AnalyzerTests.java <https://
+        ufl.instructure.com/courses/498750/files/83712397/download?
+        download_frd=1>
+      o ParserModifiedTests.java <https://ufl.instructure.com/courses/
+        498750/files/86028950?wrap=1>Download ParserModifiedTests.java
+        <https://ufl.instructure.com/courses/498750/files/86028950/
+        download?download_frd=1>
