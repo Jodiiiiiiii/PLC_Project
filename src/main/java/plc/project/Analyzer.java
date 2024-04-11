@@ -96,7 +96,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             {
                 String name = ast.getParameters().get(i);
                 Environment.Type type = Environment.getType(ast.getParameterTypeNames().get(i));
-                scope.defineVariable(name, type.getJvmName(), type, true, Environment.NIL);
+                scope.defineVariable(name, name, type, true, Environment.NIL);
             }
 
             // execute list of statements within this scope
