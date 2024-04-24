@@ -1,0 +1,105 @@
+Final Project Evaluation
+Due: Thu May 2, 2024 11:59pmDue: Thu May 2, 2024 11:59pm5/2/2024
+Ungraded, 50 Possible Points50 Points Possible
+Attempt
+
+In Progress
+NEXT UP: Submit Assignment
+
+Add Comment
+Unlimited Attempts Allowed
+
+Details
+
+This is the final evaluation of your *plc++* implementation, our
+semester project and a novel language that can be both compiled and
+interpreted! The functionality of your *plc++* solution will evaluated
+in two ways.
+
+First, each part of our semester project will be tested separately in
+the same way they were in the previous submissions, the only
+modification being for the types to be recognized by the updated
+Parser.  Thus, we will run and grade each of the 5 parts independently
+(separately). 
+
+Second, the two paths [Lexer → Parser → Interpreter and Lexer → Parser →
+Analyzer → Generator] will be also be tested in sequence.
+
+Regarding the test cases to be evaluated: 
+
+  * for the the FPE test submissions,
+      o to test your independent project parts, we will run the /test
+        submission cases/ for each of the 5 parts.
+      o to test the end-to-end sequential paths, we will run the /
+        Interpreter /and/Generator test submissions/, passing the source
+        input from our language into the Lexer → Parser → Interpreter
+        and Lexer → Parser → Analyzer → Generator sequences.  See
+        Provided Code below for sample end-to-end test cases.
+  * for the FPE final submission,
+      o to evaluate your independent project parts, we will run the
+        *final submission cases* for each of the 5 parts, adjusting the
+        Parser cases to account for types. All other individual parts
+        (Lexer, Interpreter, Analyzer, and Generator) will be evaluated
+        using the same cases as they were at the project milestone.
+      o to evaluate the end-to-end sequential paths, we will run the
+        I*nterpreter *and*Generator final submissions*, passing the
+        source input from our language for these test cases into the
+        Lexer → Parser → Interpreter and Lexer → Parser → Analyzer →
+        Generator sequences.  See Provided Code below for sample end-to-
+        end test cases.
+
+Note, a great additional exercise for you to perform on your own would
+be to create a script that reads source code from a file, runs the
+sequence of project parts, producing the executed output.  For the
+Generator process, you would also have your script execute "javac
+Main.java" and "java Main" to complete executing the entire program.
+
+Combining all parts of the project together, you can enjoy executing
+*plc++*!  From scratch, you have built your own complete programming
+language!  Congrats on a great job!
+
+
+    Submission
+
+Here (to this assignment), you will submit your |Lexer.java|, |
+Parser.java|, |Interpreter.java|, |Analyzer.java|, and |Generator.java|
+solutions. You must submit the java files for *all 5 of our project parts*.
+
+We will *NOT evaluate* any previous submission content.
+
+As in previous assignments, you will not modify (and therefore not
+submit) supporting files |Ast.java|, |Environment.java|, |Scope.java|,
+and |Token.java|.  In addition, while it is recommended that you add
+your own test cases to the |<project_part>Tests.java|, you will not
+submit these java files nor the unit tests they contain.
+
+/All work is due by 11:59 PM EST on the assigned date/. Here is the
+submission schedule.
+
+  * The first test submission will be due by *Wednesday, April 24*.
+  * The second test submission will be due by *Saturday**, April 27*.
+  * The third [extra] test submission will be due by *Tuesday**, April 30*.
+  * The final submission [/extended from the date on our syllabus to
+    provide you as much time as possible/] is due *Thursday, May 2*.
+
+
+      Provided Code
+
+The following files are provided to help you perform end-to-end
+testing.  They are the Interpreter and Generator test cases constructed
+to execute from end-to-end.  Note, in order to test the Interpreter, the
+input must be lexed and then parsed.  Since the Parser you are
+completing has been updated to include types, the input provided for
+test cases uses types where appropriate.  However, the Interpreter
+specification has not changed, the typed parser information stored in
+the tree is simply ignored by the Interpreter.
+
+  * Test Files (|src/test/java/plc/project|)
+      o EndToEndInterpreterTests.java <https://ufl.instructure.com/
+        courses/498750/files/87212931?wrap=1>Download
+        EndToEndInterpreterTests.java <https://ufl.instructure.com/
+        courses/498750/files/87212931/download?download_frd=1>
+      o EndToEndGeneratorTests.java <https://ufl.instructure.com/
+        courses/498750/files/87262291?wrap=1>Download
+        EndToEndGeneratorTests.java <https://ufl.instructure.com/
+        courses/498750/files/87262291/download?download_frd=1>
